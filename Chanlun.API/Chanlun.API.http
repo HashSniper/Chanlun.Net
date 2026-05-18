@@ -1,0 +1,6 @@
+@Chanlun.API_HostAddress = http://localhost:5260
+
+GET {{Chanlun.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
