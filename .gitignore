@@ -16,6 +16,7 @@ build/
 bld/
 [Bb]in/
 [Oo]bj/
+publish/
 
 # JetBrains Rider
 .idea/

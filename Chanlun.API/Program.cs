@@ -1,7 +1,12 @@
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.WebHost.UseUrls("http://localhost:5000");
+// 仅在非 IIS/生产环境下使用默认 URL（IIS 通过 web.config 绑定端口）
+if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ASPNETCORE_PORT")))
+{
+    builder.WebHost.UseUrls("http://localhost:5000");
+}
+
 builder.Services.AddControllers();
 
 var app = builder.Build();
