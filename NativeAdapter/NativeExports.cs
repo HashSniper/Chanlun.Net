@@ -26,7 +26,7 @@ public static unsafe partial class NativeExports
             // 在线程池中执行，避免阻塞从非托管进入的线程
             return Task.Run(() => ApiClient.CallApi(endpoint, request, requestTypeInfo)).GetAwaiter().GetResult();
         }
-        catch(Exception ex)
+        catch
         {
             return [];
         }
@@ -42,198 +42,111 @@ public static unsafe partial class NativeExports
         // 剩余位置保持通达信传入时的默认值（通常为 0）
     }
 
+    private static void ExecuteCalc(int nCount, float* pOut, float* a, float* b, float* c, string endpoint)
+    {
+        if (nCount <= 0 || pOut == null || a == null || b == null || c == null) return;
+
+        float[] arrA = new float[nCount];
+        float[] arrB = new float[nCount];
+        float[] arrC = new float[nCount];
+
+        new ReadOnlySpan<float>(a, nCount).CopyTo(arrA);
+        new ReadOnlySpan<float>(b, nCount).CopyTo(arrB);
+        new ReadOnlySpan<float>(c, nCount).CopyTo(arrC);
+
+        var request = new CalcRequest { NCount = nCount, A = arrA, B = arrB, C = arrC };
+        float[] outArr = SafeCallApi(endpoint, request, ApiJsonContext.Default.CalcRequest);
+        CopyToOutput(nCount, pOut, outArr);
+    }
+
     //=========================================================================
-    // 输出函数1号：输出简笔顶底端点
+    // 输出函数1号：将k时间存入缓存，并生成缓存key
     //=========================================================================
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) }, EntryPoint = "Func1")]
-    public static void Func1(int nCount, float* pOut, float* pHigh, float* pLow, float* pIgnore)
+    public static void Func1(int nCount, float* pOut, float* a, float* b, float* c)
     {
-        if (nCount <= 0 || pOut == null || pHigh == null || pLow == null) return;
-
-        float[] high = new float[nCount];
-        float[] low = new float[nCount];
-        for (int i = 0; i < nCount; i++)
-        {
-            high[i] = pHigh[i];
-            low[i] = pLow[i];
-        }
-        var request = new BiRequest { NCount = nCount, High = high, Low = low };
-        float[] outArr = SafeCallApi("/api/calculation/bi1", request, ApiJsonContext.Default.BiRequest);
-        CopyToOutput(nCount, pOut, outArr);
+        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/setstocktime");
     }
 
     //=========================================================================
     // 输出函数2号：输出标准笔顶底端点
     //=========================================================================
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) }, EntryPoint = "Func2")]
-    public static void Func2(int nCount, float* pOut, float* pHigh, float* pLow, float* pIgnore)
+    public static void Func2(int nCount, float* pOut, float* a, float* b, float* c)
     {
-        if (nCount <= 0 || pOut == null || pHigh == null || pLow == null) return;
-
-        float[] high = new float[nCount];
-        float[] low = new float[nCount];
-        for (int i = 0; i < nCount; i++)
-        {
-            high[i] = pHigh[i];
-            low[i] = pLow[i];
-        }
-        var request = new BiRequest { NCount = nCount, High = high, Low = low };
-        float[] outArr = SafeCallApi("/api/calculation/bi2", request, ApiJsonContext.Default.BiRequest);
-        CopyToOutput(nCount, pOut, outArr);
+        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/createbi");
     }
 
     //=========================================================================
-    // 输出函数3号：输出段的端点标准画法
+    // 输出函数3号：输出笔中枢高点
     //=========================================================================
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) }, EntryPoint = "Func3")]
-    public static void Func3(int nCount, float* pOut, float* pIn, float* pHigh, float* pLow)
+    public static void Func3(int nCount, float* pOut, float* a, float* b, float* c)
     {
-        if (nCount <= 0 || pOut == null || pIn == null || pHigh == null || pLow == null) return;
-
-        float[] bi = new float[nCount];
-        float[] high = new float[nCount];
-        float[] low = new float[nCount];
-        for (int i = 0; i < nCount; i++)
-        {
-            bi[i] = pIn[i];
-            high[i] = pHigh[i];
-            low[i] = pLow[i];
-        }
-        var request = new DuanRequest { NCount = nCount, Bi = bi, High = high, Low = low };
-        float[] outArr = SafeCallApi("/api/calculation/duan1", request, ApiJsonContext.Default.DuanRequest);
-        CopyToOutput(nCount, pOut, outArr);
+        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/createbizg");
     }
 
     //=========================================================================
     // 输出函数4号：输出段的端点1+1终结画法
     //=========================================================================
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) }, EntryPoint = "Func4")]
-    public static void Func4(int nCount, float* pOut, float* pIn, float* pHigh, float* pLow)
+    public static void Func4(int nCount, float* pOut, float* a, float* b, float* c)
     {
-        if (nCount <= 0 || pOut == null || pIn == null || pHigh == null || pLow == null) return;
-
-        float[] bi = new float[nCount];
-        float[] high = new float[nCount];
-        float[] low = new float[nCount];
-        for (int i = 0; i < nCount; i++)
-        {
-            bi[i] = pIn[i];
-            high[i] = pHigh[i];
-            low[i] = pLow[i];
-        }
-        var request = new DuanRequest { NCount = nCount, Bi = bi, High = high, Low = low };
-        float[] outArr = SafeCallApi("/api/calculation/duan2", request, ApiJsonContext.Default.DuanRequest);
-        CopyToOutput(nCount, pOut, outArr);
+        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/duan2");
     }
 
     //=========================================================================
     // 输出函数5号：中枢高点数据
     //=========================================================================
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) }, EntryPoint = "Func5")]
-    public static void Func5(int nCount, float* pOut, float* pIn, float* pHigh, float* pLow)
+    public static void Func5(int nCount, float* pOut, float* a, float* b, float* c)
     {
-        if (nCount <= 0 || pOut == null || pIn == null || pHigh == null || pLow == null) return;
-
-        float[] bi = new float[nCount];
-        float[] high = new float[nCount];
-        float[] low = new float[nCount];
-        for (int i = 0; i < nCount; i++)
-        {
-            bi[i] = pIn[i];
-            high[i] = pHigh[i];
-            low[i] = pLow[i];
-        }
-        var request = new ZsRequest { NCount = nCount, Bi = bi, High = high, Low = low };
-        float[] outArr = SafeCallApi("/api/calculation/zs/high", request, ApiJsonContext.Default.ZsRequest);
-        CopyToOutput(nCount, pOut, outArr);
+        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/zs/high");
     }
 
     //=========================================================================
     // 输出函数6号：中枢低点数据
     //=========================================================================
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) }, EntryPoint = "Func6")]
-    public static void Func6(int nCount, float* pOut, float* pIn, float* pHigh, float* pLow)
+    public static void Func6(int nCount, float* pOut, float* a, float* b, float* c)
     {
-        if (nCount <= 0 || pOut == null || pIn == null || pHigh == null || pLow == null) return;
-
-        float[] bi = new float[nCount];
-        float[] high = new float[nCount];
-        float[] low = new float[nCount];
-        for (int i = 0; i < nCount; i++)
-        {
-            bi[i] = pIn[i];
-            high[i] = pHigh[i];
-            low[i] = pLow[i];
-        }
-        var request = new ZsRequest { NCount = nCount, Bi = bi, High = high, Low = low };
-        float[] outArr = SafeCallApi("/api/calculation/zs/low", request, ApiJsonContext.Default.ZsRequest);
-        CopyToOutput(nCount, pOut, outArr);
+        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/zs/low");
     }
 
     //=========================================================================
     // 输出函数7号：中枢起点、终点信号
     //=========================================================================
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) }, EntryPoint = "Func7")]
-    public static void Func7(int nCount, float* pOut, float* pIn, float* pHigh, float* pLow)
+    public static void Func7(int nCount, float* pOut, float* a, float* b, float* c)
     {
-        if (nCount <= 0 || pOut == null || pIn == null || pHigh == null || pLow == null) return;
-
-        float[] bi = new float[nCount];
-        float[] high = new float[nCount];
-        float[] low = new float[nCount];
-        for (int i = 0; i < nCount; i++)
-        {
-            bi[i] = pIn[i];
-            high[i] = pHigh[i];
-            low[i] = pLow[i];
-        }
-        var request = new ZsRequest { NCount = nCount, Bi = bi, High = high, Low = low };
-        float[] outArr = SafeCallApi("/api/calculation/zs/signal", request, ApiJsonContext.Default.ZsRequest);
-        CopyToOutput(nCount, pOut, outArr);
+        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/zs/signal");
     }
 
     //=========================================================================
     // 输出函数8号：中枢方向数据
     //=========================================================================
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) }, EntryPoint = "Func8")]
-    public static void Func8(int nCount, float* pOut, float* pIn, float* pHigh, float* pLow)
+    public static void Func8(int nCount, float* pOut, float* a, float* b, float* c)
     {
-        if (nCount <= 0 || pOut == null || pIn == null || pHigh == null || pLow == null) return;
-
-        float[] bi = new float[nCount];
-        float[] high = new float[nCount];
-        float[] low = new float[nCount];
-        for (int i = 0; i < nCount; i++)
-        {
-            bi[i] = pIn[i];
-            high[i] = pHigh[i];
-            low[i] = pLow[i];
-        }
-        var request = new ZsRequest { NCount = nCount, Bi = bi, High = high, Low = low };
-        float[] outArr = SafeCallApi("/api/calculation/zs/direction", request, ApiJsonContext.Default.ZsRequest);
-        CopyToOutput(nCount, pOut, outArr);
+        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/zs/direction");
     }
 
     //=========================================================================
     // 输出函数9号：同方向的第几个中枢
     //=========================================================================
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) }, EntryPoint = "Func9")]
-    public static void Func9(int nCount, float* pOut, float* pIn, float* pHigh, float* pLow)
+    public static void Func9(int nCount, float* pOut, float* a, float* b, float* c)
     {
-        if (nCount <= 0 || pOut == null || pIn == null || pHigh == null || pLow == null) return;
-
-        float[] bi = new float[nCount];
-        float[] high = new float[nCount];
-        float[] low = new float[nCount];
-        for (int i = 0; i < nCount; i++)
-        {
-            bi[i] = pIn[i];
-            high[i] = pHigh[i];
-            low[i] = pLow[i];
-        }
-        var request = new ZsRequest { NCount = nCount, Bi = bi, High = high, Low = low };
-        float[] outArr = SafeCallApi("/api/calculation/zs/index", request, ApiJsonContext.Default.ZsRequest);
-        CopyToOutput(nCount, pOut, outArr);
+        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/zs/index");
+    }
+    
+    //=========================================================================
+    // 输出函数10号：获取每个k 线所在的index
+    //=========================================================================
+    [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) }, EntryPoint = "Func10")]
+    public static void Func10(int nCount, float* pOut, float* a, float* b, float* c)
+    {
+        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/stockindex");
     }
 
     // 静态函数信息表
@@ -253,6 +166,7 @@ public static unsafe partial class NativeExports
             new() { NFuncMark = 7, PCallFunc = (nint)(delegate* unmanaged[Cdecl]<int, float*, float*, float*, float*, void>)&Func7 },
             new() { NFuncMark = 8, PCallFunc = (nint)(delegate* unmanaged[Cdecl]<int, float*, float*, float*, float*, void>)&Func8 },
             new() { NFuncMark = 9, PCallFunc = (nint)(delegate* unmanaged[Cdecl]<int, float*, float*, float*, float*, void>)&Func9 },
+            new() { NFuncMark = 10, PCallFunc = (nint)(delegate* unmanaged[Cdecl]<int, float*, float*, float*, float*, void>)&Func10 },
             new() { NFuncMark = 0, PCallFunc = 0 }
         };
         _infoHandle = GCHandle.Alloc(Info, GCHandleType.Pinned);

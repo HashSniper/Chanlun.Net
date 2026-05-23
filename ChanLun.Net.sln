@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NativeAdapter", "NativeAdap
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Chanlun.API", "Chanlun.API\Chanlun.API.csproj", "{1513F415-9DD0-4E98-BA5A-3D7A062A2CFE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Chanlun.Lib", "Chanlun.Lib\Chanlun.Lib.csproj", "{CC3E3C72-A7EA-427B-B908-8FD239C395AB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +33,14 @@ Global
 		{1513F415-9DD0-4E98-BA5A-3D7A062A2CFE}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1513F415-9DD0-4E98-BA5A-3D7A062A2CFE}.Release|x64.ActiveCfg = Release|x64
 		{1513F415-9DD0-4E98-BA5A-3D7A062A2CFE}.Release|x64.Build.0 = Release|x64
+		{CC3E3C72-A7EA-427B-B908-8FD239C395AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CC3E3C72-A7EA-427B-B908-8FD239C395AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CC3E3C72-A7EA-427B-B908-8FD239C395AB}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{CC3E3C72-A7EA-427B-B908-8FD239C395AB}.Debug|x64.Build.0 = Debug|Any CPU
+		{CC3E3C72-A7EA-427B-B908-8FD239C395AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CC3E3C72-A7EA-427B-B908-8FD239C395AB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CC3E3C72-A7EA-427B-B908-8FD239C395AB}.Release|x64.ActiveCfg = Release|Any CPU
+		{CC3E3C72-A7EA-427B-B908-8FD239C395AB}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
