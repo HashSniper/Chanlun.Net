@@ -12,7 +12,7 @@ internal static class ApiClient
     private static readonly HttpClient _httpClient = new()
     {
         BaseAddress = new Uri("http://localhost:5000"),
-        Timeout = TimeSpan.FromSeconds(30)
+        Timeout = TimeSpan.FromSeconds(20)
     };
 
     public static float[] CallApi<TRequest>(string endpoint, TRequest request, JsonTypeInfo<TRequest> requestTypeInfo)
@@ -28,27 +28,12 @@ internal static class ApiClient
     }
 }
 
-public class BiRequest
+public class CalcRequest
 {
     public int NCount { get; set; }
-    public float[] High { get; set; } = [];
-    public float[] Low { get; set; } = [];
-}
-
-public class DuanRequest
-{
-    public int NCount { get; set; }
-    public float[] Bi { get; set; } = [];
-    public float[] High { get; set; } = [];
-    public float[] Low { get; set; } = [];
-}
-
-public class ZsRequest
-{
-    public int NCount { get; set; }
-    public float[] Bi { get; set; } = [];
-    public float[] High { get; set; } = [];
-    public float[] Low { get; set; } = [];
+    public float[] A { get; set; } = [];
+    public float[] B { get; set; } = [];
+    public float[] C { get; set; } = [];
 }
 
 public class CalcResponse
@@ -57,8 +42,6 @@ public class CalcResponse
     public float[] Result { get; set; } = [];
 }
 
-[JsonSerializable(typeof(BiRequest))]
-[JsonSerializable(typeof(DuanRequest))]
-[JsonSerializable(typeof(ZsRequest))]
+[JsonSerializable(typeof(CalcRequest))]
 [JsonSerializable(typeof(CalcResponse))]
 internal partial class ApiJsonContext : JsonSerializerContext { }
