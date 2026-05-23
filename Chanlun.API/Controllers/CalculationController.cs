@@ -1,6 +1,5 @@
-﻿
-using ChanAdapter;
-using ChanAdapter.Memory;
+﻿using Chanlun.Lib.Bi;
+using Chanlun.Lib.Memory;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Chanlun.API.Controllers;
@@ -9,11 +8,6 @@ namespace Chanlun.API.Controllers;
 [Route("api/[controller]")]
 public class CalculationController : ControllerBase
 {
-    /// <summary>
-    /// 1. 生成key 已经记录所有的k 线时间
-    /// </summary>
-    /// <param name="request"></param>
-    /// <returns></returns>
     [HttpPost("setstocktime")]
     public IActionResult SetStockTime([FromBody] CalcRequest request)
     {
@@ -22,115 +16,26 @@ public class CalculationController : ControllerBase
         return Ok(new CalcResponse { Result = result });
     }
 
-    /// <summary>
-    /// 2. 将缠论所有的信息都处理
-    /// </summary>
-    /// <param name="request"></param>
-    /// <returns></returns>
-    [HttpPost("createchan")]
-    public IActionResult CreateChan([FromBody] CalcRequest request)
-    {
-        ChanLunCalculator.Calculate(request.NCount, request.A, request.B, request.C);
-        var result = BiAdapter.GetBi(request.NCount, request.A, request.B, request.C);
-        return Ok(new CalcResponse { Result = [] });
-    }
-    
-    /// <summary>
-    /// 3. 获取笔相关
-    /// </summary>
-    /// <param name="request"></param>
-    /// <returns></returns>
-    [HttpPost("bilist")]
+    [HttpPost("createbi")]
     public IActionResult CreateBi([FromBody] CalcRequest request)
     {
-        var result = BiAdapter.GetBi(request.NCount, request.A, request.B, request.C);
+        var result = BiCalculator.Bi(request.NCount, request.A, request.B, request.C);
         return Ok(new CalcResponse { Result = result });
     }
     
-    /// <summary>
-    /// 4. 获取线段
-    /// </summary>
-    /// <param name="request"></param>
-    /// <returns></returns>
-    [HttpPost("seglist")]
-    public IActionResult SegList([FromBody] CalcRequest request)
+    [HttpPost("createbizg")]
+    public IActionResult CreateBiZG([FromBody] CalcRequest request)
     {
-        var result = SegAdapter.GetSeg(request.NCount, request.A, request.B, request.C);
+        var result = BiCalculator.GetKLineCombineIndex(request.NCount, request.A, request.B, request.C);
         return Ok(new CalcResponse { Result = result });
     } 
     
-    /// <summary>
-    /// 5. 获取笔中枢高点
-    /// </summary>
-    /// <param name="request"></param>
-    /// <returns></returns>
-    [HttpPost("bizszg")]
-    public IActionResult BiZSZG([FromBody] CalcRequest request)
+    [HttpPost("stockindex")]
+    public IActionResult StockIndex([FromBody] CalcRequest request)
     {
-        var result = BiZsAdapter.GetBiZSZG(request.NCount, request.A, request.B, request.C);
+        var result = BiCalculator.GetKLineCombineIndex(request.NCount, request.A, request.B, request.C);
         return Ok(new CalcResponse { Result = result });
     } 
-    
-    /// <summary>
-    /// 6. 获取笔中枢低点
-    /// </summary>
-    /// <param name="request"></param>
-    /// <returns></returns>
-    [HttpPost("bizszd")]
-    public IActionResult BiZSZD([FromBody] CalcRequest request)
-    {
-        var result = BiZsAdapter.GetBiZSZD(request.NCount, request.A, request.B, request.C);
-        return Ok(new CalcResponse { Result = result });
-    } 
-    
-    /// <summary>
-    /// 7. 获取笔中枢起始点
-    /// </summary>
-    /// <param name="request"></param>
-    /// <returns></returns>
-    [HttpPost("bizsrange")]
-    public IActionResult BiZSRange([FromBody] CalcRequest request)
-    {
-        var result = BiZsAdapter.GetBiZSRange(request.NCount, request.A, request.B, request.C);
-        return Ok(new CalcResponse { Result = result });
-    } 
-    
-    /// <summary>
-    /// 8. 合并后的k线的高点
-    /// </summary>
-    /// <param name="request"></param>
-    /// <returns></returns>
-    [HttpPost("klineg")]
-    public IActionResult KLineG([FromBody] CalcRequest request)
-    {
-        var result = KLineAdapter.GetKLineG(request.NCount, request.A, request.B, request.C);
-        return Ok(new CalcResponse { Result = result });
-    } 
-    
-    /// <summary>
-    /// 9. 合并后的k线的低点
-    /// </summary>
-    /// <param name="request"></param>
-    /// <returns></returns>
-    [HttpPost("klined")]
-    public IActionResult KLineD([FromBody] CalcRequest request)
-    {
-        var result = KLineAdapter.GetKLineD(request.NCount, request.A, request.B, request.C);
-        return Ok(new CalcResponse { Result = result });
-    } 
-    
-    /// <summary>
-    /// 10. 合并后的k线的起始点
-    /// </summary>
-    /// <param name="request"></param>
-    /// <returns></returns>
-    [HttpPost("klinerange")]
-    public IActionResult KLineRange([FromBody] CalcRequest request)
-    {
-        var result = KLineAdapter.GetKLineRange(request.NCount, request.A, request.B, request.C);
-        return Ok(new CalcResponse { Result = result });
-    } 
-
 
     [HttpPost("duan1")]
     public IActionResult Duan1([FromBody] CalcRequest request)

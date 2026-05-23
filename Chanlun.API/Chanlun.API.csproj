@@ -12,7 +12,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\ChanAdapter\ChanAdapter.csproj" />
+      <ProjectReference Include="..\Chanlun.Lib\Chanlun.Lib.csproj" />
     </ItemGroup>
 
 </Project>

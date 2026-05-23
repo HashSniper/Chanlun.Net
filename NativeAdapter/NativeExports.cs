@@ -1,4 +1,4 @@
-﻿﻿using NativeAdapter;
+﻿using NativeAdapter;
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -69,30 +69,30 @@ public static unsafe partial class NativeExports
     }
 
     //=========================================================================
-    // 输出函数2号：计算所有信息
+    // 输出函数2号：输出标准笔顶底端点
     //=========================================================================
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) }, EntryPoint = "Func2")]
     public static void Func2(int nCount, float* pOut, float* a, float* b, float* c)
     {
-        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/createchan");
+        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/createbi");
     }
 
     //=========================================================================
-    // 输出函数3号：输出笔
+    // 输出函数3号：输出笔中枢高点
     //=========================================================================
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) }, EntryPoint = "Func3")]
     public static void Func3(int nCount, float* pOut, float* a, float* b, float* c)
     {
-        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/bilist");
+        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/createbizg");
     }
 
     //=========================================================================
-    // 输出函数4号：输出线段
+    // 输出函数4号：输出段的端点1+1终结画法
     //=========================================================================
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) }, EntryPoint = "Func4")]
     public static void Func4(int nCount, float* pOut, float* a, float* b, float* c)
     {
-        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/seglist");
+        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/duan2");
     }
 
     //=========================================================================
@@ -101,7 +101,7 @@ public static unsafe partial class NativeExports
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) }, EntryPoint = "Func5")]
     public static void Func5(int nCount, float* pOut, float* a, float* b, float* c)
     {
-        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/bizszg");
+        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/zs/high");
     }
 
     //=========================================================================
@@ -110,7 +110,7 @@ public static unsafe partial class NativeExports
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) }, EntryPoint = "Func6")]
     public static void Func6(int nCount, float* pOut, float* a, float* b, float* c)
     {
-        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/bizszd");
+        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/zs/low");
     }
 
     //=========================================================================
@@ -119,34 +119,34 @@ public static unsafe partial class NativeExports
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) }, EntryPoint = "Func7")]
     public static void Func7(int nCount, float* pOut, float* a, float* b, float* c)
     {
-        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/bizsrange");
+        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/zs/signal");
     }
 
     //=========================================================================
-    // 输出函数8号：合并后的k线的高点
+    // 输出函数8号：中枢方向数据
     //=========================================================================
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) }, EntryPoint = "Func8")]
     public static void Func8(int nCount, float* pOut, float* a, float* b, float* c)
     {
-        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/klineg");
+        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/zs/direction");
     }
 
     //=========================================================================
-    // 输出函数9号：合并后的k线的低点
+    // 输出函数9号：同方向的第几个中枢
     //=========================================================================
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) }, EntryPoint = "Func9")]
     public static void Func9(int nCount, float* pOut, float* a, float* b, float* c)
     {
-        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/klined");
+        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/zs/index");
     }
     
     //=========================================================================
-    // 输出函数10号：合并后的k线的起始点
+    // 输出函数10号：获取每个k 线所在的index
     //=========================================================================
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) }, EntryPoint = "Func10")]
     public static void Func10(int nCount, float* pOut, float* a, float* b, float* c)
     {
-        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/klinerange");
+        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/stockindex");
     }
 
     // 静态函数信息表
