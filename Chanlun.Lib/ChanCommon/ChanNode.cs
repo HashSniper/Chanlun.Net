@@ -6,8 +6,8 @@
 
         public T? Next { get; set; }
 
-        public float High { get; set; }
+        public virtual float High { get; set; }
         
-        public float Low { get; set; }
+        public virtual float Low { get; set; }
     }
 }

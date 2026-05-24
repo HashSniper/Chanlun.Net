@@ -2,29 +2,10 @@
 
 namespace Chanlun.Lib.SEG;
 
-/// <summary>
-/// 特征值线段组成的分型
-/// </summary>
-public class EigenFx
+public class EigenFx(ChanDir dir)
 {
-    public EigenFx(ChanDir dir)
-    {
-        Dir = dir;
-        Eigens = new Eigen[3];
-        BiList = [];
-    }
-    
-    public Eigen?[]  Eigens { get; private set; }
-
-    public ChanDir Dir { get; }
-
-    public HashSet<Bi.Bi> BiList { get; }
-
-    public Bi.Bi LastEvidenceBi { get; set; }
-
-    public void Clear()
-    {
-        Eigens = new Eigen[3];
-        BiList.Clear();
-    }
+    public Eigen Eigen1 { get; set; } = new();
+    public Eigen Eigen2 { get; set; } = new();
+    public Eigen Eigen3 { get; set; } = new();
+    public ChanDir DIR { get;  } = dir;
 }

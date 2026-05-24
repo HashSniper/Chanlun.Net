@@ -14,8 +14,8 @@ public static class ChanMemory
 
     public static void Add(float baseKey, string suffix, object value)
     {
-        //缓存中最多保存100 条图形窗口详情
-        if (Basekeys.Add(baseKey) && (Basekeys.Count > 100 || Dict.Count > 1000))
+        //缓存中最多保存 50 条图形窗口详情
+        if (Basekeys.Add(baseKey) && (Basekeys.Count > 50))
         {
             var first = Basekeys.First();
             Basekeys.Remove(first);
@@ -24,11 +24,11 @@ public static class ChanMemory
         Dict.AddOrUpdate(BuildCacheKey(baseKey, suffix), value, (k, v) => value);
     }
 
-    public static object Get(float baseKey, string suffix)
+    public static T? Get<T>(float baseKey, string suffix) where T:class
     {
         return Dict.TryGetValue(BuildCacheKey(baseKey, suffix), out var value)
-            ? value
-            : throw new KeyNotFoundException();
+            ? value as T
+            : null;
     }
 
 
