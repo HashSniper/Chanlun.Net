@@ -24,11 +24,11 @@ public static class ChanMemory
         Dict.AddOrUpdate(BuildCacheKey(baseKey, suffix), value, (k, v) => value);
     }
 
-    public static object Get(float baseKey, string suffix)
+    public static T? Get<T>(float baseKey, string suffix) where T:class
     {
         return Dict.TryGetValue(BuildCacheKey(baseKey, suffix), out var value)
-            ? value
-            : throw new KeyNotFoundException();
+            ? value as T
+            : null;
     }
 
 

@@ -9,13 +9,13 @@ public class ChanSegmentList : SegmentListBase
     {
     }
 
-    public override void Update(IReadOnlyList<IBiLine> biLst)
+    public override void Update(IReadOnlyList<IChanLine> biLst)
     {
         DoInit();
         if (Count == 0)
             CalSegSure(biLst, beginIdx: 0);
         else
-            CalSegSure(biLst, beginIdx: this[^1].EndBi.Idx + 1);
+            CalSegSure(biLst, beginIdx: this[^1].EndChan.Idx + 1);
         CollectLeftSeg(biLst);
     }
 
@@ -39,21 +39,21 @@ public class ChanSegmentList : SegmentListBase
         }
     }
 
-    private void CalSegSure(IReadOnlyList<IBiLine> biLst, int beginIdx)
+    private void CalSegSure(IReadOnlyList<IChanLine> biLst, int beginIdx)
     {
-        var upEigen = new EigenFeature(BI_DIR.UP, lv: Lv);
-        var downEigen = new EigenFeature(BI_DIR.DOWN, lv: Lv);
-        BI_DIR? lastSegDir = Count == 0 ? null : this[^1].Dir;
+        var upEigen = new EigenFeature(CHAN_DIR.UP, lv: Lv);
+        var downEigen = new EigenFeature(CHAN_DIR.DOWN, lv: Lv);
+        CHAN_DIR? lastSegDir = Count == 0 ? null : this[^1].Dir;
         for (int i = beginIdx; i < biLst.Count; i++)
         {
             var bi = biLst[i];
             EigenFeature? fxEigen = null;
-            if (bi.IsDown() && lastSegDir != BI_DIR.UP)
+            if (bi.IsDown() && lastSegDir != CHAN_DIR.UP)
             {
                 if (upEigen.Add(bi))
                     fxEigen = upEigen;
             }
-            else if (bi.IsUp() && lastSegDir != BI_DIR.DOWN)
+            else if (bi.IsUp() && lastSegDir != CHAN_DIR.DOWN)
             {
                 if (downEigen.Add(bi))
                     fxEigen = downEigen;
@@ -63,17 +63,17 @@ public class ChanSegmentList : SegmentListBase
             {
                 if (upEigen.Ele[1] != null && bi.IsDown())
                 {
-                    lastSegDir = BI_DIR.DOWN;
+                    lastSegDir = CHAN_DIR.DOWN;
                     downEigen.Clear();
                 }
                 else if (downEigen.Ele[1] != null && bi.IsUp())
                 {
                     upEigen.Clear();
-                    lastSegDir = BI_DIR.UP;
+                    lastSegDir = CHAN_DIR.UP;
                 }
-                if (upEigen.Ele[1] == null && lastSegDir == BI_DIR.DOWN && bi.Dir == BI_DIR.DOWN)
+                if (upEigen.Ele[1] == null && lastSegDir == CHAN_DIR.DOWN && bi.Dir == CHAN_DIR.DOWN)
                     lastSegDir = null;
-                else if (downEigen.Ele[1] == null && lastSegDir == BI_DIR.UP && bi.Dir == BI_DIR.UP)
+                else if (downEigen.Ele[1] == null && lastSegDir == CHAN_DIR.UP && bi.Dir == CHAN_DIR.UP)
                     lastSegDir = null;
             }
 
@@ -85,7 +85,7 @@ public class ChanSegmentList : SegmentListBase
         }
     }
 
-    private void TreatFxEigen(EigenFeature fxEigen, IReadOnlyList<IBiLine> biLst)
+    private void TreatFxEigen(EigenFeature fxEigen, IReadOnlyList<IChanLine> biLst)
     {
         var test = fxEigen.CanBeEnd(biLst);
         int endBiIdx = fxEigen.GetPeakBiIdx();

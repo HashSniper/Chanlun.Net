@@ -75,6 +75,6 @@ public static class StockTimeCache
 
     public static List<DateTime>? Get(float key)
     {
-        return ChanMemory.Get(key,nameof(StockTimeCache)) as List<DateTime>;
+        return ChanMemory.Get<List<DateTime>>(key,nameof(StockTimeCache));
     }
 }

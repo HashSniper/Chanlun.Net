@@ -7,11 +7,11 @@ using Chan.Lib.BuySellPoints;
 
 namespace Chan.Lib.Bis;
 
-public class Bi : IBiLine
+public class Bi : IChanLine
 {
     private KLine _beginKlc;
     private KLine _endKlc;
-    private BI_DIR _dir;
+    private CHAN_DIR _dir;
     private int _idx;
     private BI_TYPE _type = BI_TYPE.STRICT;
     private bool _isSure;
@@ -19,15 +19,12 @@ public class Bi : IBiLine
     private int? _segIdx;
     public Segment? ParentSeg { get; set; }
     public BuySellPoint? Bsp { get; set; }
-    public Bi? Next { get; set; }
-    public Bi? Pre { get; set; }
-    IBiLine? IBiLine.Pre => Pre;
-    IBiLine? IBiLine.Next => Next;
-    private readonly Dictionary<string, object> _memoizeCache = new();
-
+    public IChanLine? Next { get; set; }
+    public IChanLine? Pre { get; set; }
+    
     public KLine BeginKlc => _beginKlc;
     public KLine EndKlc => _endKlc;
-    public BI_DIR Dir => _dir;
+    public CHAN_DIR Dir => _dir;
     public int Idx => _idx;
     public BI_TYPE Type => _type;
     public bool IsSure => _isSure;
@@ -40,8 +37,6 @@ public class Bi : IBiLine
         _isSure = isSure;
         Set(beginKlc, endKlc);
     }
-
-    public void CleanCache() => _memoizeCache.Clear();
 
     public void SetSegIdx(int idx) => _segIdx = idx;
 
@@ -74,12 +69,11 @@ public class Bi : IBiLine
         _endKlc = endKlc;
         _dir = beginKlc.Fx switch
         {
-            FX_TYPE.BOTTOM => BI_DIR.UP,
-            FX_TYPE.TOP => BI_DIR.DOWN,
+            FX_TYPE.BOTTOM => CHAN_DIR.UP,
+            FX_TYPE.TOP => CHAN_DIR.DOWN,
             _ => throw new ChanException("ERROR DIRECTION when creating bi", ErrCode.BI_ERR)
         };
         Check();
-        CleanCache();
     }
 
     public float GetBeginVal()
@@ -112,20 +106,7 @@ public class Bi : IBiLine
         return res;
     }
 
-    public int GetKluCnt()
-    {
-        var res = GetEndKlu().Idx - GetBeginKlu().Idx + 1;
-        return res;
-    }
-
-    public int GetKlcCnt()
-    {
-        if (EndKlc.Idx != GetEndKlu().Klc.Idx || BeginKlc.Idx != GetBeginKlu().Klc.Idx)
-            throw new InvalidOperationException();
-        var res = EndKlc.Idx - BeginKlc.Idx + 1;
-        return res;
-    }
-
+    
     public float High()
     {
         var res = IsUp() ? EndKlc.High : BeginKlc.High;
@@ -146,13 +127,13 @@ public class Bi : IBiLine
 
     public bool IsDown()
     {
-        var res = Dir == BI_DIR.DOWN;
+        var res = Dir == CHAN_DIR.DOWN;
         return res;
     }
 
     public bool IsUp()
     {
-        var res = Dir == BI_DIR.UP;
+        var res = Dir == CHAN_DIR.UP;
         return res;
     }
 
@@ -176,7 +157,6 @@ public class Bi : IBiLine
     {
         _endKlc = newKlc;
         Check();
-        CleanCache();
     }
 
     public double CalMacdMetric(MACD_ALGO macdAlgo, bool isReverse)
@@ -296,7 +276,7 @@ public class Bi : IBiLine
                     goto end;
             }
         }
-    end:
+        end:
         return s;
     }
 
@@ -380,8 +360,8 @@ public class Bi : IBiLine
         }
     }
 
-    object ICombineSource.TimeBegin => BeginKlc.Idx;
-    object ICombineSource.TimeEnd => EndKlc.Idx;
+    DateTime ICombineSource.TimeBegin => BeginKlc.TimeBegin;
+    DateTime ICombineSource.TimeEnd => EndKlc.TimeEnd;
     float ICombineSource.CombineHigh => High();
     float ICombineSource.CombineLow => Low();
 }

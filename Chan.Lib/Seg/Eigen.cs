@@ -4,11 +4,11 @@ using Chan.Lib.Bis;
 
 namespace Chan.Lib.Seg;
 
-public class Eigen : KLineCombiner<IBiLine>
+public class Eigen : Combiner<IChanLine>
 {
     public bool Gap { get; set; } = false;
 
-    public Eigen(IBiLine bi, KLINE_DIR dir) : base(bi, dir)
+    public Eigen(IChanLine chan, Combiner_DIR dir) : base(chan, dir)
     {
     }
 
@@ -25,7 +25,7 @@ public class Eigen : KLineCombiner<IBiLine>
     {
         if (Fx == FX_TYPE.UNKNOWN) throw new InvalidOperationException();
         var biDir = this[0].Dir;
-        if (biDir == BI_DIR.UP)
+        if (biDir == CHAN_DIR.UP)
             return GetLowPeakKlu().Idx - 1;
         else
             return GetHighPeakKlu().Idx - 1;

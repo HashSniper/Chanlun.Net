@@ -25,18 +25,18 @@ public class BuySellPointList
         if (!BspStoreDict.ContainsKey(bspType))
             BspStoreDict[bspType] = (new List<BuySellPoint>(), new List<BuySellPoint>());
         var list = bsp.IsBuy ? BspStoreDict[bspType].buy : BspStoreDict[bspType].sell;
-        if (list.Count > 0 && list[^1].Bi.Idx >= bsp.Bi.Idx)
-            throw new InvalidOperationException($"{bspType}, {bsp.IsBuy} {list[^1].Bi.Idx} {bsp.Bi.Idx}");
+        if (list.Count > 0 && list[^1].Chan.Idx >= bsp.Chan.Idx)
+            throw new InvalidOperationException($"{bspType}, {bsp.IsBuy} {list[^1].Chan.Idx} {bsp.Chan.Idx}");
         list.Add(bsp);
-        BspStoreFlatDict[bsp.Bi.Idx] = bsp;
+        BspStoreFlatDict[bsp.Chan.Idx] = bsp;
     }
 
     public void AddBsp1(BuySellPoint bsp)
     {
-        if (Bsp1List.Count > 0 && Bsp1List[^1].Bi.Idx >= bsp.Bi.Idx)
+        if (Bsp1List.Count > 0 && Bsp1List[^1].Chan.Idx >= bsp.Chan.Idx)
             throw new InvalidOperationException();
         Bsp1List.Add(bsp);
-        Bsp1Dict[bsp.Bi.Idx] = bsp;
+        Bsp1Dict[bsp.Chan.Idx] = bsp;
     }
 
     public void ClearStoreEnd()
@@ -47,10 +47,10 @@ public class BuySellPointList
             {
                 while (list.Count > 0)
                 {
-                    if (list[^1].Bi.GetEndKlu().Idx <= LastSurePos)
+                    if (list[^1].Chan.GetEndKlu().Idx <= LastSurePos)
                         break;
-                    BspStoreFlatDict.Remove(list[^1].Bi.Idx);
-                    list[^1].Bi.Bsp = null;
+                    BspStoreFlatDict.Remove(list[^1].Chan.Idx);
+                    list[^1].Chan.Bsp = null;
                     list.RemoveAt(list.Count - 1);
                 }
             }
@@ -61,9 +61,9 @@ public class BuySellPointList
     {
         while (Bsp1List.Count > 0)
         {
-            if (Bsp1List[^1].Bi.GetEndKlu().Idx <= LastSurePos)
+            if (Bsp1List[^1].Chan.GetEndKlu().Idx <= LastSurePos)
                 break;
-            Bsp1Dict.Remove(Bsp1List[^1].Bi.Idx);
+            Bsp1Dict.Remove(Bsp1List[^1].Chan.Idx);
             Bsp1List.RemoveAt(Bsp1List.Count - 1);
         }
     }
@@ -100,9 +100,9 @@ public class BuySellPointList
                 if (idx >= 0)
                 {
                     var bsp = (isBuy ? BspStoreDict[bspType].buy : BspStoreDict[bspType].sell)[idx];
-                    if (bsp.Bi.Idx > maxBiIdx)
+                    if (bsp.Chan.Idx > maxBiIdx)
                     {
-                        maxBiIdx = bsp.Bi.Idx;
+                        maxBiIdx = bsp.Chan.Idx;
                         maxIdx = i;
                         maxBsp = bsp;
                     }
@@ -120,7 +120,7 @@ public class BuySellPointList
 
     public int Count => BspStoreFlatDict.Count;
 
-    public void Cal(IReadOnlyList<IBiLine> biList, SegmentListBase segList)
+    public void Cal(IReadOnlyList<IChanLine> biList, SegmentListBase segList)
     {
         ClearStoreEnd();
         ClearBsp1End();
@@ -139,19 +139,19 @@ public class BuySellPointList
             var seg = segList[i];
             if (seg.IsSure)
             {
-                LastSurePos = seg.EndBi.GetBeginKlu().Idx;
+                LastSurePos = seg.EndChan.GetBeginKlu().Idx;
                 LastSureSegIdx = seg.Idx;
                 return;
             }
         }
     }
 
-    public bool SegNeedCal(Segment seg) => seg.EndBi.GetEndKlu().Idx > LastSurePos;
+    public bool SegNeedCal(Segment seg) => seg.EndChan.GetEndKlu().Idx > LastSurePos;
 
-    public void AddBs(BSP_TYPE bsType, IBiLine bi, BuySellPoint? relateBsp1 = null, bool isTargetBsp = true, Dictionary<string, double>? featureDict = null)
+    public void AddBs(BSP_TYPE bsType, IChanLine chan, BuySellPoint? relateBsp1 = null, bool isTargetBsp = true, Dictionary<string, double>? featureDict = null)
     {
-        bool isBuy = bi.IsDown();
-        if (BspStoreFlatDict.TryGetValue(bi.Idx, out var existBsp))
+        bool isBuy = chan.IsDown();
+        if (BspStoreFlatDict.TryGetValue(chan.Idx, out var existBsp))
         {
             if (existBsp.IsBuy != isBuy) throw new InvalidOperationException();
             existBsp.AddAnotherBspProp(bsType, relateBsp1);
@@ -164,16 +164,16 @@ public class BuySellPointList
         if (!isTargetBsp && bsType != BSP_TYPE.T1 && bsType != BSP_TYPE.T1P)
             return;
 
-        var bsp = new BuySellPoint(bi, isBuy, bsType, relateBsp1, featureDict);
+        var bsp = new BuySellPoint(chan, isBuy, bsType, relateBsp1, featureDict);
         if (isTargetBsp)
             StoreAddBsp(bsType, bsp);
         else
-            bsp.Bi.Bsp = null;
+            bsp.Chan.Bsp = null;
         if (bsType == BSP_TYPE.T1 || bsType == BSP_TYPE.T1P)
             AddBsp1(bsp);
     }
 
-    private void CalSegBs1point(SegmentListBase segList, IReadOnlyList<IBiLine> biList)
+    private void CalSegBs1point(SegmentListBase segList, IReadOnlyList<IChanLine> biList)
     {
         for (int i = LastSureSegIdx; i < segList.Count; i++)
         {
@@ -183,7 +183,7 @@ public class BuySellPointList
         }
     }
 
-    private void CalSingleBs1point(Segment seg, IReadOnlyList<IBiLine> biList)
+    private void CalSingleBs1point(Segment seg, IReadOnlyList<IChanLine> biList)
     {
         var bspConf = Config.GetBSConfig(seg.IsDown());
         int zsCnt = bspConf.Bsp1OnlyMultibiZs ? seg.GetMultiBiZsCnt() : seg.ZsLst.Count;
@@ -191,8 +191,8 @@ public class BuySellPointList
 
         if (seg.ZsLst.Count > 0 &&
             !seg.ZsLst[^1].IsOneBiZs() &&
-            ((seg.ZsLst[^1].BiOut != null && seg.ZsLst[^1].BiOut.Idx >= seg.EndBi.Idx) || seg.ZsLst[^1].BiLst[^1].Idx >= seg.EndBi.Idx) &&
-            seg.EndBi.Idx - seg.ZsLst[^1].GetBiIn().Idx > 2)
+            ((seg.ZsLst[^1].LineOut != null && seg.ZsLst[^1].LineOut.Idx >= seg.EndChan.Idx) || seg.ZsLst[^1].LineLst[^1].Idx >= seg.EndChan.Idx) &&
+            seg.EndChan.Idx - seg.ZsLst[^1].GetBiIn().Idx > 2)
         {
             TreatBsp1(seg, bspConf, isTargetBsp);
         }
@@ -205,19 +205,19 @@ public class BuySellPointList
     private void TreatBsp1(Segment seg, PointConfig bspConf, bool isTargetBsp)
     {
         var lastZs = seg.ZsLst[^1];
-        var (breakPeak, _) = lastZs.OutBiIsPeak(seg.EndBi.Idx);
+        var (breakPeak, _) = lastZs.OutBiIsPeak(seg.EndChan.Idx);
         if (bspConf.Bs1Peak && !breakPeak)
             isTargetBsp = false;
-        var (isDiver, divergenceRate) = lastZs.IsDivergence(bspConf, seg.EndBi);
+        var (isDiver, divergenceRate) = lastZs.IsDivergence(bspConf, seg.EndChan);
         if (!isDiver)
             isTargetBsp = false;
         var featureDict = new Dictionary<string, double> { { "divergence_rate", divergenceRate ?? 0 } };
-        AddBs(BSP_TYPE.T1, seg.EndBi, isTargetBsp: isTargetBsp, featureDict: featureDict);
+        AddBs(BSP_TYPE.T1, seg.EndChan, isTargetBsp: isTargetBsp, featureDict: featureDict);
     }
 
-    private void TreatPzBsp1(Segment seg, PointConfig bspConf, IReadOnlyList<IBiLine> biList, bool isTargetBsp)
+    private void TreatPzBsp1(Segment seg, PointConfig bspConf, IReadOnlyList<IChanLine> biList, bool isTargetBsp)
     {
-        var lastBi = seg.EndBi;
+        var lastBi = seg.EndChan;
         if (lastBi.Idx < 2) return;
         var preBi = biList[lastBi.Idx - 2];
         if (lastBi.SegIdx != preBi.SegIdx) return;
@@ -234,7 +234,7 @@ public class BuySellPointList
         AddBs(BSP_TYPE.T1P, lastBi, isTargetBsp: isTargetBsp, featureDict: featureDict);
     }
 
-    private void CalSegBs2point(SegmentListBase segList, IReadOnlyList<IBiLine> biList)
+    private void CalSegBs2point(SegmentListBase segList, IReadOnlyList<IChanLine> biList)
     {
         for (int i = LastSureSegIdx; i < segList.Count; i++)
         {
@@ -247,72 +247,72 @@ public class BuySellPointList
         }
     }
 
-    private void TreatBsp2(Segment seg, SegmentListBase segList, IReadOnlyList<IBiLine> biList)
+    private void TreatBsp2(Segment seg, SegmentListBase segList, IReadOnlyList<IChanLine> biList)
     {
-        IBiLine bsp1Bi;
+        IChanLine bsp1Chan;
         BuySellPoint? realBsp1;
-        IBiLine breakBi, bsp2Bi;
+        IChanLine breakChan, bsp2Chan;
         PointConfig bspConf;
 
         if (segList.Count > 1)
         {
             bspConf = Config.GetBSConfig(seg.IsDown());
-            bsp1Bi = seg.EndBi;
-            realBsp1 = Bsp1Dict.GetValueOrDefault(bsp1Bi.Idx);
-            if (bsp1Bi.Idx + 2 >= biList.Count) return;
-            breakBi = biList[bsp1Bi.Idx + 1];
-            bsp2Bi = biList[bsp1Bi.Idx + 2];
+            bsp1Chan = seg.EndChan;
+            realBsp1 = Bsp1Dict.GetValueOrDefault(bsp1Chan.Idx);
+            if (bsp1Chan.Idx + 2 >= biList.Count) return;
+            breakChan = biList[bsp1Chan.Idx + 1];
+            bsp2Chan = biList[bsp1Chan.Idx + 2];
         }
         else
         {
             bspConf = Config.GetBSConfig(seg.IsUp());
-            bsp1Bi = null!;
+            bsp1Chan = null!;
             realBsp1 = null;
             if (biList.Count == 1) return;
-            bsp2Bi = biList[1];
-            breakBi = biList[0];
+            bsp2Chan = biList[1];
+            breakChan = biList[0];
         }
 
-        if (bspConf.Bsp2Follow1 && (bsp1Bi == null || !BspStoreFlatDict.ContainsKey(bsp1Bi.Idx)))
+        if (bspConf.Bsp2Follow1 && (bsp1Chan == null || !BspStoreFlatDict.ContainsKey(bsp1Chan.Idx)))
             return;
 
-        double retraceRate = bsp2Bi.Amp() / breakBi.Amp();
+        double retraceRate = bsp2Chan.Amp() / breakChan.Amp();
         bool bsp2Flag = retraceRate <= bspConf.MaxBs2Rate;
         if (bsp2Flag)
-            AddBs(BSP_TYPE.T2, bsp2Bi, relateBsp1: realBsp1);
+            AddBs(BSP_TYPE.T2, bsp2Chan, relateBsp1: realBsp1);
         else if (bspConf.Bsp2sFollow2)
             return;
 
         if (!Config.GetBSConfig(seg.IsDown()).TargetTypes.Contains(BSP_TYPE.T2S))
             return;
-        TreatBsp2s(segList, biList, bsp2Bi, breakBi, realBsp1, bspConf);
+        TreatBsp2s(segList, biList, bsp2Chan, breakChan, realBsp1, bspConf);
     }
 
-    private void TreatBsp2s(SegmentListBase segList, IReadOnlyList<IBiLine> biList, IBiLine bsp2Bi, IBiLine breakBi, BuySellPoint? realBsp1, PointConfig bspConf)
+    private void TreatBsp2s(SegmentListBase segList, IReadOnlyList<IChanLine> biList, IChanLine bsp2Chan, IChanLine breakChan, BuySellPoint? realBsp1, PointConfig bspConf)
     {
         int bias = 2;
         double? low = null, high = null;
-        while (bsp2Bi.Idx + bias < biList.Count)
+        while (bsp2Chan.Idx + bias < biList.Count)
         {
-            var bsp2sBi = biList[bsp2Bi.Idx + bias];
+            var bsp2sBi = biList[bsp2Chan.Idx + bias];
             if (bspConf.MaxBsp2sLv.HasValue && bias / 2 > bspConf.MaxBsp2sLv.Value)
                 break;
-            if (bsp2sBi.SegIdx != bsp2Bi.SegIdx &&
-                (bsp2sBi.SegIdx < segList.Count - 1 || bsp2sBi.SegIdx - bsp2Bi.SegIdx >= 2 || segList[bsp2Bi.SegIdx!.Value].IsSure))
+            if (bsp2sBi.SegIdx != bsp2Chan.SegIdx &&
+                (bsp2sBi.SegIdx < segList.Count - 1 || bsp2sBi.SegIdx - bsp2Chan.SegIdx >= 2 || segList[bsp2Chan.SegIdx!.Value].IsSure))
                 break;
             if (bias == 2)
             {
-                if (!FuncUtil.HasOverlap(bsp2Bi.Low(), bsp2Bi.High(), bsp2sBi.Low(), bsp2sBi.High()))
+                if (!FuncUtil.HasOverlap(bsp2Chan.Low(), bsp2Chan.High(), bsp2sBi.Low(), bsp2sBi.High()))
                     break;
-                low = Math.Max(bsp2Bi.Low(), bsp2sBi.Low());
-                high = Math.Min(bsp2Bi.High(), bsp2sBi.High());
+                low = Math.Max(bsp2Chan.Low(), bsp2sBi.Low());
+                high = Math.Min(bsp2Chan.High(), bsp2sBi.High());
             }
             else if (!FuncUtil.HasOverlap(low!.Value, high!.Value, bsp2sBi.Low(), bsp2sBi.High()))
                 break;
 
-            if (Bsp2sBreakBsp1(bsp2sBi, breakBi))
+            if (Bsp2sBreakBsp1(bsp2sBi, breakChan))
                 break;
-            double retraceRate = Math.Abs(bsp2sBi.GetEndVal() - breakBi.GetEndVal()) / breakBi.Amp();
+            double retraceRate = Math.Abs(bsp2sBi.GetEndVal() - breakChan.GetEndVal()) / breakChan.Amp();
             if (retraceRate > bspConf.MaxBs2Rate)
                 break;
 
@@ -321,7 +321,7 @@ public class BuySellPointList
         }
     }
 
-    private void CalSegBs3point(SegmentListBase segList, IReadOnlyList<IBiLine> biList)
+    private void CalSegBs3point(SegmentListBase segList, IReadOnlyList<IChanLine> biList)
     {
         for (int i = LastSureSegIdx; i < segList.Count; i++)
         {
@@ -331,7 +331,7 @@ public class BuySellPointList
             if (!config.TargetTypes.Contains(BSP_TYPE.T3A) && !config.TargetTypes.Contains(BSP_TYPE.T3B))
                 continue;
 
-            IBiLine? bsp1Bi;
+            IChanLine? bsp1Bi;
             BuySellPoint? realBsp1;
             int nextSegIdx, bsp1BiIdx;
             Segment? nextSeg;
@@ -339,7 +339,7 @@ public class BuySellPointList
 
             if (segList.Count > 1)
             {
-                bsp1Bi = seg.EndBi;
+                bsp1Bi = seg.EndChan;
                 bsp1BiIdx = bsp1Bi.Idx;
                 bspConf = Config.GetBSConfig(seg.IsDown());
                 realBsp1 = Bsp1Dict.GetValueOrDefault(bsp1Bi.Idx);
@@ -364,7 +364,7 @@ public class BuySellPointList
         }
     }
 
-    private void TreatBsp3After(SegmentListBase segList, Segment nextSeg, PointConfig bspConf, IReadOnlyList<IBiLine> biList, BuySellPoint? realBsp1, int bsp1BiIdx, int nextSegIdx)
+    private void TreatBsp3After(SegmentListBase segList, Segment nextSeg, PointConfig bspConf, IReadOnlyList<IChanLine> biList, BuySellPoint? realBsp1, int bsp1BiIdx, int nextSegIdx)
     {
         var firstZs = nextSeg.GetFirstMultiBiZs();
         if (firstZs == null) return;
@@ -377,9 +377,9 @@ public class BuySellPointList
         for (int zsIdx = 0; zsIdx < multiBiZsLst.Count && zsIdx < bsp3aMaxZsCnt; zsIdx++)
         {
             var zs = multiBiZsLst[zsIdx];
-            if (zs.BiOut == null || zs.BiOut.Idx + 1 >= biList.Count)
+            if (zs.LineOut == null || zs.LineOut.Idx + 1 >= biList.Count)
                 break;
-            var bsp3Bi = biList[zs.BiOut.Idx + 1];
+            var bsp3Bi = biList[zs.LineOut.Idx + 1];
             if (bsp3Bi.ParentSeg == null)
             {
                 if (nextSeg.Idx != segList.Count - 1)
@@ -403,12 +403,12 @@ public class BuySellPointList
         }
     }
 
-    private void TreatBsp3Before(SegmentListBase segList, Segment seg, Segment? nextSeg, IBiLine? bsp1Bi, PointConfig bspConf, IReadOnlyList<IBiLine> biList, BuySellPoint? realBsp1, int nextSegIdx)
+    private void TreatBsp3Before(SegmentListBase segList, Segment seg, Segment? nextSeg, IChanLine? bsp1Bi, PointConfig bspConf, IReadOnlyList<IChanLine> biList, BuySellPoint? realBsp1, int nextSegIdx)
     {
         var cmpZs = seg.GetFinalMultiBiZs();
         if (cmpZs == null) return;
         if (bsp1Bi == null) return;
-        if (bspConf.StrictBsp3 && (cmpZs.BiOut == null || cmpZs.BiOut.Idx != bsp1Bi.Idx))
+        if (bspConf.StrictBsp3 && (cmpZs.LineOut == null || cmpZs.LineOut.Idx != bsp1Bi.Idx))
             return;
         int endBiIdx = CalBsp3BiEndIdx(nextSeg);
         for (int i = bsp1Bi.Idx + 2; i < biList.Count; i += 2)
@@ -427,7 +427,7 @@ public class BuySellPointList
 
     public List<BuySellPoint> GetSortedBspList()
     {
-        return BspIter().OrderBy(bsp => bsp.Bi.Idx).ToList();
+        return BspIter().OrderBy(bsp => bsp.Chan.Idx).ToList();
     }
 
     public List<BuySellPoint> GetLatestBsp(int number)
@@ -442,20 +442,20 @@ public class BuySellPointList
         return res;
     }
 
-    private static bool Bsp2sBreakBsp1(IBiLine bsp2sBi, IBiLine bsp2BreakBi)
+    private static bool Bsp2sBreakBsp1(IChanLine bsp2SChan, IChanLine bsp2BreakChan)
     {
-        return (bsp2sBi.IsDown() && bsp2sBi.Low() < bsp2BreakBi.Low()) ||
-               (bsp2sBi.IsUp() && bsp2sBi.High() > bsp2BreakBi.High());
+        return (bsp2SChan.IsDown() && bsp2SChan.Low() < bsp2BreakChan.Low()) ||
+               (bsp2SChan.IsUp() && bsp2SChan.High() > bsp2BreakChan.High());
     }
 
-    private static bool Bsp3Back2zs(IBiLine bsp3Bi, Pivot zs)
+    private static bool Bsp3Back2zs(IChanLine bsp3Chan, Pivot zs)
     {
-        return (bsp3Bi.IsDown() && bsp3Bi.Low() < zs.High) || (bsp3Bi.IsUp() && bsp3Bi.High() > zs.Low);
+        return (bsp3Chan.IsDown() && bsp3Chan.Low() < zs.High) || (bsp3Chan.IsUp() && bsp3Chan.High() > zs.Low);
     }
 
-    private static bool Bsp3BreakZspeak(IBiLine bsp3Bi, Pivot zs)
+    private static bool Bsp3BreakZspeak(IChanLine bsp3Chan, Pivot zs)
     {
-        return (bsp3Bi.IsDown() && bsp3Bi.High() >= zs.PeakHigh) || (bsp3Bi.IsUp() && bsp3Bi.Low() <= zs.PeakLow);
+        return (bsp3Chan.IsDown() && bsp3Chan.High() >= zs.PeakHigh) || (bsp3Chan.IsUp() && bsp3Chan.Low() <= zs.PeakLow);
     }
 
     private static int CalBsp3BiEndIdx(Segment? seg)
@@ -463,13 +463,13 @@ public class BuySellPointList
         if (seg == null) return int.MaxValue;
         if (seg.GetMultiBiZsCnt() == 0 && seg.Next == null)
             return int.MaxValue;
-        int endBiIdx = seg.EndBi.Idx - 1;
+        int endBiIdx = seg.EndChan.Idx - 1;
         foreach (var zs in seg.ZsLst)
         {
             if (zs.IsOneBiZs()) continue;
-            if (zs.BiOut != null)
+            if (zs.LineOut != null)
             {
-                endBiIdx = zs.BiOut.Idx;
+                endBiIdx = zs.LineOut.Idx;
                 break;
             }
         }

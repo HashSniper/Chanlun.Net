@@ -7,36 +7,21 @@ using Chan.Lib.BuySellPoints;
 
 namespace Chan.Lib.KLines;
 
-public class KLineList
+public class KLineList(KL_TYPE klType, ChanConfig conf)
 {
-    public KL_TYPE KlType { get; }
-    public ChanConfig Config { get; }
+    public KL_TYPE KlType { get; } = klType;
+    public ChanConfig Config { get; } = conf;
     public List<KLine> Lst { get; } = new();
-    public BiList BiList { get; }
-    public SegmentListBase SegList { get; }
-    public SegmentListBase SegsegList { get; }
-    public PivotList ZsList { get; }
-    public PivotList SegzsList { get; }
-    public BuySellPointList BsPointLst { get; }
-    public BuySellPointList SegBsPointLst { get; }
-    public List<object> MetricModelLst { get; }
-    public bool StepCalculation { get; }
+    public BiList BiList { get; } = new(conf.BiConf);
+    public SegmentListBase SegList { get; } = GetSeglistInstance(conf.SegConf, SEG_TYPE.BI);
+    public SegmentListBase SegsegList { get; } = GetSeglistInstance(conf.SegConf, SEG_TYPE.SEG);
+    public PivotList ZsList { get; } = new(conf.ZsConf);
+    public PivotList SegzsList { get; } = new(conf.ZsConf);
+    public BuySellPointList BsPointLst { get; } = new(conf.BsPointConf);
+    public BuySellPointList SegBsPointLst { get; } = new(conf.SegBsPointConf);
+    public bool StepCalculation { get; } = conf.TriggerStep;
     public int LastSureSegStartBiIdx { get; set; } = -1;
-
-    public KLineList(KL_TYPE klType, ChanConfig conf)
-    {
-        KlType = klType;
-        Config = conf;
-        BiList = new BiList(conf.BiConf);
-        SegList = GetSeglistInstance(conf.SegConf, SEG_TYPE.BI);
-        SegsegList = GetSeglistInstance(conf.SegConf, SEG_TYPE.SEG);
-        ZsList = new PivotList(conf.ZsConf);
-        SegzsList = new PivotList(conf.ZsConf);
-        BsPointLst = new BuySellPointList(conf.BsPointConf);
-        SegBsPointLst = new BuySellPointList(conf.SegBsPointConf);
-        MetricModelLst = conf.GetMetricModel();
-        StepCalculation = conf.TriggerStep;
-    }
+    public int LastSureSegsegStartBiIdx { get; set; } = -1;
 
     public KLine this[int index] => Lst[index];
     public List<KLine> this[System.Range range] => Lst[range];
@@ -50,9 +35,9 @@ public class KLineList
         ZsList.CalBiZs(BiList, SegList);
         UpdateZsInSeg(BiList, SegList, ZsList);
 
-        // LastSureSegsegStartBiIdx = CalSeg(SegList, SegsegList, LastSureSegsegStartBiIdx);
-        // SegzsList.CalBiZs(SegList, SegsegList);
-        // UpdateZsInSeg(SegList, SegsegList, SegzsList);
+        LastSureSegsegStartBiIdx = CalSeg(SegList, SegsegList, LastSureSegsegStartBiIdx);
+        SegzsList.CalBiZs(SegList, SegsegList);
+        UpdateZsInSeg(SegList, SegsegList, SegzsList);
 
         SegBsPointLst.Cal(SegList, SegsegList);
         BsPointLst.Cal(BiList, SegList);
@@ -60,7 +45,6 @@ public class KLineList
 
     public void AddSingleKlu(KLineUnit klu)
     {
-        klu.SetMetric(MetricModelLst);
         if (Lst.Count == 0)
         {
             Lst.Add(new KLine(klu, idx: 0));
@@ -68,7 +52,7 @@ public class KLineList
         else
         {
             var dir = Lst[^1].TryAdd(klu);
-            if (dir != KLINE_DIR.COMBINE)
+            if (dir != Combiner_DIR.COMBINE)
             {
                 Lst.Add(new KLine(klu, idx: Lst.Count, dir: dir));
                 if (Lst.Count >= 3)
@@ -77,7 +61,6 @@ public class KLineList
                 {
                     CalSegAndZs();
                 }
-
             }
             else if (StepCalculation && BiList.TryAddVirtualBi(Lst[^1], needDelEnd: true))
             {
@@ -85,14 +68,7 @@ public class KLineList
             }
         }
     }
-
-    public IEnumerable<KLineUnit> KluIter(int klcBeginIdx = 0)
-    {
-        foreach (var klc in Lst.Skip(klcBeginIdx))
-            foreach (var klu in klc.Lst)
-                yield return klu;
-    }
-
+    
     private static SegmentListBase GetSeglistInstance(SegmentConfig segConfig, SEG_TYPE lv)
     {
         return segConfig.SegAlgo switch
@@ -121,13 +97,13 @@ public class KLineList
             var bi = biList[biIdx];
             if (bi.SegIdx.HasValue && bi.Idx < lastSureSegStartBiIdx)
                 break;
-            if (bi.Idx > curSeg.EndBi.Idx)
+            if (bi.Idx > curSeg.EndChan.Idx)
             {
                 bi.SetSegIdx(curSeg.Idx + 1);
                 biIdx--;
                 continue;
             }
-            if (bi.Idx < curSeg.StartBi.Idx)
+            if (bi.Idx < curSeg.StartChan.Idx)
             {
                 if (curSeg.Pre == null) throw new InvalidOperationException();
                 curSeg = curSeg.Pre;
@@ -142,7 +118,7 @@ public class KLineList
         {
             if (seg.IsSure)
             {
-                lastSureSegStartBiIdx = seg.StartBi.Idx;
+                lastSureSegStartBiIdx = seg.StartChan.Idx;
                 break;
             }
             seg = seg.Pre;
@@ -168,13 +144,13 @@ public class KLineList
             var seg = segList[segIdx];
             if (seg.SegIdx.HasValue && seg.Idx < lastSureSegsegStartBiIdx)
                 break;
-            if (seg.Idx > curSegseg.EndBi.Idx)
+            if (seg.Idx > curSegseg.EndChan.Idx)
             {
                 seg.SetSegIdx(curSegseg.Idx + 1);
                 segIdx--;
                 continue;
             }
-            if (seg.Idx < curSegseg.StartBi.Idx)
+            if (seg.Idx < curSegseg.StartChan.Idx)
             {
                 if (curSegseg.Pre == null) throw new InvalidOperationException();
                 curSegseg = curSegseg.Pre;
@@ -189,7 +165,7 @@ public class KLineList
         {
             if (ss.IsSure)
             {
-                lastSureSegsegStartBiIdx = ss.StartBi.Idx;
+                lastSureSegsegStartBiIdx = ss.StartChan.Idx;
                 break;
             }
             ss = ss.Pre;
@@ -213,15 +189,15 @@ public class KLineList
             while (zsIdx >= 0)
             {
                 var zs = zsList[zsIdx];
-                if (zs.End.Idx < seg.StartBi.GetBeginKlu().Idx)
+                if (zs.EndUnit.Idx < seg.StartChan.GetBeginKlu().Idx)
                     break;
                 if (zs.IsInside(seg))
                     seg.AddZs(zs);
-                if (zs.BeginBi.Idx > 0)
-                    zs.SetBiIn(biList[zs.BeginBi.Idx - 1]);
-                if (zs.EndBi.Idx + 1 < biList.Count)
-                    zs.SetBiOut(biList[zs.EndBi.Idx + 1]);
-                zs.SetBiLst(biList.Skip<IBiLine>(zs.BeginBi.Idx).Take(zs.EndBi.Idx - zs.BeginBi.Idx + 1).ToList());
+                if (zs.BeginLine.Idx > 0)
+                    zs.SetLineIn(biList[zs.BeginLine.Idx - 1]);
+                if (zs.EndLine.Idx + 1 < biList.Count)
+                    zs.SetLineOut(biList[zs.EndLine.Idx + 1]);
+                zs.SetLineLst(biList.Skip<IChanLine>(zs.BeginLine.Idx).Take(zs.EndLine.Idx - zs.BeginLine.Idx + 1).ToList());
                 zsIdx--;
             }
             if (sureSegCnt > 2 && !seg.EleInsideIsSure)
@@ -246,15 +222,15 @@ public class KLineList
             while (zsIdx >= 0)
             {
                 var zs = zsList[zsIdx];
-                if (zs.End.Idx < seg.StartBi.GetBeginKlu().Idx)
+                if (zs.EndUnit.Idx < seg.StartChan.GetBeginKlu().Idx)
                     break;
                 if (zs.IsInside(seg))
                     seg.AddZs(zs);
-                if (zs.BeginBi.Idx > 0)
-                    zs.SetBiIn(segList[zs.BeginBi.Idx - 1]);
-                if (zs.EndBi.Idx + 1 < segList.Count)
-                    zs.SetBiOut(segList[zs.EndBi.Idx + 1]);
-                zs.SetBiLst(segList.Skip<IBiLine>(zs.BeginBi.Idx).Take(zs.EndBi.Idx - zs.BeginBi.Idx + 1).ToList());
+                if (zs.BeginLine.Idx > 0)
+                    zs.SetLineIn(segList[zs.BeginLine.Idx - 1]);
+                if (zs.EndLine.Idx + 1 < segList.Count)
+                    zs.SetLineOut(segList[zs.EndLine.Idx + 1]);
+                zs.SetLineLst(segList.Skip<IChanLine>(zs.BeginLine.Idx).Take(zs.EndLine.Idx - zs.BeginLine.Idx + 1).ToList());
                 zsIdx--;
             }
             if (sureSegCnt > 2 && !seg.EleInsideIsSure)

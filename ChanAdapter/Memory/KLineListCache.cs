@@ -13,6 +13,6 @@ public static class KLineListCache
 
     public static KLineList? Get(float key)
     {
-        return  ChanMemory.Get(key,nameof(KLineListCache)) as KLineList;
+        return  ChanMemory.Get<KLineList>(key,nameof(KLineListCache));
     }
 }

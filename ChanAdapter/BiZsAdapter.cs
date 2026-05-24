@@ -25,8 +25,8 @@ public static class BiZsAdapter
         var biZs = kLineList.ZsList;
         foreach (var zs in biZs)
         {
-            var startIdx = zs.Begin.Idx;
-            var endIdx = zs.End.Idx;
+            var startIdx = zs.BeginUnit.Idx;
+            var endIdx = zs.EndUnit.Idx;
             for (var i = startIdx; i <= endIdx; i++)
             {
                 pOut[i] = zs.High;
@@ -50,8 +50,8 @@ public static class BiZsAdapter
         var biZs = kLineList.ZsList;
         foreach (var zs in biZs)
         {
-            var startIdx = zs.Begin.Idx;
-            var endIdx = zs.End.Idx;
+            var startIdx = zs.BeginUnit.Idx;
+            var endIdx = zs.EndUnit.Idx;
             for (var i = startIdx; i <= endIdx; i++)
             {
                 pOut[i] = zs.Low;
@@ -74,8 +74,8 @@ public static class BiZsAdapter
 
         foreach (var zs in biZs)
         {
-            var startIdx = zs.Begin.Idx;
-            var endIdx = zs.End.Idx;
+            var startIdx = zs.BeginUnit.Idx;
+            var endIdx = zs.EndUnit.Idx;
             pOut[startIdx] = 1;
             pOut[endIdx] = 2;
         }

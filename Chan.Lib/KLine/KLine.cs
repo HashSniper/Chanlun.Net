@@ -1,20 +1,12 @@
-using Chan.Lib;
 using Chan.Lib.Common;
 using Chan.Lib.Combiner;
 
 namespace Chan.Lib.KLines;
 
-public class KLine : KLineCombiner<KLineUnit>
+public class KLine(KLineUnit klUnit, int idx, Combiner_DIR dir = Combiner_DIR.UP) : Combiner<KLineUnit>(klUnit, dir)
 {
-    public int Idx { get; }
-    public KL_TYPE? KlType { get; set; }
-
-    public KLine(KLineUnit klUnit, int idx, KLINE_DIR dir = KLINE_DIR.UP) : base(klUnit, dir)
-    {
-        Idx = idx;
-        KlType = klUnit.KlType;
-        klUnit.SetKlc(this);
-    }
+    public int Idx { get; } = idx;
+    public KL_TYPE? KlType { get; set; } = klUnit.KlType;
 
     public override string ToString()
     {
@@ -26,22 +18,7 @@ public class KLine : KLineCombiner<KLineUnit>
         };
         return $"{Idx}th{fxToken}:{TimeBegin}~{TimeEnd}({KlType}|{Count}) low={Low} high={High}";
     }
-
-    public IEnumerable<KLine> GetSubKLC()
-    {
-        KLine? lastKlc = null;
-        foreach (var klu in Lst)
-        {
-            foreach (var subKlu in klu.GetChildren())
-            {
-                if (subKlu.Klc != lastKlc)
-                {
-                    lastKlc = subKlu.Klc;
-                    yield return subKlu.Klc;
-                }
-            }
-        }
-    }
+    
 
     public double GetKluMaxHigh() => Lst.Max(x => x.High);
     public double GetKluMinLow() => Lst.Min(x => x.Low);
@@ -66,7 +43,7 @@ public class KLine : KLineCombiner<KLineUnit>
         {
             if (!forVirtual && item2.Fx != FX_TYPE.BOTTOM)
                 throw new InvalidOperationException();
-            if (forVirtual && item2.Dir != KLINE_DIR.DOWN)
+            if (forVirtual && item2.Dir != Combiner_DIR.DOWN)
                 return false;
 
             double item2High, selfLow;
@@ -104,7 +81,7 @@ public class KLine : KLineCombiner<KLineUnit>
         {
             if (!forVirtual && item2.Fx != FX_TYPE.TOP)
                 throw new InvalidOperationException();
-            if (forVirtual && item2.Dir != KLINE_DIR.UP)
+            if (forVirtual && item2.Dir != Combiner_DIR.UP)
                 return false;
 
             double item2Low, curHigh;

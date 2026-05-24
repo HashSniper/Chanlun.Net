@@ -9,7 +9,7 @@ public class DyhSegmentList : SegmentListBase
     {
     }
 
-    public override void Update(IReadOnlyList<IBiLine> biLst)
+    public override void Update(IReadOnlyList<IChanLine> biLst)
     {
         // deprecated implementation placeholder
         throw new NotImplementedException("SegListDYH is deprecated");

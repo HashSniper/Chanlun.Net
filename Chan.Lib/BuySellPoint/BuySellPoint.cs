@@ -7,7 +7,7 @@ namespace Chan.Lib.BuySellPoints;
 
 public class BuySellPoint
 {
-    public IBiLine Bi { get; }
+    public IChanLine Chan { get; }
     public KLineUnit Klu { get; }
     public bool IsBuy { get; }
     public List<BSP_TYPE> Type { get; }
@@ -15,14 +15,14 @@ public class BuySellPoint
     public Features Features { get; }
     public bool IsSegbsp { get; set; } = false;
 
-    public BuySellPoint(IBiLine bi, bool isBuy, BSP_TYPE bsType, BuySellPoint? relateBsp1 = null, Dictionary<string, double>? featureDict = null)
+    public BuySellPoint(IChanLine chan, bool isBuy, BSP_TYPE bsType, BuySellPoint? relateBsp1 = null, Dictionary<string, double>? featureDict = null)
     {
-        Bi = bi;
-        Klu = bi.GetEndKlu();
+        Chan = chan;
+        Klu = chan.GetEndKlu();
         IsBuy = isBuy;
         Type = new List<BSP_TYPE> { bsType };
         RelateBsp1 = relateBsp1;
-        Bi.Bsp = this;
+        Chan.Bsp = this;
         Features = new Features(featureDict);
     }
 

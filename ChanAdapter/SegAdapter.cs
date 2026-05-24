@@ -19,13 +19,13 @@ public static class SegAdapter
         {
             if (seg.IsUp())
             {
-                pOut[seg.EndBi.EndKlc.GetPeakKlu(true).Idx] = 1;
-                pOut[seg.StartBi.BeginKlc.GetPeakKlu(false).Idx] = -1;
+                pOut[seg.EndChan.EndKlc.GetPeakKlu(true).Idx] = 1;
+                pOut[seg.StartChan.BeginKlc.GetPeakKlu(false).Idx] = -1;
             }
             else if(seg.IsDown())
             {
-                pOut[seg.EndBi.EndKlc.GetPeakKlu(false).Idx] = -1;
-                pOut[seg.StartBi.BeginKlc.GetPeakKlu(true).Idx] = 1;
+                pOut[seg.EndChan.EndKlc.GetPeakKlu(false).Idx] = -1;
+                pOut[seg.StartChan.BeginKlc.GetPeakKlu(true).Idx] = 1;
             }
         }
         return pOut;

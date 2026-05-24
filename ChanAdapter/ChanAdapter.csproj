@@ -8,7 +8,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Chan.Lib\Chan.Lib.csproj" />
-      <ProjectReference Include="..\ChanLib\ChanLib.csproj" />
     </ItemGroup>
 
 </Project>

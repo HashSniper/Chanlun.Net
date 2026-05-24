@@ -8,7 +8,7 @@ public class PivotList
 {
     public List<Pivot> ZsLst { get; } = new();
     public PivotConfig Config { get; }
-    private List<IBiLine> _freeItemLst = new();
+    private List<IChanLine> _freeItemLst = new();
     public int LastSurePos { get; set; } = -1;
     public int LastSegIdx { get; set; } = 0;
 
@@ -26,22 +26,22 @@ public class PivotList
             var seg = segList[i];
             if (seg.IsSure)
             {
-                LastSurePos = seg.StartBi.Idx;
+                LastSurePos = seg.StartChan.Idx;
                 LastSegIdx = seg.Idx;
                 return;
             }
         }
     }
 
-    public bool SegNeedCal(Segment seg) => seg.StartBi.Idx >= LastSurePos;
+    public bool SegNeedCal(Segment seg) => seg.StartChan.Idx >= LastSurePos;
 
-    public void AddToFreeLst(IBiLine item, bool isSure, string zsAlgo)
+    public void AddToFreeLst(IChanLine item, bool isSure, string zsAlgo)
     {
         if (_freeItemLst.Count > 0 && item.Idx == _freeItemLst[^1].Idx)
             _freeItemLst.RemoveAt(_freeItemLst.Count - 1);
         _freeItemLst.Add(item);
         var res = TryConstructZs(_freeItemLst, isSure, zsAlgo);
-        if (res != null && res.BeginBi.Idx > 0)
+        if (res != null && res.BeginLine.Idx > 0)
         {
             ZsLst.Add(res);
             ClearFreeLst();
@@ -49,25 +49,25 @@ public class PivotList
         }
     }
 
-    public void ClearFreeLst() => _freeItemLst = new List<IBiLine>();
+    public void ClearFreeLst() => _freeItemLst = new List<IChanLine>();
 
-    public void Update(IBiLine bi, bool isSure = true)
+    public void Update(IChanLine chan, bool isSure = true)
     {
-        if (_freeItemLst.Count == 0 && TryAddToEnd(bi))
+        if (_freeItemLst.Count == 0 && TryAddToEnd(chan))
         {
             TryCombine();
             return;
         }
-        AddToFreeLst(bi, isSure, "normal");
+        AddToFreeLst(chan, isSure, "normal");
     }
 
-    public bool TryAddToEnd(IBiLine bi)
+    public bool TryAddToEnd(IChanLine chan)
     {
         if (ZsLst.Count == 0) return false;
-        return ZsLst[^1].TryAddToEnd(bi);
+        return ZsLst[^1].TryAddToEnd(chan);
     }
 
-    public void AddZsFromBiRange(List<IBiLine> segBiLst, BI_DIR segDir, bool segIsSure)
+    public void AddZsFromBiRange(List<IChanLine> segBiLst, CHAN_DIR segDir, bool segIsSure)
     {
         int dealBiCnt = 0;
         foreach (var bi in segBiLst)
@@ -85,7 +85,7 @@ public class PivotList
         }
     }
 
-    public Pivot? TryConstructZs(List<IBiLine> lst, bool isSure, string zsAlgo)
+    public Pivot? TryConstructZs(List<IChanLine> lst, bool isSure, string zsAlgo)
     {
         if (zsAlgo == "normal")
         {
@@ -110,9 +110,9 @@ public class PivotList
         return minHigh > maxLow ? new Pivot(lst, isSure) : null;
     }
 
-    public void CalBiZs(IReadOnlyList<IBiLine> biLst, SegmentListBase segLst)
+    public void CalBiZs(IReadOnlyList<IChanLine> biLst, SegmentListBase segLst)
     {
-        while (ZsLst.Count > 0 && ZsLst[^1].BeginBi.Idx >= LastSurePos)
+        while (ZsLst.Count > 0 && ZsLst[^1].BeginLine.Idx >= LastSurePos)
             ZsLst.RemoveAt(ZsLst.Count - 1);
 
         if (Config.ZsAlgo == "normal")
@@ -121,13 +121,13 @@ public class PivotList
             {
                 if (!SegNeedCal(seg)) continue;
                 ClearFreeLst();
-                var segBiLst = biLst.Skip(seg.StartBi.Idx).Take(seg.EndBi.Idx - seg.StartBi.Idx + 1).ToList();
+                var segBiLst = biLst.Skip(seg.StartChan.Idx).Take(seg.EndChan.Idx - seg.StartChan.Idx + 1).ToList();
                 AddZsFromBiRange(segBiLst, seg.Dir, seg.IsSure);
             }
             if (segLst.Count > 0)
             {
                 ClearFreeLst();
-                var remaining = biLst.Skip(segLst[^1].EndBi.Idx + 1).ToList();
+                var remaining = biLst.Skip(segLst[^1].EndChan.Idx + 1).ToList();
                 AddZsFromBiRange(remaining, FuncUtil.RevertBiDir(segLst[^1].Dir), false);
             }
         }
@@ -135,7 +135,7 @@ public class PivotList
         {
             if (!Config.OneBiZs) throw new InvalidOperationException();
             ClearFreeLst();
-            int beginBiIdx = ZsLst.Count > 0 ? ZsLst[^1].EndBi.Idx + 1 : 0;
+            int beginBiIdx = ZsLst.Count > 0 ? ZsLst[^1].EndLine.Idx + 1 : 0;
             for (int i = beginBiIdx; i < biLst.Count; i++)
                 Update(biLst[i]);
         }
@@ -150,13 +150,13 @@ public class PivotList
                 if (seg.IsSure || (!sureSegAppear && existSureSeg))
                 {
                     ClearFreeLst();
-                    var segBiLst = biLst.Skip(seg.StartBi.Idx).Take(seg.EndBi.Idx - seg.StartBi.Idx + 1).ToList();
+                    var segBiLst = biLst.Skip(seg.StartChan.Idx).Take(seg.EndChan.Idx - seg.StartChan.Idx + 1).ToList();
                     AddZsFromBiRange(segBiLst, seg.Dir, seg.IsSure);
                 }
                 else
                 {
                     ClearFreeLst();
-                    for (int i = seg.StartBi.Idx; i < biLst.Count; i++)
+                    for (int i = seg.StartChan.Idx; i < biLst.Count; i++)
                         Update(biLst[i]);
                     break;
                 }
@@ -169,17 +169,17 @@ public class PivotList
         UpdateLastPos(segLst);
     }
 
-    public void UpdateOversegZs(IBiLine bi)
+    public void UpdateOversegZs(IChanLine chan)
     {
         if (ZsLst.Count > 0 && _freeItemLst.Count == 0)
         {
-            if (bi.Next == null) return;
-            if (bi.Idx - ZsLst[^1].EndBi.Idx <= 1 && ZsLst[^1].InRange(bi.Next) && ZsLst[^1].TryAddToEnd(bi))
+            if (chan.Next == null) return;
+            if (chan.Idx - ZsLst[^1].EndLine.Idx <= 1 && ZsLst[^1].InRange(chan.Next) && ZsLst[^1].TryAddToEnd(chan))
                 return;
         }
-        if (ZsLst.Count > 0 && _freeItemLst.Count == 0 && ZsLst[^1].InRange(bi) && bi.Idx - ZsLst[^1].EndBi.Idx <= 1)
+        if (ZsLst.Count > 0 && _freeItemLst.Count == 0 && ZsLst[^1].InRange(chan) && chan.Idx - ZsLst[^1].EndLine.Idx <= 1)
             return;
-        AddToFreeLst(bi, bi.IsSure, "over_seg");
+        AddToFreeLst(chan, chan.IsSure, "over_seg");
     }
 
     public System.Collections.Generic.IEnumerator<Pivot> GetEnumerator() => ZsLst.GetEnumerator();

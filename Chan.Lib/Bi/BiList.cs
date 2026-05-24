@@ -3,7 +3,7 @@ using Chan.Lib.KLines;
 
 namespace Chan.Lib.Bis;
 
-public class BiList : IEnumerable<Bi>, IReadOnlyList<IBiLine>
+public class BiList : IEnumerable<Bi>, IReadOnlyList<IChanLine>
 {
     public List<Bi> BiList_ { get; } = new();
     public KLine? LastEnd { get; set; }
@@ -19,9 +19,9 @@ public class BiList : IEnumerable<Bi>, IReadOnlyList<IBiLine>
 
     System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => BiList_.GetEnumerator();
     public System.Collections.Generic.IEnumerator<Bi> GetEnumerator() => BiList_.GetEnumerator();
-    System.Collections.Generic.IEnumerator<IBiLine> System.Collections.Generic.IEnumerable<IBiLine>.GetEnumerator() => BiList_.GetEnumerator();
+    System.Collections.Generic.IEnumerator<IChanLine> System.Collections.Generic.IEnumerable<IChanLine>.GetEnumerator() => BiList_.GetEnumerator();
     public Bi this[int index] => BiList_[index];
-    IBiLine IReadOnlyList<IBiLine>.this[int index] => BiList_[index];
+    IChanLine IReadOnlyList<IChanLine>.this[int index] => BiList_[index];
     public List<Bi> this[System.Range range] => BiList_[range];
     public int Count => BiList_.Count;
 
@@ -212,8 +212,8 @@ public class BiList : IEnumerable<Bi>, IReadOnlyList<IBiLine>
     {
         if (BiList_.Count == 0) return false;
         var lastBi = BiList_[BiList_.Count - 1];
-        bool checkTop = forVirtual ? klc.Dir == KLINE_DIR.UP : klc.Fx == FX_TYPE.TOP;
-        bool checkBottom = forVirtual ? klc.Dir == KLINE_DIR.DOWN : klc.Fx == FX_TYPE.BOTTOM;
+        bool checkTop = forVirtual ? klc.Dir == Combiner_DIR.UP : klc.Fx == FX_TYPE.TOP;
+        bool checkBottom = forVirtual ? klc.Dir == Combiner_DIR.DOWN : klc.Fx == FX_TYPE.BOTTOM;
         if ((lastBi.IsUp() && checkTop && klc.High >= lastBi.GetEndVal()) ||
             (lastBi.IsDown() && checkBottom && klc.Low <= lastBi.GetEndVal()))
         {
@@ -240,23 +240,23 @@ public static class BiListHelper
         if (lastEnd.Fx == FX_TYPE.BOTTOM)
         {
             double cmpThred = curEnd.High;
-            var klc = lastEnd.GetNext() as KLine;
+            var klc = lastEnd.Next as KLine;
             while (klc != null)
             {
                 if (klc.Idx >= curEnd.Idx) return true;
                 if (klc.High > cmpThred) return false;
-                klc = klc.GetNext() as KLine;
+                klc = klc.Next as KLine;
             }
         }
         else if (lastEnd.Fx == FX_TYPE.TOP)
         {
             double cmpThred = curEnd.Low;
-            var klc = lastEnd.GetNext() as KLine;
+            var klc = lastEnd.Next as KLine;
             while (klc != null)
             {
                 if (klc.Idx >= curEnd.Idx) return true;
                 if (klc.Low < cmpThred) return false;
-                klc = klc.GetNext() as KLine;
+                klc = klc.Next as KLine;
             }
         }
         return true;

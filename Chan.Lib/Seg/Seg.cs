@@ -9,37 +9,40 @@ using Chan.Lib.Indicators;
 
 namespace Chan.Lib.Seg;
 
-public class Segment : IBiLine
+public class Segment : IChanLine
 {
     public int Idx { get; }
-    public Bi StartBi { get; }
-    public Bi EndBi { get; private set; }
+    public IChanLine StartChan { get; }
+    public IChanLine EndChan { get; private set; }
     public bool IsSure { get; set; }
-    public BI_DIR Dir { get; }
+    public CHAN_DIR Dir { get; }
     public List<Pivot> ZsLst { get; } = new();
     public EigenFeature? EigenFx { get; set; }
     public int? SegIdx { get; set; }
     public Segment? ParentSeg { get; set; }
+
     public Segment? Pre { get; set; }
     public Segment? Next { get; set; }
-    IBiLine? IBiLine.Pre => Pre;
-    IBiLine? IBiLine.Next => Next;
+    IChanLine? IChanLine.Pre => Pre;
+    IChanLine? IChanLine.Next => Next;
     public BuySellPoint? Bsp { get; set; }
-    public List<Bi> BiList { get; } = new();
+    public KLine BeginKlc { get; }
+    public KLine EndKlc { get; }
+    public List<IChanLine> BiList { get; } = new();
     public string Reason { get; }
     public TrendLine? SupportTrendLine { get; set; }
     public TrendLine? ResistanceTrendLine { get; set; }
     public bool EleInsideIsSure { get; set; } = false;
 
-    public Segment(int idx, Bi startBi, Bi endBi, bool isSure = true, BI_DIR? segDir = null, string reason = "normal")
+    public Segment(int idx, IChanLine startChan, IChanLine endChan, bool isSure = true, CHAN_DIR? segDir = null, string reason = "normal")
     {
         Idx = idx;
-        StartBi = startBi;
-        EndBi = endBi;
+        StartChan = startChan;
+        EndChan = endChan;
         IsSure = isSure;
-        Dir = segDir ?? endBi.Dir;
+        Dir = segDir ?? endChan.Dir;
         Reason = reason;
-        if (endBi.Idx - startBi.Idx < 2)
+        if (endChan.Idx - startChan.Idx < 2)
             IsSure = false;
         Check();
     }
@@ -51,35 +54,35 @@ public class Segment : IBiLine
         if (!IsSure) return;
         if (IsDown())
         {
-            if (StartBi.GetBeginVal() < EndBi.GetEndVal())
+            if (StartChan.GetBeginVal() < EndChan.GetEndVal())
                 throw new ChanException($"下降线段起始点应该高于结束点! idx={Idx}", ErrCode.SEG_END_VALUE_ERR);
         }
-        else if (StartBi.GetBeginVal() > EndBi.GetEndVal())
+        else if (StartChan.GetBeginVal() > EndChan.GetEndVal())
         {
             throw new ChanException($"上升线段起始点应该低于结束点! idx={Idx}", ErrCode.SEG_END_VALUE_ERR);
         }
-        if (EndBi.Idx - StartBi.Idx < 2)
-            throw new ChanException($"线段({StartBi.Idx}-{EndBi.Idx})长度不能小于2! idx={Idx}", ErrCode.SEG_LEN_ERR);
+        if (EndChan.Idx - StartChan.Idx < 2)
+            throw new ChanException($"线段({StartChan.Idx}-{EndChan.Idx})长度不能小于2! idx={Idx}", ErrCode.SEG_LEN_ERR);
     }
 
-    public override string ToString() => $"{StartBi.Idx}->{EndBi.Idx}: {Dir} {IsSure}";
+    public override string ToString() => $"{StartChan.Idx}->{EndChan.Idx}: {Dir} {IsSure}";
 
     public void AddZs(Pivot zs) => ZsLst.Insert(0, zs);
     public void ClearZsLst() => ZsLst.Clear();
 
     public float CalKluSlope() => (GetEndVal() - GetBeginVal()) / (GetEndKlu().Idx - GetBeginKlu().Idx) / GetBeginVal();
     public float CalAmp() => (GetEndVal() - GetBeginVal()) / GetBeginVal();
-    public int CalBiCnt() => EndBi.Idx - StartBi.Idx + 1;
+    public int CalBiCnt() => EndChan.Idx - StartChan.Idx + 1;
 
-    public float Low() => IsDown() ? EndBi.GetEndKlu().Low : StartBi.GetBeginKlu().Low;
-    public float High() => IsUp() ? EndBi.GetEndKlu().High : StartBi.GetBeginKlu().High;
-    public bool IsDown() => Dir == BI_DIR.DOWN;
-    public bool IsUp() => Dir == BI_DIR.UP;
-    public float GetEndVal() => EndBi.GetEndVal();
-    public float GetBeginVal() => StartBi.GetBeginVal();
+    public float Low() => IsDown() ? EndChan.GetEndKlu().Low : StartChan.GetBeginKlu().Low;
+    public float High() => IsUp() ? EndChan.GetEndKlu().High : StartChan.GetBeginKlu().High;
+    public bool IsDown() => Dir == CHAN_DIR.DOWN;
+    public bool IsUp() => Dir == CHAN_DIR.UP;
+    public float GetEndVal() => EndChan.GetEndVal();
+    public float GetBeginVal() => StartChan.GetBeginVal();
     public float Amp() => Math.Abs(GetEndVal() - GetBeginVal());
-    public KLineUnit GetEndKlu() => EndBi.GetEndKlu();
-    public KLineUnit GetBeginKlu() => StartBi.GetBeginKlu();
+    public KLineUnit GetEndKlu() => EndChan.GetEndKlu();
+    public KLineUnit GetBeginKlu() => StartChan.GetBeginKlu();
     public int GetKluCnt() => GetEndKlu().Idx - GetBeginKlu().Idx + 1;
 
     public double CalMacdMetric(MACD_ALGO macdAlgo, bool isReverse)
@@ -112,7 +115,7 @@ public class Segment : IBiLine
             return (endKlu.High - beginKlu.Low) / beginKlu.Low;
     }
 
-    public void UpdateBiList(List<Bi> biLst, int idx1, int idx2)
+    public void UpdateBiList(List<IChanLine> biLst, int idx1, int idx2)
     {
         for (int biIdx = idx1; biIdx <= idx2; biIdx++)
         {
@@ -140,8 +143,8 @@ public class Segment : IBiLine
 
     public int GetMultiBiZsCnt() => ZsLst.Count(zs => !zs.IsOneBiZs());
 
-    object ICombineSource.TimeBegin => StartBi.BeginKlc.Idx;
-    object ICombineSource.TimeEnd => EndBi.EndKlc.Idx;
+    DateTime ICombineSource.TimeBegin => StartChan.BeginKlc.TimeBegin;
+    DateTime ICombineSource.TimeEnd => EndChan.EndKlc.TimeBegin;
     float ICombineSource.CombineHigh => High();
     float ICombineSource.CombineLow => Low();
 }

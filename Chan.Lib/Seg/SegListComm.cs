@@ -4,7 +4,7 @@ using Chan.Lib.Bis;
 
 namespace Chan.Lib.Seg;
 
-public abstract class SegmentListBase : IEnumerable<Segment>, IReadOnlyList<IBiLine>
+public abstract class SegmentListBase : IEnumerable<Segment>, IReadOnlyList<IChanLine>
 {
     public List<Segment> Lst { get; protected set; } = new();
     public SEG_TYPE Lv { get; }
@@ -24,17 +24,17 @@ public abstract class SegmentListBase : IEnumerable<Segment>, IReadOnlyList<IBiL
 
     System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => Lst.GetEnumerator();
     public System.Collections.Generic.IEnumerator<Segment> GetEnumerator() => Lst.GetEnumerator();
-    System.Collections.Generic.IEnumerator<IBiLine> System.Collections.Generic.IEnumerable<IBiLine>.GetEnumerator() => Lst.GetEnumerator();
+    System.Collections.Generic.IEnumerator<IChanLine> System.Collections.Generic.IEnumerable<IChanLine>.GetEnumerator() => Lst.GetEnumerator();
     public Segment this[int index] => Lst[index];
-    IBiLine IReadOnlyList<IBiLine>.this[int index] => Lst[index];
+    IChanLine IReadOnlyList<IChanLine>.this[int index] => Lst[index];
     public List<Segment> this[System.Range range] => Lst[range];
     public int Count => Lst.Count;
 
     public bool LeftBiBreak(BiList biLst)
     {
         if (Count == 0) return false;
-        var lastSegEndBi = Lst[^1].EndBi;
-        foreach (var bi in biLst.Skip<IBiLine>(lastSegEndBi.Idx + 1))
+        var lastSegEndBi = Lst[^1].EndChan;
+        foreach (var bi in biLst.Skip<IChanLine>(lastSegEndBi.Idx + 1))
         {
             if (lastSegEndBi.IsUp() && bi.High() > lastSegEndBi.High()) return true;
             if (lastSegEndBi.IsDown() && bi.Low() < lastSegEndBi.Low()) return true;
@@ -42,7 +42,7 @@ public abstract class SegmentListBase : IEnumerable<Segment>, IReadOnlyList<IBiL
         return false;
     }
 
-    public void CollectFirstSeg(IReadOnlyList<IBiLine> biLst)
+    public void CollectFirstSeg(IReadOnlyList<IChanLine> biLst)
     {
         if (biLst.Count < 3) return;
         if (Config.LeftMethod == LEFT_SEG_METHOD.PEAK)
@@ -53,19 +53,19 @@ public abstract class SegmentListBase : IEnumerable<Segment>, IReadOnlyList<IBiL
             {
                 var peakBi = FindPeakBi(biLst, isHigh: true);
                 if (peakBi == null) throw new InvalidOperationException();
-                AddNewSeg(biLst, peakBi.Idx, isSure: false, segDir: BI_DIR.UP, splitFirstSeg: false, reason: "0seg_find_high");
+                AddNewSeg(biLst, peakBi.Idx, isSure: false, segDir: CHAN_DIR.UP, splitFirstSeg: false, reason: "0seg_find_high");
             }
             else
             {
                 var peakBi = FindPeakBi(biLst, isHigh: false);
                 if (peakBi == null) throw new InvalidOperationException();
-                AddNewSeg(biLst, peakBi.Idx, isSure: false, segDir: BI_DIR.DOWN, splitFirstSeg: false, reason: "0seg_find_low");
+                AddNewSeg(biLst, peakBi.Idx, isSure: false, segDir: CHAN_DIR.DOWN, splitFirstSeg: false, reason: "0seg_find_low");
             }
             CollectLeftAsSeg(biLst);
         }
         else if (Config.LeftMethod == LEFT_SEG_METHOD.ALL)
         {
-            var dir = biLst[biLst.Count - 1].GetEndVal() >= biLst[0].GetBeginVal() ? BI_DIR.UP : BI_DIR.DOWN;
+            var dir = biLst[biLst.Count - 1].GetEndVal() >= biLst[0].GetBeginVal() ? CHAN_DIR.UP : CHAN_DIR.DOWN;
             AddNewSeg(biLst, biLst[biLst.Count - 1].Idx, isSure: false, segDir: dir, splitFirstSeg: false, reason: "0seg_collect_all");
         }
         else
@@ -74,38 +74,38 @@ public abstract class SegmentListBase : IEnumerable<Segment>, IReadOnlyList<IBiL
         }
     }
 
-    public void CollectLeftSegPeakMethod(IBiLine lastSegEndBi, IReadOnlyList<IBiLine> biLst)
+    public void CollectLeftSegPeakMethod(IChanLine lastSegEndChan, IReadOnlyList<IChanLine> biLst)
     {
         bool findNewSeg = false;
-        if (lastSegEndBi.IsDown())
+        if (lastSegEndChan.IsDown())
         {
-            var peakBi = FindPeakBi(biLst.Skip(lastSegEndBi.Idx + 3), isHigh: true);
-            if (peakBi != null && peakBi.Idx - lastSegEndBi.Idx >= 3)
+            var peakBi = FindPeakBi(biLst.Skip(lastSegEndChan.Idx + 3), isHigh: true);
+            if (peakBi != null && peakBi.Idx - lastSegEndChan.Idx >= 3)
             {
-                AddNewSeg(biLst, peakBi.Idx, isSure: false, segDir: BI_DIR.UP, reason: "collectleft_find_high");
+                AddNewSeg(biLst, peakBi.Idx, isSure: false, segDir: CHAN_DIR.UP, reason: "collectleft_find_high");
                 findNewSeg = true;
             }
         }
         else
         {
-            var peakBi = FindPeakBi(biLst.Skip(lastSegEndBi.Idx + 3), isHigh: false);
-            if (peakBi != null && peakBi.Idx - lastSegEndBi.Idx >= 3)
+            var peakBi = FindPeakBi(biLst.Skip(lastSegEndChan.Idx + 3), isHigh: false);
+            if (peakBi != null && peakBi.Idx - lastSegEndChan.Idx >= 3)
             {
-                AddNewSeg(biLst, peakBi.Idx, isSure: false, segDir: BI_DIR.DOWN, reason: "collectleft_find_low");
+                AddNewSeg(biLst, peakBi.Idx, isSure: false, segDir: CHAN_DIR.DOWN, reason: "collectleft_find_low");
                 findNewSeg = true;
             }
         }
-        lastSegEndBi = Lst[^1].EndBi;
+        lastSegEndChan = Lst[^1].EndChan;
         if (!findNewSeg)
             CollectLeftAsSeg(biLst);
         else
-            CollectLeftSegPeakMethod(lastSegEndBi, biLst);
+            CollectLeftSegPeakMethod(lastSegEndChan, biLst);
     }
 
-    public void CollectSegs(IReadOnlyList<IBiLine> biLst)
+    public void CollectSegs(IReadOnlyList<IChanLine> biLst)
     {
         var lastBi = biLst[biLst.Count - 1];
-        var lastSegEndBi = Lst[^1].EndBi;
+        var lastSegEndBi = Lst[^1].EndChan;
         if (lastBi.Idx - lastSegEndBi.Idx < 3)
             return;
         if (lastSegEndBi.IsDown() && lastBi.GetEndVal() <= lastSegEndBi.GetEndVal())
@@ -113,7 +113,7 @@ public abstract class SegmentListBase : IEnumerable<Segment>, IReadOnlyList<IBiL
             var peakBi = FindPeakBi(biLst.Skip(lastSegEndBi.Idx + 3), isHigh: true);
             if (peakBi != null)
             {
-                AddNewSeg(biLst, peakBi.Idx, isSure: false, segDir: BI_DIR.UP, reason: "collectleft_find_high_force");
+                AddNewSeg(biLst, peakBi.Idx, isSure: false, segDir: CHAN_DIR.UP, reason: "collectleft_find_high_force");
                 CollectLeftSeg(biLst);
             }
         }
@@ -122,7 +122,7 @@ public abstract class SegmentListBase : IEnumerable<Segment>, IReadOnlyList<IBiL
             var peakBi = FindPeakBi(biLst.Skip(lastSegEndBi.Idx + 3), isHigh: false);
             if (peakBi != null)
             {
-                AddNewSeg(biLst, peakBi.Idx, isSure: false, segDir: BI_DIR.DOWN, reason: "collectleft_find_low_force");
+                AddNewSeg(biLst, peakBi.Idx, isSure: false, segDir: CHAN_DIR.DOWN, reason: "collectleft_find_low_force");
                 CollectLeftSeg(biLst);
             }
         }
@@ -140,7 +140,7 @@ public abstract class SegmentListBase : IEnumerable<Segment>, IReadOnlyList<IBiL
         }
     }
 
-    public void CollectLeftSeg(IReadOnlyList<IBiLine> biLst)
+    public void CollectLeftSeg(IReadOnlyList<IChanLine> biLst)
     {
         if (Count == 0)
             CollectFirstSeg(biLst);
@@ -148,10 +148,10 @@ public abstract class SegmentListBase : IEnumerable<Segment>, IReadOnlyList<IBiL
             CollectSegs(biLst);
     }
 
-    public void CollectLeftAsSeg(IReadOnlyList<IBiLine> biLst)
+    public void CollectLeftAsSeg(IReadOnlyList<IChanLine> biLst)
     {
         var lastBi = biLst[biLst.Count - 1];
-        var lastSegEndBi = Lst[^1].EndBi;
+        var lastSegEndBi = Lst[^1].EndChan;
         if (lastSegEndBi.Idx + 1 >= biLst.Count)
             return;
         if (lastSegEndBi.Dir == lastBi.Dir)
@@ -160,7 +160,7 @@ public abstract class SegmentListBase : IEnumerable<Segment>, IReadOnlyList<IBiL
             AddNewSeg(biLst, lastBi.Idx, isSure: false, reason: "collect_left_0");
     }
 
-    public void TryAddNewSeg(IReadOnlyList<IBiLine> biLst, int endBiIdx, bool isSure = true, BI_DIR? segDir = null, bool splitFirstSeg = true, string reason = "normal")
+    public void TryAddNewSeg(IReadOnlyList<IChanLine> biLst, int endBiIdx, bool isSure = true, CHAN_DIR? segDir = null, bool splitFirstSeg = true, string reason = "normal")
     {
         if (Count == 0 && splitFirstSeg && endBiIdx >= 3)
         {
@@ -176,20 +176,20 @@ public abstract class SegmentListBase : IEnumerable<Segment>, IReadOnlyList<IBiL
                 }
             }
         }
-        int bi1Idx = Count == 0 ? 0 : Lst[^1].EndBi.Idx + 1;
+        int bi1Idx = Count == 0 ? 0 : Lst[^1].EndChan.Idx + 1;
         var bi1 = biLst[bi1Idx];
         var bi2 = biLst[endBiIdx];
-        Lst.Add(new Segment(Lst.Count, (Bi)bi1, (Bi)bi2, isSure: isSure, segDir: segDir, reason: reason));
+        Lst.Add(new Segment(Lst.Count, bi1, bi2, isSure: isSure, segDir: segDir, reason: reason));
 
         if (Lst.Count >= 2)
         {
             Lst[^2].Next = Lst[^1];
             Lst[^1].Pre = Lst[^2];
         }
-        Lst[^1].UpdateBiList(biLst.Skip(bi1Idx).Take(endBiIdx - bi1Idx + 1).Cast<Bi>().ToList(), 0, endBiIdx - bi1Idx);
+        Lst[^1].UpdateBiList(biLst.Skip(bi1Idx).Take(endBiIdx - bi1Idx + 1).Cast<IChanLine>().ToList(), 0, endBiIdx - bi1Idx);
     }
 
-    public bool AddNewSeg(IReadOnlyList<IBiLine> biLst, int endBiIdx, bool isSure = true, BI_DIR? segDir = null, bool splitFirstSeg = true, string reason = "normal")
+    public bool AddNewSeg(IReadOnlyList<IChanLine> biLst, int endBiIdx, bool isSure = true, CHAN_DIR? segDir = null, bool splitFirstSeg = true, string reason = "normal")
     {
         try
         {
@@ -206,13 +206,13 @@ public abstract class SegmentListBase : IEnumerable<Segment>, IReadOnlyList<IBiL
         return true;
     }
 
-    public abstract void Update(IReadOnlyList<IBiLine> biLst);
+    public abstract void Update(IReadOnlyList<IChanLine> biLst);
 
     public bool ExistSureSeg() => Lst.Any(s => s.IsSure);
 
-    public static IBiLine? FindPeakBi(IEnumerable<IBiLine> biLst, bool? isHigh = null)
+    public static IChanLine? FindPeakBi(IEnumerable<IChanLine> biLst, bool? isHigh = null)
     {
-        IBiLine? peakBi = null;
+        IChanLine? peakBi = null;
         double peakVal = isHigh.HasValue && isHigh.Value ? double.NegativeInfinity : double.PositiveInfinity;
         foreach (var bi in biLst)
         {

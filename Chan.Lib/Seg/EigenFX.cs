@@ -7,63 +7,63 @@ namespace Chan.Lib.Seg;
 public class EigenFeature
 {
     public SEG_TYPE Lv { get; }
-    public BI_DIR Dir { get; }
+    public CHAN_DIR Dir { get; }
     public Eigen?[] Ele { get; } = new Eigen?[3];
-    public List<IBiLine> Lst { get; set; } = new();
+    public List<IChanLine> Lst { get; set; } = new();
     public bool ExcludeIncluded { get; }
-    public KLINE_DIR KlDir { get; }
-    public IBiLine? LastEvidenceBi { get; set; }
+    public Combiner_DIR KlDir { get; }
+    public IChanLine? LastEvidenceBi { get; set; }
 
-    public EigenFeature(BI_DIR dir, bool excludeIncluded = true, SEG_TYPE lv = SEG_TYPE.BI)
+    public EigenFeature(CHAN_DIR dir, bool excludeIncluded = true, SEG_TYPE lv = SEG_TYPE.BI)
     {
         Lv = lv;
         Dir = dir;
         ExcludeIncluded = excludeIncluded;
-        KlDir = dir == BI_DIR.UP ? KLINE_DIR.UP : KLINE_DIR.DOWN;
+        KlDir = dir == CHAN_DIR.UP ? Combiner_DIR.UP : Combiner_DIR.DOWN;
     }
 
-    public bool Add(IBiLine bi)
+    public bool Add(IChanLine chan)
     {
-        if (bi.Dir == Dir) throw new ChanException($"特征序列方向错误! bi.dir={bi.Dir}, seg.dir={Dir}", ErrCode.SEG_EIGEN_ERR);
-        Lst.Add(bi);
+        if (chan.Dir == Dir) throw new ChanException($"特征序列方向错误! bi.dir={chan.Dir}, seg.dir={Dir}", ErrCode.SEG_EIGEN_ERR);
+        Lst.Add(chan);
         if (Ele[0] == null)
-            return TreatFirstEle(bi);
+            return TreatFirstEle(chan);
         else if (Ele[1] == null)
-            return TreatSecondEle(bi);
+            return TreatSecondEle(chan);
         else if (Ele[2] == null)
-            return TreatThirdEle(bi);
+            return TreatThirdEle(chan);
         else
-            throw new ChanException($"特征序列3个都找齐了还没处理!! 当前笔:{bi.Idx},当前:{this}", ErrCode.SEG_EIGEN_ERR);
+            throw new ChanException($"特征序列3个都找齐了还没处理!! 当前笔:{chan.Idx},当前:{this}", ErrCode.SEG_EIGEN_ERR);
     }
 
-    private bool TreatFirstEle(IBiLine bi)
+    private bool TreatFirstEle(IChanLine chan)
     {
-        Ele[0] = new Eigen(bi, KlDir);
+        Ele[0] = new Eigen(chan, KlDir);
         return false;
     }
 
-    private bool TreatSecondEle(IBiLine bi)
+    private bool TreatSecondEle(IChanLine chan)
     {
         if (Ele[0] == null) throw new InvalidOperationException();
-        var combineDir = Ele[0].TryAdd(bi, excludeIncluded: ExcludeIncluded);
-        if (combineDir != KLINE_DIR.COMBINE)
+        var combineDir = Ele[0].TryAdd(chan, excludeIncluded: ExcludeIncluded);
+        if (combineDir != Combiner_DIR.COMBINE)
         {
-            Ele[1] = new Eigen(bi, KlDir);
+            Ele[1] = new Eigen(chan, KlDir);
             if ((IsUp() && Ele[1].High < Ele[0].High) || (IsDown() && Ele[1].Low > Ele[0].Low))
                 return Reset();
         }
         return false;
     }
 
-    private bool TreatThirdEle(IBiLine bi)
+    private bool TreatThirdEle(IChanLine chan)
     {
         if (Ele[0] == null || Ele[1] == null) throw new InvalidOperationException();
-        LastEvidenceBi = bi;
-        int? allowTopEqual = ExcludeIncluded ? (bi.IsDown() ? 1 : -1) : null;
-        var combineDir = Ele[1].TryAdd(bi, allowTopEqual: allowTopEqual);
-        if (combineDir == KLINE_DIR.COMBINE)
+        LastEvidenceBi = chan;
+        int? allowTopEqual = ExcludeIncluded ? (chan.IsDown() ? 1 : -1) : null;
+        var combineDir = Ele[1].TryAdd(chan, allowTopEqual: allowTopEqual);
+        if (combineDir == Combiner_DIR.COMBINE)
             return false;
-        Ele[2] = new Eigen(bi, combineDir);
+        Ele[2] = new Eigen(chan, combineDir);
         if (!ActualBreak())
             return Reset();
         Ele[1]!.UpdateFx(Ele[0]!, Ele[2]!, excludeIncluded: ExcludeIncluded, allowTopEqual: allowTopEqual);
@@ -93,7 +93,7 @@ public class EigenFeature
         return false;
     }
 
-    public bool? CanBeEnd(IReadOnlyList<IBiLine> biLst)
+    public bool? CanBeEnd(IReadOnlyList<IChanLine> biLst)
     {
         if (Ele[1] == null) throw new InvalidOperationException();
         if (Ele[1].Gap)
@@ -107,8 +107,8 @@ public class EigenFeature
         return true;
     }
 
-    public bool IsDown() => Dir == BI_DIR.DOWN;
-    public bool IsUp() => Dir == BI_DIR.UP;
+    public bool IsDown() => Dir == CHAN_DIR.DOWN;
+    public bool IsUp() => Dir == CHAN_DIR.UP;
 
     public int GetPeakBiIdx()
     {
@@ -160,7 +160,7 @@ public class EigenFeature
         return false;
     }
 
-    private bool? FindRevertFx(IReadOnlyList<IBiLine> biList, int beginIdx, double thredValue, double breakThred)
+    private bool? FindRevertFx(IReadOnlyList<IChanLine> biList, int beginIdx, double thredValue, double breakThred)
     {
         bool commonCombine = false;
         var firstBiDir = biList[beginIdx].Dir;

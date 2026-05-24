@@ -39,9 +39,9 @@ public static class FuncUtil
         }
     }
 
-    public static BI_DIR RevertBiDir(BI_DIR dir)
+    public static CHAN_DIR RevertBiDir(CHAN_DIR dir)
     {
-        return dir == BI_DIR.UP ? BI_DIR.DOWN : BI_DIR.UP;
+        return dir == CHAN_DIR.UP ? CHAN_DIR.DOWN : CHAN_DIR.UP;
     }
 
     public static bool HasOverlap(double l1, double h1, double l2, double h2, bool equal = false)

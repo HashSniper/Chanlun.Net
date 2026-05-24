@@ -11,6 +11,17 @@ builder.Services.AddControllers();
 
 var app = builder.Build();
 
+#if DEBUG
+AppDomain.CurrentDomain.FirstChanceException += (sender, eventArgs) =>
+{
+    var ex = eventArgs.Exception;
+    // 跳过常见的框架内部噪音异常
+    if (ex is OperationCanceledException or TaskCanceledException or ThreadAbortException)
+        return;
+    System.Diagnostics.Debugger.Break();
+};
+#endif
+
 app.UseAuthorization();
 app.MapControllers();
 

@@ -42,13 +42,13 @@ public class TrendLine
     public Line? Line { get; private set; }
     public TREND_LINE_SIDE Side { get; }
 
-    public TrendLine(List<Bi> lst, TREND_LINE_SIDE side = TREND_LINE_SIDE.OUTSIDE)
+    public TrendLine(List<IChanLine> lst, TREND_LINE_SIDE side = TREND_LINE_SIDE.OUTSIDE)
     {
         Side = side;
         Cal(lst);
     }
 
-    private void Cal(List<Bi> lst)
+    private void Cal(List<IChanLine> lst)
     {
         double bench = double.PositiveInfinity;
         List<Point> allP;
@@ -73,14 +73,14 @@ public class TrendLine
         }
     }
 
-    private static double InitPeakSlope(BI_DIR dir, TREND_LINE_SIDE side)
+    private static double InitPeakSlope(CHAN_DIR dir, TREND_LINE_SIDE side)
     {
         if (side == TREND_LINE_SIDE.INSIDE)
             return 0;
-        return dir == BI_DIR.UP ? double.PositiveInfinity : double.NegativeInfinity;
+        return dir == CHAN_DIR.UP ? double.PositiveInfinity : double.NegativeInfinity;
     }
 
-    private static (Line line, int idx) CalTl(List<Point> cP, BI_DIR dir, TREND_LINE_SIDE side)
+    private static (Line line, int idx) CalTl(List<Point> cP, CHAN_DIR dir, TREND_LINE_SIDE side)
     {
         var p = cP[0];
         double peakSlope = InitPeakSlope(dir, side);
@@ -89,11 +89,11 @@ public class TrendLine
         {
             var p2 = cP[pointIdx + 1];
             double slope = p.CalSlope(p2);
-            if ((dir == BI_DIR.UP && slope < 0) || (dir == BI_DIR.DOWN && slope > 0))
+            if ((dir == CHAN_DIR.UP && slope < 0) || (dir == CHAN_DIR.DOWN && slope > 0))
                 continue;
             if (side == TREND_LINE_SIDE.INSIDE)
             {
-                if ((dir == BI_DIR.UP && slope > peakSlope) || (dir == BI_DIR.DOWN && slope < peakSlope))
+                if ((dir == CHAN_DIR.UP && slope > peakSlope) || (dir == CHAN_DIR.DOWN && slope < peakSlope))
                 {
                     peakSlope = slope;
                     idx = pointIdx + 1;
@@ -101,7 +101,7 @@ public class TrendLine
             }
             else
             {
-                if ((dir == BI_DIR.UP && slope < peakSlope) || (dir == BI_DIR.DOWN && slope > peakSlope))
+                if ((dir == CHAN_DIR.UP && slope < peakSlope) || (dir == CHAN_DIR.DOWN && slope > peakSlope))
                 {
                     peakSlope = slope;
                     idx = pointIdx + 1;

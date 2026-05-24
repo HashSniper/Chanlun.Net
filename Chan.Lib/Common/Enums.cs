@@ -23,7 +23,7 @@ public enum KL_TYPE
     K_YEAR
 }
 
-public enum KLINE_DIR
+public enum Combiner_DIR
 {
     UP,
     DOWN,
@@ -33,12 +33,13 @@ public enum KLINE_DIR
 
 public enum FX_TYPE
 {
+    UNKNOWN,
     BOTTOM,
     TOP,
-    UNKNOWN
+
 }
 
-public enum BI_DIR
+public enum CHAN_DIR
 {
     UP,
     DOWN
