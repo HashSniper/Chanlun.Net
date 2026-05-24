@@ -1,16 +1,19 @@
-﻿using Chanlun.Lib.Bi;
-using Chanlun.Lib.Memory;
-using Chanlun.Lib.SEG;
+﻿using Chanlun.Lib.Extensions;
 
-namespace Chanlun.Lib.ZS;
+namespace Chanlun.Lib.SEG;
 
 public static class SegCalculator
 {
-    public static SegList Calculate(float key, BiList biList)
+    public static List<Seg> Calculate(float key, List<Bi.Bi> bis)
     {
-        SegList biZsList = [];
+        var result = new List<Seg>();
+        if (bis.IsNullOrEmpty())
+        {
+            return result;
+        }
+        
         
 
-        return biZsList;
+        return result;
     }
 }
