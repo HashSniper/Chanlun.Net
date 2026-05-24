@@ -2,10 +2,8 @@
 
 namespace Chanlun.Lib.KLine
 {
-    public class KLineUnit(int idx) : ChanNode<KLineUnit>
+    public class KLineUnit(int idx) : ChanNode<KLineUnit>(idx)
     {
-        public int Idx { get; } = idx;
-
         public DateTime Time { get; set; }
     }
 }

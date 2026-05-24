@@ -5,20 +5,11 @@ namespace Chanlun.Lib.KLine
     /// <summary>
     /// 合并后的K线数据，包含合并
     /// </summary>
-    public class KLineGroup : ChanNode<KLineGroup>
+    public class KLineGroup(int idx, ChanDir dir) : ChanNode<KLineGroup>(idx)
     {
-        private readonly List<KLineUnit> _combinedUnits;
+        private readonly List<KLineUnit> _combinedUnits = new();
 
-        public KLineGroup(int idx, ChanDir dir)
-        {
-            Idx = idx;
-            DIR = dir;
-            _combinedUnits = new List<KLineUnit>();
-        }
-
-        public int Idx { get; }
-        
-        public ChanDir DIR { get; set; }
+        public ChanDir DIR { get; set; } = dir;
 
         public KLineUnit PeakUnit { get; private set; }
 

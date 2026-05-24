@@ -4,19 +4,18 @@ using Chanlun.Lib.SEG;
 
 namespace Chanlun.Lib;
 
-public class ChanCalculator
+public static class ChanCalculator
 {
-  
-
-    public ChanCalculateResult Calculate(int nCount,float[] pHigh, float[] pLow, float[] pkey)
+    
+    public static void Calculate(int nCount,float[] pHigh, float[] pLow, float[] pkey)
     {
         float key = pkey[0];
         
-        ChanCalculateResult result = new ChanCalculateResult();
-        result.BiList = BiCalculator.Calculate(nCount, pHigh, pLow, pkey);
-        result.SegList = SegCalculator.Calculate(key, result.BiList);
+        var result = new ChanCalculateResult();
+        BiCalculator.Calculate(nCount, pHigh, pLow, pkey, ref result);
+        SegCalculator.Calculate(key, result.BiList, ref result);
         
         ChanCalculateResultCache.Add(key,result);
-        return result;
+
     }
 }

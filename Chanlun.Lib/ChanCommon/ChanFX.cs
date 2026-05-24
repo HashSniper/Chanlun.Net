@@ -2,6 +2,7 @@
 {
     public enum ChanFX
     {
+        UNKNOWN,
         BOTTOM,
         TOP,
     }
