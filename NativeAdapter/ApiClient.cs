@@ -12,7 +12,7 @@ internal static class ApiClient
     private static readonly HttpClient _httpClient = new()
     {
         BaseAddress = new Uri("http://localhost:5000"),
-        Timeout = TimeSpan.FromSeconds(30)
+        Timeout = TimeSpan.FromSeconds(20)
     };
 
     public static float[] CallApi<TRequest>(string endpoint, TRequest request, JsonTypeInfo<TRequest> requestTypeInfo)

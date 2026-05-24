@@ -2,7 +2,9 @@
 {
     public enum ChanDir
     {
+        UNKNOWN,
         UP,
-        DOWN
+        DOWN,
+        COMBINE,
     }
 }
