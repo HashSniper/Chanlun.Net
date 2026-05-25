@@ -37,14 +37,24 @@ public class Eigen(int idx, ChanDir dir, Bi.Bi bi) : ChanNode<Eigen>(idx)
         return dir;
     }
 
-    public void UpdateFx(Eigen pre, Eigen next)
+    public void UpdateFx(Eigen pre, Eigen next, int allowTopEqual)
     {
         Pre = pre;
         Next = next;
         Pre.Next = this;
         Next.Pre = this;
 
-        if (pre.High < High && next.High < High && pre.Low < Low && next.Low < Low)
+        if (pre.High < High && next.High <= High && next.Low < Low)
+        {
+            if (allowTopEqual == 1 || next.High < High)
+                Fx = ChanFX.TOP;
+        }
+        else if (next.High > High && pre.Low > Low && next.Low >= Low)
+        {
+            if (allowTopEqual == -1 || next.Low > Low)
+                Fx = ChanFX.BOTTOM;
+        }
+        else if (pre.High < High && next.High < High && pre.Low < Low && next.Low < Low)
         {
             Fx = ChanFX.TOP;
         }
@@ -72,10 +82,15 @@ public class Eigen(int idx, ChanDir dir, Bi.Bi bi) : ChanNode<Eigen>(idx)
 
     private ChanDir TestCombine(Bi.Bi item)
     {
+        if (High <= item.High && Low >= item.Low)
+        {
+            return ChanDir.INCLUDED;
+        }
         if (High > item.High && Low > item.Low)
             return ChanDir.DOWN;
         if (High < item.High && Low < item.Low)
             return ChanDir.UP;
+        
 
         return ChanDir.COMBINE;
     }

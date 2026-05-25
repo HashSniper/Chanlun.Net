@@ -4,65 +4,44 @@ using Chanlun.Lib.KLine;
 
 namespace Chanlun.Lib.Bi
 {
-    public class Bi(int idx, KLineGroup startKLine, KLineGroup endKLine, bool isSure = true)
+    public class Bi(int idx, ChanKLine startChanKLine, ChanKLine endChanKLine)
         : ChanNode<Bi>(idx)
     {
         
-        public ChanDir DIR => StartKLine.FX == ChanFX.TOP ? ChanDir.DOWN : ChanDir.UP;
+        public ChanDir DIR => StartChanKLine.FX == ChanFX.TOP ? ChanDir.DOWN : ChanDir.UP;
 
-        public KLineGroup StartKLine { get; set; } = startKLine;
+        public ChanKLine StartChanKLine { get; set; } = startChanKLine;
 
-        public KLineGroup EndKLine { get; set; } = endKLine;
+        public ChanKLine EndChanKLine { get; set; } = endChanKLine;
 
-        public override float High => DIR.IsUp() ? endKLine.High : startKLine.High;
-        public override float Low => DIR.IsUp() ? startKLine.Low : endKLine.Low;
-
-        public bool? IsSure { get; set; } = isSure;
-
-        public List<KLineGroup> SureEndKLines { get; set; } = new();
+        public override float High => DIR.IsUp() ? EndChanKLine.High : StartChanKLine.High;
+        public override float Low => DIR.IsUp() ? StartChanKLine.Low : EndChanKLine.Low;
 
         public override string ToString() => $"{Idx}|{DIR}";
         
-        public void RestoreToSureEnd(KLineGroup end)
+        private void UpdateNewEnd(ChanKLine end)
         {
-            IsSure = true;
-            UpdateNewEnd(end);
-            SureEndKLines.Clear();
+            EndChanKLine = end;
         }
 
-        private void UpdateNewEnd(KLineGroup end)
+        public void UpdateEnd(ChanKLine end)
         {
-            EndKLine = end;
-        }
-
-
-        public bool TryUpdateEnd(KLineGroup end)
-        {
-            if ((DIR == ChanDir.UP && end.DIR == ChanDir.UP && end.High >= EndKLine.High) ||
-                (DIR == ChanDir.DOWN && end.DIR == ChanDir.DOWN && end.Low <= EndKLine.Low))
+            if ((DIR.IsUp() && end.DIR.IsUp() && end.High >= EndChanKLine.High) ||
+                (DIR.IsDown() && end.DIR.IsDown() && end.Low <= EndChanKLine.Low))
             {
                 UpdateNewEnd(end);
-                return true;
             }
-
-            return false;
         }
-
-        public void UpdateVirtualEnd(KLineGroup end)
-        {
-            SureEndKLines.Add(EndKLine);
-            UpdateNewEnd(end);
-            IsSure = false;
-        }
+        
 
         public float GetEndValue()
         {
-            return DIR.IsUp() ? EndKLine.High : EndKLine.Low;
+            return DIR.IsUp() ? EndChanKLine.High : EndChanKLine.Low;
         }
         
         public float GetBeginValue()
         {
-            return DIR.IsUp() ? EndKLine.Low : EndKLine.High;
+            return DIR.IsUp() ? EndChanKLine.Low : EndChanKLine.High;
         }
     }
 }

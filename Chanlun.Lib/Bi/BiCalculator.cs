@@ -1,38 +1,17 @@
-using Chanlun.Lib.ChanCommon;
 using Chanlun.Lib.Extensions;
-using Chanlun.Lib.KLine;
 using Chanlun.Lib.Memory;
-using Chanlun.Lib.SEG;
 
 namespace Chanlun.Lib.Bi;
 
 public static class BiCalculator
 {
-    public static void Calculate(int nCount, float[] pHigh, float[] pLow, float[] pKey, ref ChanCalculateResult result)
+    public static void Calculate(ref ChanCalculateResult result)
     {
-        float key = pKey[0];
-        var times = StockTimeCache.Get(key);
-
-        if (times.IsNullOrEmpty() || times.Count != nCount)
-        {
-            return;
-        }
-
-        var kLineCombines = new KLineGroupList();
+        var lineList = result.LineList;
         var biList = new BiList();
-        for (int i = 0; i < nCount; i++)
+        foreach (var line in lineList)
         {
-            var countBefore = kLineCombines.Count;
-            // 合并 k 线
-            var kLine = kLineCombines.CreateOrUpdateKLineCombineFromUnit(new KLineUnit(i)
-            {
-                High = pHigh[i],
-                Low = pLow[i],
-                Time = times[i],
-            });
-            biList.CreateOrUpdateBiFromKLine(kLine, countBefore < kLineCombines.Count);
-
-            
+            biList.CreateOrUpdateBiFromKLine(line);
         }
         result.BiList = biList;
     }
@@ -53,13 +32,13 @@ public static class BiCalculator
         {
             if (bi.DIR.IsUp())
             {
-                pOut[bi.EndKLine.PeakUnit.Idx] = 1;
-                pOut[bi.StartKLine.PeakUnit.Idx] = -1;
+                pOut[bi.EndChanKLine.PeakUnit.Idx] = 1;
+                pOut[bi.StartChanKLine.PeakUnit.Idx] = -1;
             }
             else
             {
-                pOut[bi.EndKLine.PeakUnit.Idx] = -1;
-                pOut[bi.StartKLine.PeakUnit.Idx] = 1;
+                pOut[bi.EndChanKLine.PeakUnit.Idx] = -1;
+                pOut[bi.StartChanKLine.PeakUnit.Idx] = 1;
             }
         }
         return pOut;
