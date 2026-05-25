@@ -3,28 +3,28 @@ using Chanlun.Lib.KLine;
 
 namespace Chanlun.Lib.Extensions
 {
-    public static class KLineCombineExtensions
+    public static class ChanLineExtensions
     {
         
-        public static int GetSpan(this KLineGroup start, KLineGroup end)
+        public static int GetSpan(this ChanKLine start, ChanKLine end)
         {
             var span = end.Idx - start.Idx;
             var tempStart = start.Next;
-            while (tempStart != null && tempStart.Idx < end.Idx)
-            {
-                //跳空缺口，可以多一根
-                if (tempStart.HasGap(tempStart.Next))
-                {
-                    span++;
-                }
-
-                tempStart = tempStart.Next;
-            }
+            // while (tempStart != null && tempStart.Idx < end.Idx)
+            // {
+            //     //跳空缺口，可以多一根
+            //     if (tempStart.HasGap(tempStart.Next))
+            //     {
+            //         span++;
+            //     }
+            //
+            //     tempStart = tempStart.Next;
+            // }
 
             return span;
         }
 
-        public static bool CanCreateNewBi(this KLineGroup start, KLineGroup end)
+        public static bool CanCreateNewBi(this ChanKLine start, ChanKLine end)
         {
             if (!start.CheckSpanValid(end))
             {
@@ -34,7 +34,7 @@ namespace Chanlun.Lib.Extensions
             return start.CheckFxValid(end) && start.CheckEndIsPeak(end);
         }
 
-        private static bool CheckEndIsPeak(this KLineGroup start, KLineGroup end)
+        private static bool CheckEndIsPeak(this ChanKLine start, ChanKLine end)
         {
             var current = start;
             while (current != null && current.Idx < end.Idx)
@@ -54,16 +54,16 @@ namespace Chanlun.Lib.Extensions
             return true;
         }
 
-        private static bool CheckSpanValid(this KLineGroup start, KLineGroup end)
+        private static bool CheckSpanValid(this ChanKLine start, ChanKLine end)
         {
             var span = start.GetSpan(end);
             //一笔至少5 k线
             return span >= 4;
         }
 
-        private static bool CheckFxValid(this KLineGroup start, KLineGroup end)
+        private static bool CheckFxValid(this ChanKLine start, ChanKLine end)
         {
-            if (start.FX == end.FX || start.FX == null || end.FX == null)
+            if (start.FX == end.FX || start.FX == ChanFX.UNKNOWN || end.FX == ChanFX.UNKNOWN )
             {
                 return false;
             }

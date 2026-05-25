@@ -55,13 +55,14 @@ public class EigenFx(ChanDir dir)
     {
         if (Eigen0 == null || Eigen1 == null) throw new InvalidOperationException();
         LastEvidenceBi = bi;
+        int allowTopEqual = bi.DIR.IsDown() ? 1 : -1;
         var combineDir = Eigen1.TryAdd(bi);
         if (combineDir == ChanDir.COMBINE)
             return false;
         Eigen2 = new Eigen(2, combineDir, bi);
         if (!ActualBreak())
             return Reset();
-        Eigen1!.UpdateFx(Eigen0!, Eigen2!);
+        Eigen1!.UpdateFx(Eigen0!, Eigen2!, allowTopEqual);
         var fx = Eigen1.Fx;
         var isFx = (DIR.IsUp() && fx == ChanFX.TOP) || (DIR.IsDown() && fx == ChanFX.BOTTOM);
         return isFx || Reset();

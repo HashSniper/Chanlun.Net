@@ -3,22 +3,22 @@ using Chanlun.Lib.Extensions;
 
 namespace Chanlun.Lib.KLine
 {
-    public class KLineGroupList : List<KLineGroup>
+    public class ChanKLineList : List<ChanKLine>
     {
-        private KLineGroup? LastKLine => this.IsNotNullOrEmpty() ? this.Last() : null;
+        private ChanKLine? LastKLine => this.IsNotNullOrEmpty() ? this.Last() : null;
 
-        public KLineGroup CreateOrUpdateKLineCombineFromUnit(KLineUnit kLineUnit)
+        public ChanKLine CreateOrUpdateKLineCombineFromUnit(KLineUnit kLineUnit)
         {
-            if (this.Count == 0)
+            if (LastKLine == null)
             {
-                return CreateNewCombine(kLineUnit, ChanDir.UP);
+                return CreateNewLine(kLineUnit, ChanDir.UP);
             }
 
             var currentDir = LastKLine.GetNewNodeDir(kLineUnit);
 
-            if (currentDir.HasValue)
+            if (currentDir != ChanDir.COMBINE)
             {
-                return CreateNewCombine(kLineUnit, currentDir.Value);
+                return CreateNewLine(kLineUnit, currentDir);
             }
             else
             {
@@ -27,9 +27,9 @@ namespace Chanlun.Lib.KLine
             }
         }
 
-        private KLineGroup CreateNewCombine(KLineUnit kLineUnit, ChanDir dir)
+        private ChanKLine CreateNewLine(KLineUnit kLineUnit, ChanDir dir)
         {
-            var newCombine = new KLineGroup(this.Count, dir);
+            var newCombine = new ChanKLine(this.Count, dir);
             newCombine.AddKLineUnit(kLineUnit);
 
             var lastCombine = LastKLine;

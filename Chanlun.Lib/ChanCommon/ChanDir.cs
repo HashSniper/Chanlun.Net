@@ -6,5 +6,6 @@
         UP,
         DOWN,
         COMBINE,
+        INCLUDED,
     }
 }

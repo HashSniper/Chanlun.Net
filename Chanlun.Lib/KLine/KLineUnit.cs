@@ -5,5 +5,7 @@ namespace Chanlun.Lib.KLine
     public class KLineUnit(int idx) : ChanNode<KLineUnit>(idx)
     {
         public DateTime Time { get; set; }
+        
+        public override string ToString() => $"Unit|{Idx}|{Time}";
     }
 }

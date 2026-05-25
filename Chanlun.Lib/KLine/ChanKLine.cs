@@ -5,7 +5,7 @@ namespace Chanlun.Lib.KLine
     /// <summary>
     /// 合并后的K线数据，包含合并
     /// </summary>
-    public class KLineGroup(int idx, ChanDir dir) : ChanNode<KLineGroup>(idx)
+    public class ChanKLine(int idx, ChanDir dir) : ChanNode<ChanKLine>(idx)
     {
         private readonly List<KLineUnit> _combinedUnits = new();
 
@@ -13,29 +13,24 @@ namespace Chanlun.Lib.KLine
 
         public KLineUnit PeakUnit { get; private set; }
 
-        private ChanFX? _fx;
-
-        public ChanFX? FX
+        public ChanFX FX
         {
             get
             {
-                if (!_fx.HasValue && Pre != null && Next != null)
+                if (field != ChanFX.UNKNOWN || Pre == null || Next == null) return field;
+                if (Pre.High < High && Next.High < High && Pre.Low < Low && Next.Low < Low)
                 {
-                    if (Pre.High < High && Next.High < High && Pre.Low < Low && Next.Low < Low)
-                    {
-                        _fx = ChanFX.TOP;
-                    }
-                    else if (Pre.High > High && Next.High > High && Pre.Low > Low && Next.Low > Low)
-                    {
-                        _fx = ChanFX.BOTTOM;
-                    }
+                    field = ChanFX.TOP;
                 }
-
-                return _fx;
+                else if (Pre.High > High && Next.High > High && Pre.Low > Low && Next.Low > Low)
+                {
+                    field = ChanFX.BOTTOM;
+                }
+                return field;
             }
         }
         
-        public List<KLineUnit> CombinedUnits => _combinedUnits;
+        public IReadOnlyList<KLineUnit> CombinedUnits => _combinedUnits;
 
         public void AddKLineUnit(KLineUnit unit)
         {
