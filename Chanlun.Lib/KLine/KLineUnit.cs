@@ -7,5 +7,8 @@ namespace Chanlun.Lib.KLine
         public DateTime Time { get; set; }
         
         public override string ToString() => $"Unit|{Idx}|{Time}";
+        
+        public MACD.MACD MACD { get; set; }
     }
+    
 }
