@@ -1,4 +1,5 @@
 ﻿using Chanlun.Lib.ChanCommon;
+using Chanlun.Lib.Extensions;
 
 namespace Chanlun.Lib.SEG;
 
@@ -15,10 +16,10 @@ public class Seg(int idx, Bi.Bi startBi, Bi.Bi endBi, bool isSure = true)
     public ChanDir DIR => Lst.Count > 0 ? Lst[0].DIR : ChanDir.UP;
 
     /// <summary>线段最高点</summary>
-    public float High => Lst.Count > 0 ? Lst.Max(b => b.High) : 0;
+    public override float High => DIR.IsUp() ? EndBi.High : StartBi.High;
 
     /// <summary>线段最低点</summary>
-    public float Low => Lst.Count > 0 ? Lst.Min(b => b.Low) : 0;
+    public override float Low => DIR.IsUp() ? StartBi.Low : EndBi.Low;
     
     /// <summary>笔的数量</summary>
     public int Count => Lst.Count;

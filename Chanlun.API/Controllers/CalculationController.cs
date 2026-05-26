@@ -1,7 +1,9 @@
 ﻿using Chanlun.Lib;
 using Chanlun.Lib.Bi;
+using Chanlun.Lib.KLine;
 using Chanlun.Lib.Memory;
 using Chanlun.Lib.SEG;
+using Chanlun.Lib.Zs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Chanlun.API.Controllers;
@@ -59,29 +61,27 @@ public class CalculationController : ControllerBase
     } 
     
     /// <summary>
-    /// 5. 获取笔中枢高点
+    /// 5. 获取中枢高点
     /// </summary>
     /// <param name="request"></param>
     /// <returns></returns>
-    [HttpPost("bizszg")]
-    public IActionResult BiZSZG([FromBody] CalcRequest request)
+    [HttpPost("pivotzg")]
+    public IActionResult PivotZG([FromBody] CalcRequest request)
     {
-        // var result = BiZsAdapter.GetBiZSZG(request.NCount, request.A, request.B, request.C);
-        // return Ok(new CalcResponse { Result = result });
-        return Ok(new CalcResponse { Result = [] });
+        var result = PivotCalculator.GetPivotZG(request.NCount, request.A, request.B, request.C);
+        return Ok(new CalcResponse { Result = result });
     } 
     
     /// <summary>
-    /// 6. 获取笔中枢低点
+    /// 6. 获取中枢低点
     /// </summary>
     /// <param name="request"></param>
     /// <returns></returns>
-    [HttpPost("bizszd")]
-    public IActionResult BiZSZD([FromBody] CalcRequest request)
+    [HttpPost("pivotzd")]
+    public IActionResult PivotZD([FromBody] CalcRequest request)
     {
-        // var result = BiZsAdapter.GetBiZSZD(request.NCount, request.A, request.B, request.C);
-        // return Ok(new CalcResponse { Result = result });
-        return Ok(new CalcResponse { Result = [] });
+        var result = PivotCalculator.GetPivotZD(request.NCount, request.A, request.B, request.C);
+        return Ok(new CalcResponse { Result = result });
     } 
     
     /// <summary>
@@ -89,12 +89,11 @@ public class CalculationController : ControllerBase
     /// </summary>
     /// <param name="request"></param>
     /// <returns></returns>
-    [HttpPost("bizsrange")]
-    public IActionResult BiZSRange([FromBody] CalcRequest request)
+    [HttpPost("pivotrange")]
+    public IActionResult PivotRange([FromBody] CalcRequest request)
     {
-        // var result = BiZsAdapter.GetBiZSRange(request.NCount, request.A, request.B, request.C);
-        // return Ok(new CalcResponse { Result = result });
-        return Ok(new CalcResponse { Result = [] });
+        var result = PivotCalculator.GetPivotRange(request.NCount, request.A, request.B, request.C);
+        return Ok(new CalcResponse { Result = result });
     } 
     
     /// <summary>
@@ -105,9 +104,8 @@ public class CalculationController : ControllerBase
     [HttpPost("klineg")]
     public IActionResult KLineG([FromBody] CalcRequest request)
     {
-        // var result = KLineAdapter.GetKLineG(request.NCount, request.A, request.B, request.C);
-        // return Ok(new CalcResponse { Result = result });
-        return Ok(new CalcResponse { Result = [] });
+        var result = ChanKLineCalculator.GetKLineG(request.NCount, request.A, request.B, request.C);
+        return Ok(new CalcResponse { Result = result });
     } 
     
     /// <summary>
@@ -118,9 +116,8 @@ public class CalculationController : ControllerBase
     [HttpPost("klined")]
     public IActionResult KLineD([FromBody] CalcRequest request)
     {
-        // var result = KLineAdapter.GetKLineD(request.NCount, request.A, request.B, request.C);
-        // return Ok(new CalcResponse { Result = result });
-        return Ok(new CalcResponse { Result = [] });
+        var result = ChanKLineCalculator.GetKLineD(request.NCount, request.A, request.B, request.C);
+        return Ok(new CalcResponse { Result = result });
     } 
     
     /// <summary>
@@ -131,9 +128,8 @@ public class CalculationController : ControllerBase
     [HttpPost("klinerange")]
     public IActionResult KLineRange([FromBody] CalcRequest request)
     {
-        // var result = KLineAdapter.GetKLineRange(request.NCount, request.A, request.B, request.C);
-        // return Ok(new CalcResponse { Result = result });
-        return Ok(new CalcResponse { Result = [] });
+        var result = ChanKLineCalculator.GetKLineRange(request.NCount, request.A, request.B, request.C);
+        return Ok(new CalcResponse { Result = result });
     } 
 
 

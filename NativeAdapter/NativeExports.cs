@@ -101,7 +101,7 @@ public static unsafe partial class NativeExports
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) }, EntryPoint = "Func5")]
     public static void Func5(int nCount, float* pOut, float* a, float* b, float* c)
     {
-        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/bizszg");
+        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/pivotzg");
     }
 
     //=========================================================================
@@ -110,7 +110,7 @@ public static unsafe partial class NativeExports
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) }, EntryPoint = "Func6")]
     public static void Func6(int nCount, float* pOut, float* a, float* b, float* c)
     {
-        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/bizszd");
+        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/pivotzd");
     }
 
     //=========================================================================
@@ -119,7 +119,7 @@ public static unsafe partial class NativeExports
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) }, EntryPoint = "Func7")]
     public static void Func7(int nCount, float* pOut, float* a, float* b, float* c)
     {
-        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/bizsrange");
+        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/pivotrange");
     }
 
     //=========================================================================
