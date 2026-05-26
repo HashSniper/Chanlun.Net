@@ -6,7 +6,7 @@ namespace Chanlun.Lib.Zs;
 
 public class PivotList : List<Pivot>
 {
-    private Pivot _currentPivot = null;
+    private Pivot? _currentPivot = null;
     private int _searchIndex = 0; // 用于扫描新中枢的起点指针
     
     public void CreateOrUpdatePivot(List<Seg> segList)

@@ -148,6 +148,15 @@ public static unsafe partial class NativeExports
     {
         ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/klinerange");
     }
+    
+    //=========================================================================
+    // 输出函数10号：存入MACD
+    //=========================================================================
+    [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) }, EntryPoint = "Func11")]
+    public static void Func11(int nCount, float* pOut, float* a, float* b, float* c)
+    {
+        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/setmacd");
+    }
 
     // 静态函数信息表
     private static readonly PluginTCalcFuncInfo[] Info;
@@ -167,6 +176,7 @@ public static unsafe partial class NativeExports
             new() { NFuncMark = 8, PCallFunc = (nint)(delegate* unmanaged[Cdecl]<int, float*, float*, float*, float*, void>)&Func8 },
             new() { NFuncMark = 9, PCallFunc = (nint)(delegate* unmanaged[Cdecl]<int, float*, float*, float*, float*, void>)&Func9 },
             new() { NFuncMark = 10, PCallFunc = (nint)(delegate* unmanaged[Cdecl]<int, float*, float*, float*, float*, void>)&Func10 },
+            new() { NFuncMark = 11, PCallFunc = (nint)(delegate* unmanaged[Cdecl]<int, float*, float*, float*, float*, void>)&Func11 },
             new() { NFuncMark = 0, PCallFunc = 0 }
         };
         _infoHandle = GCHandle.Alloc(Info, GCHandleType.Pinned);

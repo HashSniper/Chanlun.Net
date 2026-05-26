@@ -64,18 +64,29 @@ public class Pivot(int idx) : ChanNode<Pivot>(idx)
         if (IsClosed) return false;
 
         // 只要与 [ZD, ZG] 还有重叠，就属于中枢震荡延伸
-        if (s.Low <= ZG && s.High >= ZD)
+        if (IsOverLap(s))
         {
-            Segs.Add(s);
-            GG = Math.Max(GG, s.High);
-            DD = Math.Min(DD, s.Low);
-
-            // 9段升级逻辑不变
-            if (Segs.Count == 9)
+            //构成第三类买卖点，此时设置退出
+            if (s.Next != null && !IsOverLap(s.Next))
             {
-                Level++;
+                OutSeg = s;
+                IsClosed = true;
+                return false; 
             }
-            return true; 
+            else
+            {
+                Segs.Add(s);
+                GG = Math.Max(GG, s.High);
+                DD = Math.Min(DD, s.Low);
+
+                // 9段升级逻辑不变
+                if (Segs.Count == 9)
+                {
+                    Level++;
+                }
+
+                return true; 
+            }
         }
         else
         {
@@ -84,6 +95,12 @@ public class Pivot(int idx) : ChanNode<Pivot>(idx)
             IsClosed = true;
             return false; 
         }
+    }
+
+    private bool IsOverLap(Seg s)
+    {
+        if (IsClosed) return false;
+        return s.Low <= ZG && s.High >= ZD;
     }
 
 }
