@@ -1,6 +1,7 @@
 ﻿using Chanlun.Lib.Bi;
 using Chanlun.Lib.KLine;
 using Chanlun.Lib.SEG;
+using Chanlun.Lib.Zs;
 
 namespace Chanlun.Lib;
 
@@ -11,4 +12,6 @@ public class ChanCalculateResult
     public BiList BiList { get; set; }
     
     public List<Seg> SegList { get; set; }
+    
+    public PivotList PivotList { get; set; }
 }
