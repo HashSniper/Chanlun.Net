@@ -14,12 +14,13 @@ public static class SegCalculator
         {
             return;
         }
+
         segs.CreateOrUpdateSeg(bis);
-        
+
         result.SegList = segs;
     }
-    
-    
+
+
     public static float[] GetSegs(int nCount, float[] pHigh, float[] pLow, float[] pKey)
     {
         var key = pKey[0];
@@ -44,7 +45,21 @@ public static class SegCalculator
                 pOut[seg.StartBi.StartChanKLine.PeakUnit.Idx] = 1;
             }
         }
-
+#if DEBUG
+        var filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "seg_output.txt");
+        using (var writer = new StreamWriter(filePath, false))
+        {
+            writer.WriteLine($"key: {key}");
+            for (int i = 0; i < pOut.Length; i++)
+            {
+                if (pOut[i] == 1 || pOut[i] == -1)
+                {
+                    writer.WriteLine($"{i}: {pOut[i]}");
+                }
+            }
+        }
+#endif
+        
         return pOut;
     }
 }

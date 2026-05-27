@@ -12,21 +12,18 @@ public class Seg(int idx, Bi.Bi startBi, Bi.Bi endBi, bool isSure = true)
     /// <summary>构成线段的所有笔</summary>
     public List<Bi.Bi> Lst { get; } = new();
 
-    /// <summary>线段方向（与第一笔同向）</summary>
-    public ChanDir DIR => Lst.Count > 0 ? Lst[0].DIR : ChanDir.UP;
+    /// <summary>线段方向</summary>
+    public ChanDir DIR => EndBi.DIR;
 
     /// <summary>线段最高点</summary>
-    public override float High => DIR.IsUp() ? EndBi.High : StartBi.High;
+    public override float High => DIR.IsUp() ? EndBi.EndChanKLine.PeakUnit.High : StartBi.StartChanKLine.PeakUnit.High;
 
     /// <summary>线段最低点</summary>
-    public override float Low => DIR.IsUp() ? StartBi.Low : EndBi.Low;
-    
-    /// <summary>笔的数量</summary>
-    public int Count => Lst.Count;
-    
-    public Bi.Bi StartBi { get;  private set; } = startBi;
+    public override float Low => DIR.IsUp() ? StartBi.StartChanKLine.PeakUnit.Low : EndBi.EndChanKLine.PeakUnit.Low;
+
+    public Bi.Bi StartBi { get; private set; } = startBi;
     public Bi.Bi EndBi { get; private set; } = endBi;
-    public bool IsSure { get; set; } = isSure;
+
     public EigenFx? EigenFx { get; set; }
 
     public void UpdateBiList(List<Bi.Bi> biLst, int idx1, int idx2)
@@ -39,6 +36,6 @@ public class Seg(int idx, Bi.Bi startBi, Bi.Bi endBi, bool isSure = true)
 
     public override string ToString()
     {
-        return $"[{nameof(Seg)}] {DIR} Idx={Idx} Count={Count} H={High} L={Low}";
+        return $"[{nameof(Seg)}] {DIR} Idx={Idx} Count={Lst.Count} H={High} L={Low}";
     }
 }
