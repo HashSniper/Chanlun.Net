@@ -6,34 +6,44 @@ namespace Chanlun.Lib.Bi
 {
     public class BiList : List<Bi>
     {
-        private Bi? LastBi => this.IsNotNullOrEmpty() ? this.Last() : null;
-        
         public void CreateOrUpdateBiFromKLine(ChanKLine chanKLine)
         {
-            if (chanKLine.FX == ChanFX.UNKNOWN)
-            {
-                return;
-            }
-            
+            var lastBi = this.IsNotNullOrEmpty() ? this.Last() : null;
+
             if (chanKLine.FX == ChanFX.UNKNOWN)
             {
                 return;
             }
 
-            if (LastBi == null)
+            if (chanKLine.FX == ChanFX.UNKNOWN)
+            {
+                return;
+            }
+
+            if (lastBi == null)
             {
                 TryCreateFirstBi(chanKLine);
             }
-            else if (LastBi.EndChanKLine.FX == chanKLine.FX)
+            else if (lastBi.EndChanKLine.FX == chanKLine.FX)
             {
-                LastBi.UpdateEnd(chanKLine);
+                lastBi.TryUpdateEnd(chanKLine);
             }
-            else if (LastBi.EndChanKLine.CanCreateNewBi(chanKLine))
+            else if (lastBi.Pre != null && lastBi.Pre.EndChanKLine.FX == chanKLine.FX)
             {
-                AddNewBi(LastBi.EndChanKLine, chanKLine);
+                if (lastBi.Pre.TryUpdateEnd(chanKLine))
+                {
+                    lastBi = lastBi.Pre;
+                    lastBi.Next = null;
+                    this.RemoveEnd();
+                }
+            }
+
+            if (lastBi != null && lastBi.EndChanKLine.CanCreateNewBi(chanKLine))
+            {
+                AddNewBi(lastBi.EndChanKLine, chanKLine);
             }
         }
-        
+
         private bool TryCreateFirstBi(ChanKLine endChanKLine)
         {
             var startKLine = endChanKLine.Pre;
@@ -58,11 +68,12 @@ namespace Chanlun.Lib.Bi
 
         private void AddNewBi(ChanKLine start, ChanKLine end)
         {
+            var lastBi = this.IsNotNullOrEmpty() ? this.Last() : null;
             var newBi = new Bi(this.Count, start, end);
-            if (LastBi != null)
+            if (lastBi != null)
             {
-                LastBi.Next = newBi;
-                newBi.Pre = LastBi;
+                lastBi.Next = newBi;
+                newBi.Pre = lastBi;
             }
 
             this.Add(newBi);

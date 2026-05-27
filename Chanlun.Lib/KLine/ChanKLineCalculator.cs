@@ -115,10 +115,11 @@ public static class ChanKLineCalculator
                 continue;
             }
 
-            var startIdx = kLine.CombinedUnits[0].Idx;
-            var endIdx = kLine.CombinedUnits.Last().Idx;
-            pOut[startIdx] = 1;
-            pOut[endIdx] = 2;
+            // 合并区间内的每根K线都标记为1，形成连续的矩形框
+            foreach (var unit in kLine.CombinedUnits)
+            {
+                pOut[unit.Idx] = 1;
+            }
         }
 
         return pOut;

@@ -24,13 +24,15 @@ namespace Chanlun.Lib.Bi
             EndChanKLine = end;
         }
 
-        public void UpdateEnd(ChanKLine end)
+        public bool TryUpdateEnd(ChanKLine end)
         {
             if ((DIR.IsUp() && end.DIR.IsUp() && end.High >= EndChanKLine.High) ||
                 (DIR.IsDown() && end.DIR.IsDown() && end.Low <= EndChanKLine.Low))
             {
                 UpdateNewEnd(end);
+                return true;
             }
+            return false;
         }
         
 

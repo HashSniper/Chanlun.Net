@@ -5,11 +5,10 @@ namespace Chanlun.Lib.Extensions
 {
     public static class ChanLineExtensions
     {
-        
-        public static int GetSpan(this ChanKLine start, ChanKLine end)
+        private static int GetSpan(this ChanKLine start, ChanKLine end)
         {
             var span = end.Idx - start.Idx;
-            var tempStart = start.Next;
+            //var tempStart = start.Next;
             // while (tempStart != null && tempStart.Idx < end.Idx)
             // {
             //     //跳空缺口，可以多一根
