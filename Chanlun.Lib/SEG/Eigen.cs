@@ -7,8 +7,8 @@ public class Eigen(int idx, ChanDir dir, Bi.Bi bi) : ChanNode<Eigen>(idx)
 {
     private List<Bi.Bi> Lst { get; } = [bi];
     public ChanDir DIR { get; } = dir;
-    public float High { get; private set; } = bi.High;
-    public float Low { get; private set; } = bi.Low;
+    public override float High { get; set; } = bi.High;
+    public override float Low { get; set; } = bi.Low;
     public int Count => Lst.IsNullOrEmpty() ? 0 : Lst.Count;
     public bool Gap { get; set; } = false;
 
@@ -86,11 +86,12 @@ public class Eigen(int idx, ChanDir dir, Bi.Bi bi) : ChanNode<Eigen>(idx)
         {
             return ChanDir.INCLUDED;
         }
+
         if (High > item.High && Low > item.Low)
             return ChanDir.DOWN;
         if (High < item.High && Low < item.Low)
             return ChanDir.UP;
-        
+
 
         return ChanDir.COMBINE;
     }

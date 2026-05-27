@@ -26,12 +26,13 @@ public static class SegCalculator
         var key = pKey[0];
         var calculateResult = ChanCalculateResultCache.Get(key);
         var pOut = new float[nCount];
-        if (calculateResult == null)
+        var segList = calculateResult?.SegList;
+        if (segList == null)
         {
             return pOut;
         }
 
-        var segList = calculateResult.SegList;
+      
         foreach (var seg in segList)
         {
             if (seg.DIR.IsUp())

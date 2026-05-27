@@ -28,7 +28,7 @@ public static class MACDCalculator
                 unit.MACD = new MACD(pDif[unit.Idx], pDea[unit.Idx]);
             }
         }
-        
+
         var segList = calculateResult.SegList;
         if (segList.IsNullOrEmpty())
         {
@@ -38,21 +38,32 @@ public static class MACDCalculator
         foreach (var seg in segList)
         {
             float amount = 0;
-            var curBi = seg.StartBi;
-            while (curBi!=null && curBi.Idx <= seg.EndBi.Idx)
+            var curKline = seg.StartBi.StartChanKLine;
+            while (curKline != null && curKline.Idx <= seg.EndBi.EndChanKLine.Idx)
             {
-                var curKline = curBi.StartChanKLine;
-                while (curKline!=null&& curKline.Idx <= curBi.EndChanKLine.Idx)
-                {
-                    amount += curKline.CombinedUnits.Sum(p => p.MACD.MACDHist);
-                    curKline = curKline.Next;
-                }
-
-                curBi = curBi.Next;
+                amount += curKline.CombinedUnits
+                    .Where(p => seg.DIR.IsDown() ? p.MACD.Hist < 0 : p.MACD.Hist > 0)
+                    .Sum(p => p.MACD.Hist);
+                curKline = curKline.Next;
             }
 
-            pOut[seg.EndBi.EndChanKLine.PeakUnit.Idx] = amount;
+            pOut[seg.EndBi.EndChanKLine.PeakUnit.Idx] = MathF.Round(amount, 2);
         }
+
+#if DEBUG
+        var filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "macd_output.txt");
+        using (var writer = new StreamWriter(filePath, false))
+        {
+            writer.WriteLine($"key: {key}");
+            for (int i = 0; i < pOut.Length; i++)
+            {
+                if (pOut[i] != 0)
+                {
+                    writer.WriteLine($"{i}: {pOut[i]}");
+                }
+            }
+        }
+#endif
 
         return pOut;
     }
