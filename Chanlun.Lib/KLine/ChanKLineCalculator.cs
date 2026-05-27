@@ -14,7 +14,17 @@ public static class ChanKLineCalculator
         {
             return;
         }
-        
+#if DEBUG
+        var filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "kline_output.txt");
+        using (var writer = new StreamWriter(filePath, false))
+        {
+            writer.WriteLine($"key: {key}");
+            writer.WriteLine($"timeStart: {times[0]}");
+            writer.WriteLine($"timeEnd: {times[^1]}");
+        }
+#endif
+
+
         var lineList = new ChanKLineList();
         for (int i = 0; i < nCount; i++)
         {
@@ -25,11 +35,11 @@ public static class ChanKLineCalculator
                 Low = pLow[i],
                 Time = times[i],
             });
-            
         }
 
         result.LineList = lineList;
     }
+
     public static float[] GetKLineG(int nCount, float[] pHigh, float[] pLow, float[] pKey)
     {
         var key = pKey[0];
@@ -41,14 +51,15 @@ public static class ChanKLineCalculator
         }
 
         var kList = calculateResult.LineList;
-       
+
         foreach (var kLine in kList)
         {
             if (kLine.CombinedUnits.Count == 1)
             {
                 continue;
             }
-            foreach (var unit in  kLine.CombinedUnits)
+
+            foreach (var unit in kLine.CombinedUnits)
             {
                 pOut[unit.Idx] = kLine.High;
             }
@@ -56,7 +67,7 @@ public static class ChanKLineCalculator
 
         return pOut;
     }
-    
+
     public static float[] GetKLineD(int nCount, float[] pHigh, float[] pLow, float[] pKey)
     {
         var key = pKey[0];
@@ -68,14 +79,15 @@ public static class ChanKLineCalculator
         }
 
         var kList = calculateResult.LineList;
-       
+
         foreach (var kLine in kList)
         {
             if (kLine.CombinedUnits.Count == 1)
             {
                 continue;
             }
-            foreach (var unit in  kLine.CombinedUnits)
+
+            foreach (var unit in kLine.CombinedUnits)
             {
                 pOut[unit.Idx] = kLine.Low;
             }
@@ -83,7 +95,7 @@ public static class ChanKLineCalculator
 
         return pOut;
     }
-    
+
     public static float[] GetKLineRange(int nCount, float[] pHigh, float[] pLow, float[] pKey)
     {
         var key = pKey[0];
@@ -95,20 +107,20 @@ public static class ChanKLineCalculator
         }
 
         var kList = calculateResult.LineList;
-       
+
         foreach (var kLine in kList)
         {
             if (kLine.CombinedUnits.Count == 1)
             {
                 continue;
             }
-            
+
             var startIdx = kLine.CombinedUnits[0].Idx;
             var endIdx = kLine.CombinedUnits.Last().Idx;
             pOut[startIdx] = 1;
             pOut[endIdx] = 2;
         }
+
         return pOut;
     }
-    
 }
