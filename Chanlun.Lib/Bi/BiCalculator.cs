@@ -1,4 +1,6 @@
+using Chanlun.Lib.ChanCommon;
 using Chanlun.Lib.Extensions;
+using Chanlun.Lib.KLine;
 using Chanlun.Lib.Memory;
 
 namespace Chanlun.Lib.Bi;
@@ -9,10 +11,29 @@ public static class BiCalculator
     {
         var lineList = result.LineList;
         var biList = new BiList();
+        List<ChanKLine> fxs = new List<ChanKLine>();
         foreach (var line in lineList)
         {
-            biList.CreateOrUpdateBiFromKLine(line);
+            if (line.FX != ChanFX.UNKNOWN)
+            {
+                if (fxs.Count == 0 || fxs.Last().FX != line.FX)
+                {
+                    fxs.Add(line);
+                }
+                else if ((fxs.Last().FX == ChanFX.BOTTOM && line.Low < fxs.Last().Low) ||
+                         (fxs.Last().FX == ChanFX.TOP && line.High > fxs.Last().High))
+                {
+                    fxs.RemoveEnd();
+                    fxs.Add(line);
+                }
+            }
         }
+
+        foreach (var fx in fxs)
+        {
+            biList.CreateOrUpdateBiFromKLine(fx);
+        }
+
         result.BiList = biList;
     }
     

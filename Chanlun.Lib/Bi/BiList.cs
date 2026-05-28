@@ -6,6 +6,7 @@ namespace Chanlun.Lib.Bi
 {
     public class BiList : List<Bi>
     {
+        
         public void CreateOrUpdateBiFromKLine(ChanKLine chanKLine)
         {
             var lastBi = this.IsNotNullOrEmpty() ? this.Last() : null;
@@ -14,21 +15,20 @@ namespace Chanlun.Lib.Bi
             {
                 return;
             }
-
-            if (chanKLine.FX == ChanFX.UNKNOWN)
-            {
-                return;
-            }
-
+            
             if (lastBi == null)
             {
                 TryCreateFirstBi(chanKLine);
             }
-            else if (lastBi.EndChanKLine.FX == chanKLine.FX)
+            else if (lastBi.EndChanKLine.CanCreateNewBi(chanKLine))
+            {
+                AddNewBi(lastBi.EndChanKLine, chanKLine);
+            }
+            else if (lastBi.EndChanKLine.FX == chanKLine.FX && lastBi.StartChanKLine.CanCreateNewBi(chanKLine) )
             {
                 lastBi.TryUpdateEnd(chanKLine);
             }
-            else if (lastBi.Pre != null && lastBi.Pre.EndChanKLine.FX == chanKLine.FX)
+            else if (lastBi.Pre != null && lastBi.Pre.EndChanKLine.FX == chanKLine.FX && lastBi.Pre.StartChanKLine.CanCreateNewBi(chanKLine))
             {
                 if (lastBi.Pre.TryUpdateEnd(chanKLine))
                 {
@@ -36,11 +36,6 @@ namespace Chanlun.Lib.Bi
                     lastBi.Next = null;
                     this.RemoveEnd();
                 }
-            }
-
-            if (lastBi != null && lastBi.EndChanKLine.CanCreateNewBi(chanKLine))
-            {
-                AddNewBi(lastBi.EndChanKLine, chanKLine);
             }
         }
 

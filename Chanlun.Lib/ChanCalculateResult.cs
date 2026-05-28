@@ -13,5 +13,5 @@ public class ChanCalculateResult
     
     public List<Seg> SegList { get; set; }
     
-    public PivotList PivotList { get; set; }
+    public SegPivotList SegPivotList { get; set; }
 }

@@ -2,19 +2,20 @@ using Chanlun.Lib.ChanCommon;
 using Chanlun.Lib.SEG;
 
 namespace Chanlun.Lib.Zs;
+using Bi= Bi.Bi;
 
-public class Pivot(int idx) : ChanNode<Pivot>(idx)
+public class BiPivot(int idx) : ChanNode<BiPivot>(idx)
 {
-    public Seg InSeg { get; set; }
+    public Bi InBi { get; set; }
 
-    public Seg OutSeg { get; set; }
+    public Bi OutBi { get; set; }
 
     public ChanDir DIR { get; set; }
 
     /// <summary>
     /// 构成中枢的所有线段
     /// </summary>
-    public List<Seg> Segs { get; private set; } = [];
+    public List<Bi> BiList { get; private set; } = [];
 
     /// <summary>
     /// 中枢高点
@@ -38,10 +39,10 @@ public class Pivot(int idx) : ChanNode<Pivot>(idx)
 
     public int Level { get; set; } = 1;
 
-    public bool TryInitialize(Seg entry, Seg s1, Seg s2, Seg s3)
+    public bool TryInitialize(Bi entry, Bi b1, Bi b2, Bi b3)
     {
-        var maxLow = Math.Max(s1.Low, Math.Max(s2.Low, s3.Low));
-        var minHigh = Math.Min(s1.High, Math.Min(s2.High, s3.High));
+        var maxLow = Math.Max(b1.Low, Math.Max(b2.Low, b3.Low));
+        var minHigh = Math.Min(b1.High, Math.Min(b2.High, b3.High));
 
         if (maxLow > minHigh)
         {
@@ -50,18 +51,18 @@ public class Pivot(int idx) : ChanNode<Pivot>(idx)
 
         ZD = maxLow;
         ZG = minHigh;
-        GG = Math.Max(s1.High, Math.Max(s2.High, s3.High));
-        DD = Math.Min(s1.Low, Math.Min(s2.Low, s3.Low));
+        GG = Math.Max(b1.High, Math.Max(b2.High, b3.High));
+        DD = Math.Min(b1.Low, Math.Min(b2.Low, b3.Low));
         DIR = entry.DIR;
 
-        InSeg = entry;
-        Segs.AddRange([s1, s2, s3]);
+        InBi = entry;
+        BiList.AddRange([b1, b2, b3]);
 
         return true;
     }
 
     // 处理新线段（包含中枢延伸与 9 段扩展逻辑）
-    public bool ProcessNextSegment(Seg s)
+    public bool ProcessNextSegment(Bi bi)
     {
         if (IsClosed)
         {
@@ -70,20 +71,20 @@ public class Pivot(int idx) : ChanNode<Pivot>(idx)
 
         // 只要与 [ZD, ZG] 还有重叠，就属于中枢震荡延伸
         // 构成第三类买卖点，此时设置退出
-        if (!IsOverlap(s) || (s.Next != null && !IsOverlap(s.Next)))
+        if (!IsOverlap(bi) || (bi.Next != null && !IsOverlap(bi.Next)))
         {
             // 无法延伸，说明该线段脱离了中枢，确认为退出段
-            OutSeg = s;
+            OutBi = bi;
             IsClosed = true;
             return false;
         }
         
-        Segs.Add(s);
-        GG = Math.Max(GG, s.High);
-        DD = Math.Min(DD, s.Low);
+        BiList.Add(bi);
+        GG = Math.Max(GG, bi.High);
+        DD = Math.Min(DD, bi.Low);
 
         // 9 段升级逻辑不变
-        if (Segs.Count == 9)
+        if (BiList.Count == 9)
         {
             Level++;
         }
@@ -91,7 +92,7 @@ public class Pivot(int idx) : ChanNode<Pivot>(idx)
         return true;
     }
 
-    private bool IsOverlap(Seg s)
+    private bool IsOverlap(Bi s)
     {
         return s.Low <= ZG && s.High >= ZD;
     }

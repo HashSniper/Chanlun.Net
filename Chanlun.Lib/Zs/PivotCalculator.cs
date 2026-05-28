@@ -7,9 +7,9 @@ public static class PivotCalculator
 {
     public static void Calculate(ref ChanCalculateResult result)
     {
-        var pivotList = new PivotList();
+        var pivotList = new SegPivotList();
         pivotList.CreateOrUpdatePivot(result.SegList);
-        result.PivotList = pivotList;
+        result.SegPivotList = pivotList;
     }
     
     
@@ -23,7 +23,7 @@ public static class PivotCalculator
             return pOut;
         }
 
-        var pivotList = calculateResult.PivotList;
+        var pivotList = calculateResult.SegPivotList;
         foreach (var zs in pivotList)
         {
             var startIdx = zs.Segs[0].StartBi.StartChanKLine.PeakUnit.Idx;
@@ -47,7 +47,7 @@ public static class PivotCalculator
             return pOut;
         }
 
-        var pivotList = calculateResult.PivotList;
+        var pivotList = calculateResult.SegPivotList;
         foreach (var zs in pivotList)
         {
             var startIdx = zs.Segs[0].StartBi.StartChanKLine.PeakUnit.Idx;
@@ -71,7 +71,7 @@ public static class PivotCalculator
             return pOut;
         }
 
-        var pivotList = calculateResult.PivotList;
+        var pivotList = calculateResult.SegPivotList;
         foreach (var zs in pivotList)
         {
             var startIdx = zs.Segs[0].StartBi.StartChanKLine.PeakUnit.Idx;

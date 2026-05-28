@@ -25,12 +25,9 @@ namespace Chanlun.Lib.Extensions
 
         public static bool CanCreateNewBi(this ChanKLine start, ChanKLine end)
         {
-            if (!start.CheckSpanValid(end))
-            {
-                return false;
-            }
-
-            return start.CheckFxValid(end) && start.CheckEndIsPeak(end);
+            return start.CheckSpanValid(end) &&
+                   start.CheckFxValid(end) &&
+                   start.CheckEndIsPeak(end);
         }
 
         private static bool CheckEndIsPeak(this ChanKLine start, ChanKLine end)
@@ -38,6 +35,13 @@ namespace Chanlun.Lib.Extensions
             var current = start;
             while (current != null && current.Idx < end.Idx)
             {
+                if (current.FX != end.FX)
+                {
+                    current = current.Next;
+                    continue;
+                }
+
+                // 如果下降笔，则只要保证 底是最低的，
                 if (start.FX == ChanFX.TOP && current.Low < end.Low)
                 {
                     return false;
@@ -62,28 +66,7 @@ namespace Chanlun.Lib.Extensions
 
         private static bool CheckFxValid(this ChanKLine start, ChanKLine end)
         {
-            if (start.FX == end.FX || start.FX == ChanFX.UNKNOWN || end.FX == ChanFX.UNKNOWN )
-            {
-                return false;
-            }
-
-            switch (start.FX)
-            {
-                case ChanFX.TOP:
-                {
-                    var endMaxHigh = Math.Max(end.Pre.High, end.High);
-                    var startMinLow = Math.Min(start.Low, start.Next.Low);
-                    return start.High > endMaxHigh && end.Low < startMinLow;
-                }
-                case ChanFX.BOTTOM:
-                {
-                    var endMinLow = Math.Min(end.Pre.Low, end.Low);
-                    var startMaxHigh = Math.Max(start.High, start.Next.High);
-                    return start.Low < endMinLow && end.High > startMaxHigh;
-                }
-                default:
-                    return false;
-            }
+            return start.FX != end.FX && start.FX != ChanFX.UNKNOWN && end.FX != ChanFX.UNKNOWN;
         }
     }
 }

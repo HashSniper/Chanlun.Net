@@ -1,37 +1,37 @@
-﻿using Chanlun.Lib.ChanCommon;
-using Chanlun.Lib.Extensions;
+﻿using Chanlun.Lib.Extensions;
 using Chanlun.Lib.SEG;
 
 namespace Chanlun.Lib.Zs;
+using Bi= Bi.Bi;
 
-public class PivotList : List<Pivot>
+public class BiPivotList : List<BiPivot>
 {
-    private Pivot? _currentPivot;
+    private BiPivot? _currentPivot;
     private int _searchIndex; // 用于扫描新中枢的起点指针
 
-    public void CreateOrUpdatePivot(List<Seg> segList)
+    public void CreateOrUpdatePivot(List<Bi> biList)
     {
-        if (segList.IsNullOrEmpty() || segList.Count < 3)
+        if (biList.IsNullOrEmpty() || biList.Count < 3)
         {
             return;
         }
 
-        while (_searchIndex < segList.Count)
+        while (_searchIndex < biList.Count)
         {
-            TryCreatePivot(segList, segList[_searchIndex]);
+            TryCreatePivot(biList, biList[_searchIndex]);
         }
     }
 
-    private void TryCreatePivot(List<Seg> segList, Seg curSeg)
+    private void TryCreatePivot(List<Bi> biList, Bi curBi)
     {
         if (_currentPivot is null || _currentPivot.IsClosed)
         {
-            TryInitializeNewPivot(segList);
+            TryInitializeNewPivot(biList);
             return;
         }
 
         // 当前有运行中的中枢，尝试延伸
-        bool isExtended = _currentPivot.ProcessNextSegment(curSeg);
+        bool isExtended = _currentPivot.ProcessNextSegment(curBi);
         if (isExtended)
         {
             _searchIndex++;
@@ -40,29 +40,29 @@ public class PivotList : List<Pivot>
         {
             // 中枢已经闭合，重置搜索指针。
             // 缠论中，当前的退出段往往会成为下一个中枢的进入段（或组成部分）
-            _searchIndex = _currentPivot.OutSeg.Idx;
-            if (_searchIndex == segList.Count - 1)
+            _searchIndex = _currentPivot.OutBi.Idx;
+            if (_searchIndex == biList.Count - 1)
             {
-                _searchIndex = segList.Count; // 增加索引，用于终结循环
+                _searchIndex = biList.Count; // 增加索引，用于终结循环
             }
         }
     }
 
-    private void TryInitializeNewPivot(List<Seg> segList)
+    private void TryInitializeNewPivot(List<Bi> biList)
     {
         // 尝试构建新中枢，要求至少有 4 条线段（1个进入段 + 3个重叠段）
-        if (segList.Count - _searchIndex < 4)
+        if (biList.Count - _searchIndex < 4)
         {
-            _searchIndex = segList.Count;
+            _searchIndex = biList.Count;
             return;
         }
 
-        var entry = segList[_searchIndex];
-        var s1 = segList[_searchIndex + 1];
-        var s2 = segList[_searchIndex + 2];
-        var s3 = segList[_searchIndex + 3];
+        var entry = biList[_searchIndex];
+        var s1 = biList[_searchIndex + 1];
+        var s2 = biList[_searchIndex + 2];
+        var s3 = biList[_searchIndex + 3];
 
-        var newPivot = new Pivot(Count);
+        var newPivot = new BiPivot(Count);
         if (!newPivot.TryInitialize(entry, s1, s2, s3))
         {
             // 无法形成中枢，指针右移一位，继续寻找
