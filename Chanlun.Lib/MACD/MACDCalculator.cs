@@ -29,25 +29,46 @@ public static class MACDCalculator
             }
         }
 
-        var segList = calculateResult.SegList;
-        if (segList.IsNullOrEmpty())
+        // var segList = calculateResult.SegList;
+        // if (segList.IsNullOrEmpty())
+        // {
+        //     return pOut;
+        // }
+        //
+        // foreach (var seg in segList)
+        // {
+        //     float amount = 0;
+        //     var curKline = seg.StartBi.StartChanKLine;
+        //     while (curKline != null && curKline.Idx <= seg.EndBi.EndChanKLine.Idx)
+        //     {
+        //         amount += curKline.CombinedUnits
+        //             .Where(p => seg.DIR.IsDown() ? p.MACD.Hist < 0 : p.MACD.Hist > 0)
+        //             .Sum(p => p.MACD.Hist);
+        //         curKline = curKline.Next;
+        //     }
+        //
+        //     pOut[seg.EndBi.EndChanKLine.PeakUnit.Idx] = MathF.Round(amount, 2);
+        // }
+        
+        var biList = calculateResult.BiList;
+        if (biList.IsNullOrEmpty())
         {
             return pOut;
         }
 
-        foreach (var seg in segList)
+        foreach (var bi in biList)
         {
             float amount = 0;
-            var curKline = seg.StartBi.StartChanKLine;
-            while (curKline != null && curKline.Idx <= seg.EndBi.EndChanKLine.Idx)
+            var curKline = bi.StartChanKLine;
+            while (curKline != null && curKline.Idx <= bi.EndChanKLine.Idx)
             {
                 amount += curKline.CombinedUnits
-                    .Where(p => seg.DIR.IsDown() ? p.MACD.Hist < 0 : p.MACD.Hist > 0)
+                    .Where(p => bi.DIR.IsDown() ? p.MACD.Hist < 0 : p.MACD.Hist > 0)
                     .Sum(p => p.MACD.Hist);
                 curKline = curKline.Next;
             }
 
-            pOut[seg.EndBi.EndChanKLine.PeakUnit.Idx] = MathF.Round(amount, 2);
+            pOut[bi.EndChanKLine.PeakUnit.Idx] = MathF.Round(amount, 2);
         }
 
 #if DEBUG
