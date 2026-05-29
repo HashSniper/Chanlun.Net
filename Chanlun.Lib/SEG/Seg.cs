@@ -7,7 +7,7 @@ namespace Chanlun.Lib.SEG;
 /// 线段相关
 /// </summary>
 public class Seg(int idx, Bi.Bi startBi, Bi.Bi endBi, bool isSure = true)
-    : ChanNode<Seg>(idx)
+    : ChanNode<Seg>(idx), IDirectional
 {
     /// <summary>构成线段的所有笔</summary>
     public List<Bi.Bi> Lst { get; } = new();

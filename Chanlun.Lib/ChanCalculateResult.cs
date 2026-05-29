@@ -14,4 +14,6 @@ public class ChanCalculateResult
     public List<Seg> SegList { get; set; }
     
     public SegPivotList SegPivotList { get; set; }
+    
+    public BiPivotList BiPivotList { get; set; }
 }

@@ -66,10 +66,10 @@ public class CalculationController : ControllerBase
     /// </summary>
     /// <param name="request"></param>
     /// <returns></returns>
-    [HttpPost("pivotzg")]
-    public IActionResult PivotZG([FromBody] CalcRequest request)
+    [HttpPost("getsegpivotzg")]
+    public IActionResult GetSegPivotZG([FromBody] CalcRequest request)
     {
-        var result = PivotCalculator.GetPivotZG(request.NCount, request.A, request.B, request.C);
+        var result = PivotCalculator.GetSegPivotZG(request.NCount, request.A, request.B, request.C);
         return Ok(new CalcResponse { Result = result });
     } 
     
@@ -78,10 +78,10 @@ public class CalculationController : ControllerBase
     /// </summary>
     /// <param name="request"></param>
     /// <returns></returns>
-    [HttpPost("pivotzd")]
-    public IActionResult PivotZD([FromBody] CalcRequest request)
+    [HttpPost("getsegpivotzd")]
+    public IActionResult GetSegPivotZD([FromBody] CalcRequest request)
     {
-        var result = PivotCalculator.GetPivotZD(request.NCount, request.A, request.B, request.C);
+        var result = PivotCalculator.GetSegPivotZD(request.NCount, request.A, request.B, request.C);
         return Ok(new CalcResponse { Result = result });
     } 
     
@@ -90,10 +90,10 @@ public class CalculationController : ControllerBase
     /// </summary>
     /// <param name="request"></param>
     /// <returns></returns>
-    [HttpPost("pivotrange")]
-    public IActionResult PivotRange([FromBody] CalcRequest request)
+    [HttpPost("getsegpivotrange")]
+    public IActionResult GetSegPivotRange([FromBody] CalcRequest request)
     {
-        var result = PivotCalculator.GetPivotRange(request.NCount, request.A, request.B, request.C);
+        var result = PivotCalculator.GetSegPivotRange(request.NCount, request.A, request.B, request.C);
         return Ok(new CalcResponse { Result = result });
     } 
     
@@ -145,6 +145,42 @@ public class CalculationController : ControllerBase
         var result = MACDCalculator.Calculate(request.NCount, request.A, request.B, request.C);
         return Ok(new CalcResponse { Result = result });
     }
+    
+    /// <summary>
+    /// 12. 获取中枢高点
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
+    [HttpPost("getbipivotzg")]
+    public IActionResult GetBiPivotZG([FromBody] CalcRequest request)
+    {
+        var result = PivotCalculator.GetBiPivotZG(request.NCount, request.A, request.B, request.C);
+        return Ok(new CalcResponse { Result = result });
+    } 
+    
+    /// <summary>
+    /// 13. 获取中枢低点
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
+    [HttpPost("getbipivotzd")]
+    public IActionResult GetBiPivotZD([FromBody] CalcRequest request)
+    {
+        var result = PivotCalculator.GetBiPivotZD(request.NCount, request.A, request.B, request.C);
+        return Ok(new CalcResponse { Result = result });
+    } 
+    
+    /// <summary>
+    /// 14. 获取笔中枢起始点
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
+    [HttpPost("getbipivotrange")]
+    public IActionResult GetBiPivotRange([FromBody] CalcRequest request)
+    {
+        var result = PivotCalculator.GetBiPivotRange(request.NCount, request.A, request.B, request.C);
+        return Ok(new CalcResponse { Result = result });
+    } 
 
 }
 

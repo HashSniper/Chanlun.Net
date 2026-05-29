@@ -5,7 +5,7 @@ using Chanlun.Lib.KLine;
 namespace Chanlun.Lib.Bi
 {
     public class Bi(int idx, ChanKLine startChanKLine, ChanKLine endChanKLine)
-        : ChanNode<Bi>(idx)
+        : ChanNode<Bi>(idx), IDirectional
     {
         
         public ChanDir DIR => StartChanKLine.FX == ChanFX.TOP ? ChanDir.DOWN : ChanDir.UP;

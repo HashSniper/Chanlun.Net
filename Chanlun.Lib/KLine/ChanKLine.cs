@@ -5,7 +5,7 @@ namespace Chanlun.Lib.KLine
     /// <summary>
     /// 合并后的K线数据，包含合并
     /// </summary>
-    public class ChanKLine(int idx, ChanDir dir) : ChanNode<ChanKLine>(idx)
+    public class ChanKLine(int idx, ChanDir dir) : ChanNode<ChanKLine>(idx), IDirectional
     {
         private readonly List<KLineUnit> _combinedUnits = new();
 
@@ -26,10 +26,11 @@ namespace Chanlun.Lib.KLine
                 {
                     field = ChanFX.BOTTOM;
                 }
+
                 return field;
             }
         }
-        
+
         public IReadOnlyList<KLineUnit> CombinedUnits => _combinedUnits;
 
         public void AddKLineUnit(KLineUnit unit)
