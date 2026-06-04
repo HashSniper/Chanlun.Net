@@ -150,12 +150,12 @@ public static unsafe partial class NativeExports
     }
     
     //=========================================================================
-    // 输出函数11号：存入MACD
+    // 输出函数11号：设置指标
     //=========================================================================
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) }, EntryPoint = "Func11")]
     public static void Func11(int nCount, float* pOut, float* a, float* b, float* c)
     {
-        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/setmacd");
+        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/setindicator");
     }
     
     //=========================================================================

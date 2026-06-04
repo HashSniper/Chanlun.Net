@@ -1,4 +1,5 @@
 ﻿using Chanlun.Lib.ChanCommon;
+using Skender.Stock.Indicators;
 
 namespace Chanlun.Lib.KLine
 {
@@ -6,9 +7,15 @@ namespace Chanlun.Lib.KLine
     {
         public DateTime Time { get; set; }
         
-        public override string ToString() => $"Unit|{Idx}|{Time}";
+        public float Open { get; set; }
         
-        public MACD.MACD MACD { get; set; }
+        public float Close { get; set; }
+
+        public MacdResult MACD { get; set; }
+
+        public BollingerBandsResult Boll { get; set; }
+
+        public override string ToString() => $"Unit|{Idx}|{Time}";
     }
     
 }

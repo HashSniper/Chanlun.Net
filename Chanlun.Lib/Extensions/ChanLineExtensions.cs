@@ -1,5 +1,6 @@
 ﻿using Chanlun.Lib.ChanCommon;
 using Chanlun.Lib.KLine;
+using Chanlun.Lib.StockIndicators;
 
 namespace Chanlun.Lib.Extensions
 {
@@ -67,6 +68,19 @@ namespace Chanlun.Lib.Extensions
         private static bool CheckFxValid(this ChanKLine start, ChanKLine end)
         {
             return start.FX != end.FX && start.FX != ChanFX.UNKNOWN && end.FX != ChanFX.UNKNOWN;
+        }
+
+        public static List<StockBar> ConvertToBars(this List<KLineUnit> units)
+        {
+            var result = new List<StockBar>();
+            if (units.IsNullOrEmpty())
+            {
+                return result;
+            }
+
+            result.AddRange(units.Select(unit => new StockBar(unit.Time, (decimal)unit.Open, (decimal)unit.High, (decimal)unit.Low, (decimal)unit.Close, 0)));
+
+            return result;
         }
     }
 }

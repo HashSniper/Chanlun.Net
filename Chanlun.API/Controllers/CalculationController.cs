@@ -1,9 +1,9 @@
 ﻿using Chanlun.Lib;
 using Chanlun.Lib.Bi;
 using Chanlun.Lib.KLine;
-using Chanlun.Lib.MACD;
 using Chanlun.Lib.Memory;
 using Chanlun.Lib.SEG;
+using Chanlun.Lib.StockIndicators;
 using Chanlun.Lib.Zs;
 using Microsoft.AspNetCore.Mvc;
 
@@ -139,10 +139,10 @@ public class CalculationController : ControllerBase
     /// </summary>
     /// <param name="request"></param>
     /// <returns></returns>
-    [HttpPost("setmacd")]
-    public IActionResult SetMACD([FromBody] CalcRequest request)
+    [HttpPost("setindicator")]
+    public IActionResult SetIndicator([FromBody] CalcRequest request)
     {
-        var result = MACDCalculator.Calculate(request.NCount, request.A, request.B, request.C);
+        var result = IndicatorCalculator.Calculate(request.NCount, request.A, request.B, request.C);
         return Ok(new CalcResponse { Result = result });
     }
     
