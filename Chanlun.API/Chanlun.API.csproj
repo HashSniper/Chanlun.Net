@@ -5,14 +5,16 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <Platforms>AnyCPU;x64</Platforms>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <NoWarn>$(NoWarn);1591</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.6" />
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="7.3.2" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\ChanAdapter\ChanAdapter.csproj" />
+      <ProjectReference Include="..\Chanlun.Lib\Chanlun.Lib.csproj" />
     </ItemGroup>
 
 </Project>

@@ -1,4 +1,4 @@
-﻿﻿using NativeAdapter;
+﻿﻿﻿using NativeAdapter;
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -101,7 +101,7 @@ public static unsafe partial class NativeExports
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) }, EntryPoint = "Func5")]
     public static void Func5(int nCount, float* pOut, float* a, float* b, float* c)
     {
-        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/bizszg");
+        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/getsegpivotzg");
     }
 
     //=========================================================================
@@ -110,7 +110,7 @@ public static unsafe partial class NativeExports
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) }, EntryPoint = "Func6")]
     public static void Func6(int nCount, float* pOut, float* a, float* b, float* c)
     {
-        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/bizszd");
+        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/getsegpivotzd");
     }
 
     //=========================================================================
@@ -119,7 +119,7 @@ public static unsafe partial class NativeExports
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) }, EntryPoint = "Func7")]
     public static void Func7(int nCount, float* pOut, float* a, float* b, float* c)
     {
-        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/bizsrange");
+        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/getsegpivotrange");
     }
 
     //=========================================================================
@@ -148,6 +148,42 @@ public static unsafe partial class NativeExports
     {
         ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/klinerange");
     }
+    
+    //=========================================================================
+    // 输出函数11号：设置指标
+    //=========================================================================
+    [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) }, EntryPoint = "Func11")]
+    public static void Func11(int nCount, float* pOut, float* a, float* b, float* c)
+    {
+        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/setindicator");
+    }
+    
+    //=========================================================================
+    // 输出函数12号：中枢高点数据
+    //=========================================================================
+    [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) }, EntryPoint = "Func12")]
+    public static void Func12(int nCount, float* pOut, float* a, float* b, float* c)
+    {
+        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/getbipivotzg");
+    }
+
+    //=========================================================================
+    // 输出函数13号：中枢低点数据
+    //=========================================================================
+    [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) }, EntryPoint = "Func13")]
+    public static void Func13(int nCount, float* pOut, float* a, float* b, float* c)
+    {
+        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/getbipivotzd");
+    }
+
+    //=========================================================================
+    // 输出函数14号：中枢起点、终点信号
+    //=========================================================================
+    [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) }, EntryPoint = "Func14")]
+    public static void Func14(int nCount, float* pOut, float* a, float* b, float* c)
+    {
+        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/getbipivotrange");
+    }
 
     // 静态函数信息表
     private static readonly PluginTCalcFuncInfo[] Info;
@@ -167,6 +203,10 @@ public static unsafe partial class NativeExports
             new() { NFuncMark = 8, PCallFunc = (nint)(delegate* unmanaged[Cdecl]<int, float*, float*, float*, float*, void>)&Func8 },
             new() { NFuncMark = 9, PCallFunc = (nint)(delegate* unmanaged[Cdecl]<int, float*, float*, float*, float*, void>)&Func9 },
             new() { NFuncMark = 10, PCallFunc = (nint)(delegate* unmanaged[Cdecl]<int, float*, float*, float*, float*, void>)&Func10 },
+            new() { NFuncMark = 11, PCallFunc = (nint)(delegate* unmanaged[Cdecl]<int, float*, float*, float*, float*, void>)&Func11 },
+            new() { NFuncMark = 12, PCallFunc = (nint)(delegate* unmanaged[Cdecl]<int, float*, float*, float*, float*, void>)&Func12 },
+            new() { NFuncMark = 13, PCallFunc = (nint)(delegate* unmanaged[Cdecl]<int, float*, float*, float*, float*, void>)&Func13 },
+            new() { NFuncMark = 14, PCallFunc = (nint)(delegate* unmanaged[Cdecl]<int, float*, float*, float*, float*, void>)&Func14 },
             new() { NFuncMark = 0, PCallFunc = 0 }
         };
         _infoHandle = GCHandle.Alloc(Info, GCHandleType.Pinned);

@@ -1,6 +1,10 @@
-﻿
-using ChanAdapter;
-using ChanAdapter.Memory;
+﻿using Chanlun.Lib;
+using Chanlun.Lib.Bi;
+using Chanlun.Lib.KLine;
+using Chanlun.Lib.Memory;
+using Chanlun.Lib.SEG;
+using Chanlun.Lib.StockIndicators;
+using Chanlun.Lib.Zs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Chanlun.API.Controllers;
@@ -17,7 +21,6 @@ public class CalculationController : ControllerBase
     [HttpPost("setstocktime")]
     public IActionResult SetStockTime([FromBody] CalcRequest request)
     {
-        
         var result = StockTimeCache.Set(request.A, request.B, request.C);
         return Ok(new CalcResponse { Result = result });
     }
@@ -30,8 +33,7 @@ public class CalculationController : ControllerBase
     [HttpPost("createchan")]
     public IActionResult CreateChan([FromBody] CalcRequest request)
     {
-        ChanLunCalculator.Calculate(request.NCount, request.A, request.B, request.C);
-        var result = BiAdapter.GetBi(request.NCount, request.A, request.B, request.C);
+        ChanCalculator.Calculate(request.NCount, request.A, request.B, request.C);
         return Ok(new CalcResponse { Result = [] });
     }
     
@@ -43,7 +45,7 @@ public class CalculationController : ControllerBase
     [HttpPost("bilist")]
     public IActionResult CreateBi([FromBody] CalcRequest request)
     {
-        var result = BiAdapter.GetBi(request.NCount, request.A, request.B, request.C);
+        var result = BiCalculator.GetBi(request.NCount, request.A, request.B, request.C);
         return Ok(new CalcResponse { Result = result });
     }
     
@@ -55,31 +57,31 @@ public class CalculationController : ControllerBase
     [HttpPost("seglist")]
     public IActionResult SegList([FromBody] CalcRequest request)
     {
-        var result = SegAdapter.GetSeg(request.NCount, request.A, request.B, request.C);
+        var result = SegCalculator.GetSegs(request.NCount, request.A, request.B, request.C);
         return Ok(new CalcResponse { Result = result });
     } 
     
     /// <summary>
-    /// 5. 获取笔中枢高点
+    /// 5. 获取中枢高点
     /// </summary>
     /// <param name="request"></param>
     /// <returns></returns>
-    [HttpPost("bizszg")]
-    public IActionResult BiZSZG([FromBody] CalcRequest request)
+    [HttpPost("getsegpivotzg")]
+    public IActionResult GetSegPivotZG([FromBody] CalcRequest request)
     {
-        var result = BiZsAdapter.GetBiZSZG(request.NCount, request.A, request.B, request.C);
+        var result = PivotCalculator.GetSegPivotZG(request.NCount, request.A, request.B, request.C);
         return Ok(new CalcResponse { Result = result });
     } 
     
     /// <summary>
-    /// 6. 获取笔中枢低点
+    /// 6. 获取中枢低点
     /// </summary>
     /// <param name="request"></param>
     /// <returns></returns>
-    [HttpPost("bizszd")]
-    public IActionResult BiZSZD([FromBody] CalcRequest request)
+    [HttpPost("getsegpivotzd")]
+    public IActionResult GetSegPivotZD([FromBody] CalcRequest request)
     {
-        var result = BiZsAdapter.GetBiZSZD(request.NCount, request.A, request.B, request.C);
+        var result = PivotCalculator.GetSegPivotZD(request.NCount, request.A, request.B, request.C);
         return Ok(new CalcResponse { Result = result });
     } 
     
@@ -88,10 +90,10 @@ public class CalculationController : ControllerBase
     /// </summary>
     /// <param name="request"></param>
     /// <returns></returns>
-    [HttpPost("bizsrange")]
-    public IActionResult BiZSRange([FromBody] CalcRequest request)
+    [HttpPost("getsegpivotrange")]
+    public IActionResult GetSegPivotRange([FromBody] CalcRequest request)
     {
-        var result = BiZsAdapter.GetBiZSRange(request.NCount, request.A, request.B, request.C);
+        var result = PivotCalculator.GetSegPivotRange(request.NCount, request.A, request.B, request.C);
         return Ok(new CalcResponse { Result = result });
     } 
     
@@ -103,7 +105,7 @@ public class CalculationController : ControllerBase
     [HttpPost("klineg")]
     public IActionResult KLineG([FromBody] CalcRequest request)
     {
-        var result = KLineAdapter.GetKLineG(request.NCount, request.A, request.B, request.C);
+        var result = ChanKLineCalculator.GetKLineG(request.NCount, request.A, request.B, request.C);
         return Ok(new CalcResponse { Result = result });
     } 
     
@@ -115,7 +117,7 @@ public class CalculationController : ControllerBase
     [HttpPost("klined")]
     public IActionResult KLineD([FromBody] CalcRequest request)
     {
-        var result = KLineAdapter.GetKLineD(request.NCount, request.A, request.B, request.C);
+        var result = ChanKLineCalculator.GetKLineD(request.NCount, request.A, request.B, request.C);
         return Ok(new CalcResponse { Result = result });
     } 
     
@@ -127,98 +129,59 @@ public class CalculationController : ControllerBase
     [HttpPost("klinerange")]
     public IActionResult KLineRange([FromBody] CalcRequest request)
     {
-        var result = KLineAdapter.GetKLineRange(request.NCount, request.A, request.B, request.C);
+        var result = ChanKLineCalculator.GetKLineRange(request.NCount, request.A, request.B, request.C);
         return Ok(new CalcResponse { Result = result });
     } 
 
 
-    [HttpPost("duan1")]
-    public IActionResult Duan1([FromBody] CalcRequest request)
+    /// <summary>
+    /// 11. 设置MACD
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
+    [HttpPost("setindicator")]
+    public IActionResult SetIndicator([FromBody] CalcRequest request)
     {
-        //var result = DuanCalculator.Duan1(request.NCount, request.A, request.B, request.C);
-        return Ok(new CalcResponse { Result = [] });
+        var result = IndicatorCalculator.Calculate(request.NCount, request.A, request.B, request.C);
+        return Ok(new CalcResponse { Result = result });
     }
+    
+    /// <summary>
+    /// 12. 获取中枢高点
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
+    [HttpPost("getbipivotzg")]
+    public IActionResult GetBiPivotZG([FromBody] CalcRequest request)
+    {
+        var result = PivotCalculator.GetBiPivotZG(request.NCount, request.A, request.B, request.C);
+        return Ok(new CalcResponse { Result = result });
+    } 
+    
+    /// <summary>
+    /// 13. 获取中枢低点
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
+    [HttpPost("getbipivotzd")]
+    public IActionResult GetBiPivotZD([FromBody] CalcRequest request)
+    {
+        var result = PivotCalculator.GetBiPivotZD(request.NCount, request.A, request.B, request.C);
+        return Ok(new CalcResponse { Result = result });
+    } 
+    
+    /// <summary>
+    /// 14. 获取笔中枢起始点
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
+    [HttpPost("getbipivotrange")]
+    public IActionResult GetBiPivotRange([FromBody] CalcRequest request)
+    {
+        var result = PivotCalculator.GetBiPivotRange(request.NCount, request.A, request.B, request.C);
+        return Ok(new CalcResponse { Result = result });
+    } 
 
-    [HttpPost("duan2")]
-    public IActionResult Duan2([FromBody] CalcRequest request)
-    {
-        //var result = DuanCalculator.Duan2(request.NCount, request.A, request.B, request.C);
-        return Ok(new CalcResponse { Result = [] });
-    }
-
-    [HttpPost("zs/high")]
-    public IActionResult ZsHigh([FromBody] CalcRequest request)
-    {
-        // var zhongShuList = ZhongShuCalculator.ZS(request.NCount, request.A, request.B, request.C);
-        // float[] pOut = new float[request.NCount];
-        // foreach (var zs in zhongShuList)
-        // {
-        //     for (int j = zs.S + 1; j <= zs.E - 1; j++)
-        //         pOut[j] = zs.Zg;
-        // }
-        return Ok(new CalcResponse { Result = [] });
-    }
-
-    [HttpPost("zs/low")]
-    public IActionResult ZsLow([FromBody] CalcRequest request)
-    {
-        // var zhongShuList = ZhongShuCalculator.ZS(request.NCount, request.A, request.B, request.C);
-        // float[] pOut = new float[request.NCount];
-        // foreach (var zs in zhongShuList)
-        // {
-        //     for (int j = zs.S + 1; j <= zs.E - 1; j++)
-        //         pOut[j] = zs.Zd;
-        // }
-        return Ok(new CalcResponse { Result = [] });
-    }
-
-    [HttpPost("zs/signal")]
-    public IActionResult ZsSignal([FromBody] CalcRequest request)
-    {
-        // var zhongShuList = ZhongShuCalculator.ZS(request.NCount, request.A, request.B, request.C);
-        // float[] pOut = new float[request.NCount];
-        // foreach (var zs in zhongShuList)
-        // {
-        //     pOut[zs.S + 1] = 1;
-        //     pOut[zs.E - 1] = 2;
-        // }
-        return Ok(new CalcResponse { Result = [] });
-    }
-
-    [HttpPost("zs/direction")]
-    public IActionResult ZsDirection([FromBody] CalcRequest request)
-    {
-        // var zhongShuList = ZhongShuCalculator.ZS(request.NCount, request.A, request.B, request.C);
-        // float[] pOut = new float[request.NCount];
-        // foreach (var zs in zhongShuList)
-        // {
-        //     for (int j = zs.S + 1; j <= zs.E - 1; j++)
-        //         pOut[j] = zs.Direction;
-        // }
-        return Ok(new CalcResponse { Result = [] });
-    }
-
-    [HttpPost("zs/index")]
-    public IActionResult ZsIndex([FromBody] CalcRequest request)
-    {
-        // var zhongShuList = ZhongShuCalculator.ZS(request.NCount, request.A, request.B, request.C);
-        // float[] pOut = new float[request.NCount];
-        // for (int i = 0; i < zhongShuList.Count; i++)
-        // {
-        //     var zs = zhongShuList[i];
-        //     float c = 1;
-        //     for (int j = i - 1; j >= 0; j--)
-        //     {
-        //         if (zhongShuList[j].Direction == zs.Direction)
-        //             c++;
-        //         else
-        //             break;
-        //     }
-        //     for (int j = zs.S + 1; j <= zs.E - 1; j++)
-        //         pOut[j] = c;
-        // }
-        return Ok(new CalcResponse { Result = [] });
-    }
 }
 
 public class CalcRequest
