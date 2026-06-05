@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChanLun 缠论图表 - TradingView Charting Library</title>
+    <script src="./charting_library/charting_library.standalone.js"></script>
+    <script src="./datafeed.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; background: #131722; }
+        #tv_chart_container { width: 100%; height: 100%; }
+    </style>
+</head>
+<body>
+    <div id="tv_chart_container"></div>
+    <script>
+        const datafeed = new ChanLunDataFeed({
+            apiUrl: 'http://localhost:5000',
+            symbol: 'SH600000'
+        });
+
+        const widget = new TradingView.widget({
+            container_id: "tv_chart_container",
+            datafeed: datafeed,
+            library_path: "./charting_library/",
+            locale: "zh",
+            disabled_features: ["use_localstorage_for_settings", "header_symbol_search"],
+            enabled_features: ["study_templates"],
+            charts_storage_url: 'https://saveload.tradingview.com',
+            charts_storage_api_version: "1.1",
+            client_id: 'chanlunx',
+            user_id: 'public_user',
+            fullscreen: true,
+            autosize: true,
+            symbol: 'SH600000',
+            interval: 'D',
+            timezone: "Asia/Shanghai",
+            theme: "Dark",
+        });
+
+        widget.onChartReady(() => {
+            datafeed.setChartWidget(widget);
+            console.log('[ChanLun] Chart ready, overlay system initialized.');
+        });
+    </script>
+</body>
+</html>

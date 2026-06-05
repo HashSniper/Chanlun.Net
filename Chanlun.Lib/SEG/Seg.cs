@@ -16,10 +16,10 @@ public class Seg(int idx, Bi.Bi startBi, Bi.Bi endBi, bool isSure = true)
     public ChanDir DIR => EndBi.DIR;
 
     /// <summary>线段最高点</summary>
-    public override float High => DIR.IsUp() ? EndBi.EndChanKLine.PeakUnit.High : StartBi.StartChanKLine.PeakUnit.High;
+    public override decimal High => DIR.IsUp() ? EndBi.EndChanKLine.PeakUnit.High : StartBi.StartChanKLine.PeakUnit.High;
 
     /// <summary>线段最低点</summary>
-    public override float Low => DIR.IsUp() ? StartBi.StartChanKLine.PeakUnit.Low : EndBi.EndChanKLine.PeakUnit.Low;
+    public override decimal Low => DIR.IsUp() ? StartBi.StartChanKLine.PeakUnit.Low : EndBi.EndChanKLine.PeakUnit.Low;
 
     public Bi.Bi StartBi { get; private set; } = startBi;
     public Bi.Bi EndBi { get; private set; } = endBi;

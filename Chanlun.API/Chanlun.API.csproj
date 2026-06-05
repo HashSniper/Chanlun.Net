@@ -14,7 +14,10 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Stock.Data\Stock.Data.csproj" />
       <ProjectReference Include="..\Chanlun.Lib\Chanlun.Lib.csproj" />
+      <ProjectReference Include="..\Stock.Service\Stock.Service.csproj" />
+      <ProjectReference Include="..\TdxQuantNet\TdxQuantNet.csproj" />
     </ItemGroup>
 
 </Project>

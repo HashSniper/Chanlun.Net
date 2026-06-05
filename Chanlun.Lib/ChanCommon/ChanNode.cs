@@ -7,9 +7,9 @@
 
         public T? Next { get; set; }
 
-        public virtual float High { get; set; }
+        public virtual decimal High { get; set; }
 
-        public virtual float Low { get; set; }
+        public virtual decimal Low { get; set; }
 
         public override string ToString()
         {

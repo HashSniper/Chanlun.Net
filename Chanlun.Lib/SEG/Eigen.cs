@@ -7,8 +7,8 @@ public class Eigen(int idx, ChanDir dir, Bi.Bi bi) : ChanNode<Eigen>(idx)
 {
     private List<Bi.Bi> Lst { get; } = [bi];
     public ChanDir DIR { get; } = dir;
-    public override float High { get; set; } = bi.High;
-    public override float Low { get; set; } = bi.Low;
+    public override decimal High { get; set; } = bi.High;
+    public override decimal Low { get; set; } = bi.Low;
     public int Count => Lst.IsNullOrEmpty() ? 0 : Lst.Count;
     public bool Gap { get; set; } = false;
 

@@ -1,5 +1,9 @@
 
 using System.Reflection;
+using Stock.Data;
+using Stock.Data.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Stock.Service;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,8 +12,22 @@ if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ASPNETCORE_PORT")))
 {
     builder.WebHost.UseUrls("http://localhost:5000");
 }
+//注册数据库
+builder.Services.AddDb(builder.Configuration.GetConnectionString("DefaultConnection"));
+builder.Services.AddMyService();//注册服务层
 
 builder.Services.AddControllers();
+
+// 添加 CORS，允许TradingView跨域调用
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowTradingView", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
 
 // 添加 Swagger/OpenAPI 服务，并读取 XML 注释
 builder.Services.AddEndpointsApiExplorer();
@@ -33,10 +51,13 @@ app.UseSwaggerUI(options =>
     options.RoutePrefix = "swagger";
 });
 
+app.UseCors("AllowTradingView");
+app.UseDefaultFiles();
+app.UseStaticFiles();
 app.UseAuthorization();
 app.MapControllers();
 
-app.MapGet("/", () => Results.Content("""
+app.MapGet("/info", () => Results.Content("""
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -83,7 +104,37 @@ app.MapGet("/", () => Results.Content("""
         </tbody>
     </table>
 
-    <div class="footer">ChanlunX.CSharp &middot; .NET 10 Web API</div>
+    <h2 style="margin-top:40px; color:#2c3e50;">📈 TradingView 对接接口</h2>
+    <table>
+        <thead>
+            <tr><th>端点</th><th>方法</th><th>说明</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>/api/calculation/tvdata</code></td><td>POST</td><td>将已有缠论结果转为TradingView JSON格式</td></tr>
+            <tr><td><code>/api/calculation/tvchanlun</code></td><td>POST</td><td>一站式：传入K线JSON，直接返回TV格式缠论数据</td></tr>
+            <tr><td><code>/api/tradingview/chanlun</code></td><td>POST</td><td>TradingView专用：计算并返回缠论JSON</td></tr>
+            <tr><td><code>/api/tradingview/push</code></td><td>POST</td><td>推送K线数据到缓存（供UDF history使用）</td></tr>
+            <tr><td><code>/api/tradingview/config</code></td><td>GET</td><td>UDF 配置接口</td></tr>
+            <tr><td><code>/api/tradingview/symbols</code></td><td>GET</td><td>UDF 商品信息接口</td></tr>
+            <tr><td><code>/api/tradingview/history</code></td><td>GET</td><td>UDF 历史K线数据接口</td></tr>
+            <tr><td><code>/api/tradingview/time</code></td><td>GET</td><td>UDF 服务器时间接口</td></tr>
+            <tr><td><code>/api/tradingview/search</code></td><td>GET</td><td>UDF 商品搜索接口</td></tr>
+        </tbody>
+    </table>
+
+    <h2 style="margin-top:40px; color:#2c3e50;">🖥️ 前端页面</h2>
+    <table>
+        <thead>
+            <tr><th>端点</th><th>说明</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>/</code></td><td>React 缠论图表（推荐）</td></tr>
+            <tr><td><code>/tv-lightweight/index.html</code></td><td>原生 HTML + Lightweight Charts</td></tr>
+            <tr><td><code>/tv-charting-library/index.html</code></td><td>TradingView Charting Library 模板</td></tr>
+        </tbody>
+    </table>
+
+    <div class="footer">ChanlunX.CSharp &middot; .NET 10 Web API &middot; TradingView Ready</div>
 </body>
 </html>
 """, "text/html"));

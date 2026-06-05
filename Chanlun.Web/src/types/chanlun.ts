@@ -1,0 +1,64 @@
+export interface KlineBar {
+  time: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+export interface BiItem {
+  startTime: number;
+  startPrice: number;
+  endTime: number;
+  endPrice: number;
+  direction: 'up' | 'down';
+}
+
+export interface SegItem {
+  startTime: number;
+  startPrice: number;
+  endTime: number;
+  endPrice: number;
+  direction: 'up' | 'down';
+}
+
+export interface PivotItem {
+  startTime: number;
+  endTime: number;
+  zg: number;
+  zd: number;
+  gg: number;
+  dd: number;
+  type: 'bi' | 'seg';
+  level: number;
+}
+
+export interface MergedKLine {
+  startTime: number;
+  endTime: number;
+  high: number;
+  low: number;
+  direction: 'up' | 'down' | 'combine';
+}
+
+export interface ChanlunResponse {
+  symbol: string;
+  barCount: number;
+  biList: BiItem[];
+  segList: SegItem[];
+  biPivotList: PivotItem[];
+  segPivotList: PivotItem[];
+  mergedKLines: MergedKLine[];
+}
+
+export interface UdfHistory {
+  s: 'ok' | 'error' | 'no_data';
+  errmsg?: string;
+  t?: number[];
+  o?: number[];
+  h?: number[];
+  l?: number[];
+  c?: number[];
+  v?: number[];
+}

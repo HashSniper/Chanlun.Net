@@ -20,20 +20,20 @@ public abstract class PivotBase<TNode, TSegment>(int idx) : ChanNode<TNode>(idx)
     /// <summary>
     /// 中枢高点
     /// </summary>
-    public float ZG { get; private set; }
+    public decimal ZG { get; private set; }
 
     /// <summary>
     /// 中枢低点
     /// </summary>
-    public float ZD { get; private set; }
+    public decimal ZD { get; private set; }
 
-    public float GG { get; private set; } // 中枢震荡最高点
+    public decimal GG { get; private set; } // 中枢震荡最高点
 
-    public float DD { get; private set; } // 中枢震荡最低点
+    public decimal DD { get; private set; } // 中枢震荡最低点
 
-    public override float Low => ZD;
+    public override decimal Low => ZD;
 
-    public override float High => ZG;
+    public override decimal High => ZG;
 
     public bool IsClosed { get; private set; }
 

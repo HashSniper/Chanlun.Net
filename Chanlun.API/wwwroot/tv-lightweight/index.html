@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChanLun 缠论图表 - TradingView Lightweight Charts</title>
+    <script src="https://unpkg.com/lightweight-charts@4.2.1/dist/lightweight-charts.standalone.production.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: #131722; color: #d1d4dc; }
+        .header { background: #1e222d; padding: 12px 20px; border-bottom: 1px solid #2a2e39; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .header h1 { font-size: 16px; color: #fff; margin-right: auto; }
+        .header input, .header select, .header button { padding: 6px 10px; border: 1px solid #2a2e39; background: #131722; color: #d1d4dc; border-radius: 4px; font-size: 12px; outline: none; }
+        .header input:focus { border-color: #2962FF; }
+        .header button { background: #2962FF; color: #fff; border: none; cursor: pointer; font-weight: 500; }
+        .header button:hover { background: #1e52e2; }
+        .header button:disabled { background: #555; cursor: not-allowed; }
+        .header .status { font-size: 12px; padding: 4px 10px; border-radius: 4px; white-space: nowrap; }
+        .header .status.ok { background: rgba(46, 204, 113, 0.15); color: #2ecc71; }
+        .header .status.error { background: rgba(231, 76, 60, 0.15); color: #e74c3c; }
+        .header .status.loading { background: rgba(41, 98, 255, 0.15); color: #5c9dff; }
+        .container { display: flex; height: calc(100vh - 56px); }
+        .sidebar { width: 300px; background: #1e222d; border-right: 1px solid #2a2e39; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+        .sidebar h3 { font-size: 13px; margin-bottom: 8px; color: #fff; font-weight: 600; }
+        .sidebar textarea { width: 100%; height: 160px; background: #131722; border: 1px solid #2a2e39; color: #d1d4dc; padding: 10px; font-family: "Consolas", "Monaco", monospace; font-size: 11px; border-radius: 4px; resize: vertical; }
+        .sidebar .option { display: flex; align-items: center; gap: 8px; font-size: 12px; margin-bottom: 6px; cursor: pointer; }
+        .sidebar .option input { cursor: pointer; }
+        .sidebar .legend { border-top: 1px solid #2a2e39; padding-top: 12px; }
+        .sidebar .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; font-size: 11px; color: #868993; }
+        .sidebar .legend-color { width: 16px; height: 3px; border-radius: 2px; }
+        .chart-container { flex: 1; position: relative; }
+        #chart { width: 100%; height: 100%; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📈 ChanLun 缠论图表</h1>
+        <input type="text" id="apiUrl" value="http://localhost:5000" placeholder="API地址" style="width:170px;">
+        <input type="text" id="symbol" value="SH600000" placeholder="股票代码" style="width:100px;">
+        <select id="dataSource">
+            <option value="manual">手动输入K线JSON</option>
+            <option value="history">从API缓存获取</option>
+        </select>
+        <button id="btnCalc" onclick="calculate()">计算缠论</button>
+        <button id="btnClear" onclick="clearOverlays()" style="background:#444;">清除图层</button>
+        <span id="status" class="status">就绪</span>
+    </div>
+    <div class="container">
+        <div class="sidebar">
+            <div>
+                <h3>📋 K线数据</h3>
+                <textarea id="klineData" placeholder='[{"time":"2024-01-01T09:30:00","open":10,"high":10.5,"low":9.8,"close":10.2,"volume":10000}, ...]'></textarea>
+            </div>
+            <div>
+                <h3>⚙️ 显示选项</h3>
+                <label class="option"><input type="checkbox" id="showBi" checked> 显示笔</label>
+                <label class="option"><input type="checkbox" id="showSeg" checked> 显示线段</label>
+                <label class="option"><input type="checkbox" id="showBiPivot" checked> 显示笔中枢</label>
+                <label class="option"><input type="checkbox" id="showSegPivot" checked> 显示线段中枢</label>
+                <label class="option"><input type="checkbox" id="showMergedKLine"> 显示合并K线</label>
+            </div>
+            <div class="legend">
+                <h3>📐 图例</h3>
+                <div class="legend-item"><div class="legend-color" style="background:#ff6d00;"></div>向上笔</div>
+                <div class="legend-item"><div class="legend-color" style="background:#00c853;"></div>向下笔</div>
+                <div class="legend-item"><div class="legend-color" style="background:#d50000;"></div>向上线段</div>
+                <div class="legend-item"><div class="legend-color" style="background:#00bfa5;"></div>向下线段</div>
+                <div class="legend-item"><div class="legend-color" style="background:rgba(41,98,255,0.6);height:8px;"></div>笔中枢</div>
+                <div class="legend-item"><div class="legend-color" style="background:rgba(255,171,0,0.6);height:8px;"></div>线段中枢</div>
+            </div>
+        </div>
+        <div class="chart-container">
+            <div id="chart"></div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

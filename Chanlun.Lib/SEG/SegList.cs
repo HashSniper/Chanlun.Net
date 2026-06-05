@@ -22,8 +22,8 @@ public class SegList : List<Seg>
     private void CollectFirstSeg(List<Bi> biLst)
     {
         if (biLst.Count < 3) return;
-        float high = biLst.Max(b => b.High);
-        float low = biLst.Min(b => b.Low);
+        decimal high = biLst.Max(b => b.High);
+        decimal low = biLst.Min(b => b.Low);
         if (Math.Abs(high - biLst[0].GetBeginValue()) >= Math.Abs(low - biLst[0].GetBeginValue()))
         {
             var peakBi = FindPeakBi(biLst, isHigh: true);
@@ -216,7 +216,7 @@ public class SegList : List<Seg>
     private Bi? FindPeakBi(IList<Bi> biLst, bool isHigh)
     {
         Bi? peakBi = null;
-        float peakVal = isHigh ? float.NegativeInfinity : float.PositiveInfinity;
+        decimal peakVal = isHigh ? decimal.MinValue : decimal.MaxValue;
 
         foreach (var bi in biLst)
         {

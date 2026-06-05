@@ -14,8 +14,8 @@ namespace Chanlun.Lib.Bi
 
         public ChanKLine EndChanKLine { get; set; } = endChanKLine;
 
-        public override float High => DIR.IsUp() ? EndChanKLine.High : StartChanKLine.High;
-        public override float Low => DIR.IsUp() ? StartChanKLine.Low : EndChanKLine.Low;
+        public override decimal High => DIR.IsUp() ? EndChanKLine.High : StartChanKLine.High;
+        public override decimal Low => DIR.IsUp() ? StartChanKLine.Low : EndChanKLine.Low;
 
         public override string ToString() => $"{Idx}|{DIR}";
         
@@ -36,12 +36,12 @@ namespace Chanlun.Lib.Bi
         }
         
 
-        public float GetEndValue()
+        public decimal GetEndValue()
         {
             return DIR.IsUp() ? EndChanKLine.High : EndChanKLine.Low;
         }
         
-        public float GetBeginValue()
+        public decimal GetBeginValue()
         {
             return DIR.IsUp() ? EndChanKLine.Low : EndChanKLine.High;
         }

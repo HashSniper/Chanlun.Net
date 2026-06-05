@@ -1,5 +1,4 @@
-﻿﻿﻿using NativeAdapter;
-using System;
+﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.Json.Serialization.Metadata;
@@ -184,6 +183,16 @@ public static unsafe partial class NativeExports
     {
         ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/getbipivotrange");
     }
+    
+    //=========================================================================
+    // 输出函数15号 传入成交量
+    //=========================================================================
+    [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) }, EntryPoint = "Func15")]
+    public static void Func15(int nCount, float* pOut, float* a, float* b, float* c)
+    {
+        ExecuteCalc(nCount, pOut, a, b, c, "/api/calculation/setvolume");
+    }
+
 
     // 静态函数信息表
     private static readonly PluginTCalcFuncInfo[] Info;
@@ -207,6 +216,7 @@ public static unsafe partial class NativeExports
             new() { NFuncMark = 12, PCallFunc = (nint)(delegate* unmanaged[Cdecl]<int, float*, float*, float*, float*, void>)&Func12 },
             new() { NFuncMark = 13, PCallFunc = (nint)(delegate* unmanaged[Cdecl]<int, float*, float*, float*, float*, void>)&Func13 },
             new() { NFuncMark = 14, PCallFunc = (nint)(delegate* unmanaged[Cdecl]<int, float*, float*, float*, float*, void>)&Func14 },
+            new() { NFuncMark = 15, PCallFunc = (nint)(delegate* unmanaged[Cdecl]<int, float*, float*, float*, float*, void>)&Func15 },
             new() { NFuncMark = 0, PCallFunc = 0 }
         };
         _infoHandle = GCHandle.Alloc(Info, GCHandleType.Pinned);

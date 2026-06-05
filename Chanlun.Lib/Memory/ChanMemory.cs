@@ -5,14 +5,14 @@ namespace Chanlun.Lib.Memory;
 public static class ChanMemory
 {
     private static readonly ConcurrentDictionary<string, object> Dict = new();
-    private static readonly HashSet<float> Basekeys = [];
+    private static readonly HashSet<decimal> Basekeys = [];
 
-    private static string BuildCacheKey(float key, string suffix)
+    private static string BuildCacheKey(decimal key, string suffix)
     {
         return $"{key}_{suffix}";
     }
 
-    public static void Add(float baseKey, string suffix, object value)
+    public static void Add(decimal baseKey, string suffix, object value)
     {
         //缓存中最多保存 50 条图形窗口详情
         if (Basekeys.Add(baseKey) && (Basekeys.Count > 50))
@@ -24,7 +24,7 @@ public static class ChanMemory
         Dict.AddOrUpdate(BuildCacheKey(baseKey, suffix), value, (k, v) => value);
     }
 
-    public static T? Get<T>(float baseKey, string suffix) where T:class
+    public static T? Get<T>(decimal baseKey, string suffix) where T:class
     {
         return Dict.TryGetValue(BuildCacheKey(baseKey, suffix), out var value)
             ? value as T
@@ -32,7 +32,7 @@ public static class ChanMemory
     }
 
 
-    public static void Remove(float baseKey, string suffix)
+    public static void Remove(decimal baseKey, string suffix)
     {
         Dict.TryRemove(BuildCacheKey(baseKey, suffix), out _);
     }
