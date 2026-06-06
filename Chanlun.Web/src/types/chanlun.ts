@@ -45,12 +45,15 @@ export interface MergedKLine {
 export interface ChanlunResponse {
   symbol: string;
   barCount: number;
+  bars: KlineBar[];
   biList: BiItem[];
   segList: SegItem[];
   biPivotList: PivotItem[];
   segPivotList: PivotItem[];
   mergedKLines: MergedKLine[];
 }
+
+export type KlineResolution = 'Minute1' | 'Minute5' | 'Minute15' | 'Minute30' | 'Minute60' | 'Day' | 'Week' | 'Month';
 
 export interface UdfHistory {
   s: 'ok' | 'error' | 'no_data';

@@ -10,7 +10,7 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<StockInfo> StockInfos { get; set; }
-    public DbSet<UserWatchRecord> UserWatchRecords { get; set; }
+    public DbSet<TdxCurrentKlineView> TdxCurrentKlineViews { get; set; }
 
     // 分周期K线表（TPC：每个具体类独立一张完整表）
     public DbSet<Kline1m> Kline1m { get; set; }
@@ -38,14 +38,13 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Type).HasMaxLength(20).IsRequired();
         });
 
-        // 用户查看记录
-        modelBuilder.Entity<UserWatchRecord>(entity =>
+        // 通达信当前K线视图
+        modelBuilder.Entity<TdxCurrentKlineView>(entity =>
         {
-            entity.ToTable("UserWatchRecord");
+            entity.ToTable("TdxCurrentKlineView");
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => new { e.Symbol, e.Resolution });
             entity.Property(e => e.Symbol).HasMaxLength(20).IsRequired();
-            entity.Property(e => e.Resolution).HasMaxLength(10).IsRequired();
             entity.Property(e => e.StartTime).HasPrecision(0);
             entity.Property(e => e.EndTime).HasPrecision(0);
             entity.Property(e => e.CreatedAt).HasPrecision(0);

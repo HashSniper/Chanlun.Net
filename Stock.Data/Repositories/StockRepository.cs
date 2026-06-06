@@ -71,63 +71,59 @@ public class StockRepository : IStockRepository
 
     #endregion
 
-    #region Kline 泛型实现
-
-    public async Task<IEnumerable<T>> GetKlinesAsync<T>(string symbol, DateTime fromTime, DateTime toTime, CancellationToken ct = default)
-        where T : class
+    #region Kline 查询实现
+    
+    public async Task<IEnumerable<T>> GetKlinesAsync<T>(string symbol,KlineResolution resolution, DateTime fromTime, DateTime toTime, CancellationToken ct = default)
+        where T : KlineBase
     {
-        var query = _context.Set<T>().AsNoTracking()
-            .Where(k => EF.Property<string>(k, "Symbol") == symbol)
-            .Where(k => EF.Property<DateTime>(k, "TradeTime") >= fromTime)
-            .Where(k => EF.Property<DateTime>(k, "TradeTime") <= toTime)
-            .OrderBy(k => EF.Property<DateTime>(k, "TradeTime"));
-
-        return await query.ToListAsync(ct);
+         return resolution switch
+        {
+            KlineResolution.Minute1 => (await _context.Kline1m.AsNoTracking()
+                .Where(k => k.Symbol == symbol && k.TradeTime >= fromTime && k.TradeTime <= toTime)
+                .OrderBy(k => k.TradeTime).ToListAsync(ct)).Cast<T>().ToList(),
+            KlineResolution.Minute5 => (await _context.Kline5m.AsNoTracking()
+                .Where(k => k.Symbol == symbol && k.TradeTime >= fromTime && k.TradeTime <= toTime)
+                .OrderBy(k => k.TradeTime).ToListAsync(ct)).Cast<T>().ToList(),
+            KlineResolution.Minute15 => (await _context.Kline15m.AsNoTracking()
+                .Where(k => k.Symbol == symbol && k.TradeTime >= fromTime && k.TradeTime <= toTime)
+                .OrderBy(k => k.TradeTime).ToListAsync(ct)).Cast<T>().ToList(),
+            KlineResolution.Minute30 => (await _context.Kline30m.AsNoTracking()
+                .Where(k => k.Symbol == symbol && k.TradeTime >= fromTime && k.TradeTime <= toTime)
+                .OrderBy(k => k.TradeTime).ToListAsync(ct)).Cast<T>().ToList(),
+            KlineResolution.Minute60 => (await _context.Kline60m.AsNoTracking()
+                .Where(k => k.Symbol == symbol && k.TradeTime >= fromTime && k.TradeTime <= toTime)
+                .OrderBy(k => k.TradeTime).ToListAsync(ct)).Cast<T>().ToList(),
+            KlineResolution.Day => (await _context.Kline1d.AsNoTracking()
+                .Where(k => k.Symbol == symbol && k.TradeTime >= fromTime && k.TradeTime <= toTime)
+                .OrderBy(k => k.TradeTime).ToListAsync(ct)).Cast<T>().ToList(),
+            KlineResolution.Week => (await _context.Kline1w.AsNoTracking()
+                .Where(k => k.Symbol == symbol && k.TradeTime >= fromTime && k.TradeTime <= toTime)
+                .OrderBy(k => k.TradeTime).ToListAsync(ct)).Cast<T>().ToList(),
+            KlineResolution.Month => (await _context.Kline1mo.AsNoTracking()
+                .Where(k => k.Symbol == symbol && k.TradeTime >= fromTime && k.TradeTime <= toTime)
+                .OrderBy(k => k.TradeTime).ToListAsync(ct)).Cast<T>().ToList(),
+            _ => throw new ArgumentException($"Unsupported resolution: {resolution}")
+        };
     }
-
-    public async Task<T?> GetKlineAsync<T>(string symbol, DateTime tradeTime, CancellationToken ct = default)
-        where T : class
-    {
-        return await _context.Set<T>().AsNoTracking()
-            .Where(k => EF.Property<string>(k, "Symbol") == symbol)
-            .Where(k => EF.Property<DateTime>(k, "TradeTime") == tradeTime)
-            .FirstOrDefaultAsync(ct);
-    }
-
-    public async Task AddKlineAsync<T>(T kline, CancellationToken ct = default) where T : class
-    {
-        if (kline is Kline1m k1m) k1m.CreatedAt = DateTime.Now;
-        else if (kline is Kline5m k5m) k5m.CreatedAt = DateTime.Now;
-        else if (kline is Kline30m k30m) k30m.CreatedAt = DateTime.Now;
-        else if (kline is Kline1d k1d) k1d.CreatedAt = DateTime.Now;
-        else if (kline is Kline1w k1w) k1w.CreatedAt = DateTime.Now;
-        else if (kline is Kline1mo k1mo) k1mo.CreatedAt = DateTime.Now;
-
-        await _context.Set<T>().AddAsync(kline, ct);
-    }
-
-    public async Task AddKlinesAsync<T>(IEnumerable<T> klines, CancellationToken ct = default) where T : class
+    
+    
+    public async Task AddKlinesAsync<T>(IEnumerable<T> klines, CancellationToken ct = default) where T : KlineBase
     {
         var now = DateTime.Now;
         foreach (var kline in klines)
         {
-            if (kline is Kline1m k1m) k1m.CreatedAt = now;
-            else if (kline is Kline5m k5m) k5m.CreatedAt = now;
-            else if (kline is Kline30m k30m) k30m.CreatedAt = now;
-            else if (kline is Kline1d k1d) k1d.CreatedAt = now;
-            else if (kline is Kline1w k1w) k1w.CreatedAt = now;
-            else if (kline is Kline1mo k1mo) k1mo.CreatedAt = now;
+            kline.CreatedAt = now;
         }
         await _context.Set<T>().AddRangeAsync(klines, ct);
     }
 
     public async Task DeleteKlinesAsync<T>(string symbol, DateTime fromTime, DateTime toTime, CancellationToken ct = default)
-        where T : class
+        where T : KlineBase
     {
         var klines = await _context.Set<T>()
-            .Where(k => EF.Property<string>(k, "Symbol") == symbol)
-            .Where(k => EF.Property<DateTime>(k, "TradeTime") >= fromTime)
-            .Where(k => EF.Property<DateTime>(k, "TradeTime") <= toTime)
+            .Where(k => k.Symbol == symbol)
+            .Where(k => k.TradeTime >= fromTime)
+            .Where(k => k.TradeTime <= toTime)
             .ToListAsync(ct);
 
         _context.Set<T>().RemoveRange(klines);
@@ -136,6 +132,30 @@ public class StockRepository : IStockRepository
     public Task<int> SaveChangesAsync(CancellationToken ct = default)
     {
         return _context.SaveChangesAsync(ct);
+    }
+
+    #endregion
+
+    #region TdxCurrentKlineView
+
+    public Task<TdxCurrentKlineView?> GetTdxCurrentKlineViewAsync(CancellationToken ct = default)
+    {
+        return _context.TdxCurrentKlineViews
+            .AsNoTracking()
+            .FirstOrDefaultAsync(ct);
+    }
+
+    public async Task<long> AddTdxCurrentKlineViewAsync(TdxCurrentKlineView record, CancellationToken ct = default)
+    {
+        record.CreatedAt = DateTime.Now;
+        await _context.TdxCurrentKlineViews.AddAsync(record, ct);
+        await _context.SaveChangesAsync(ct);
+        return record.Id;
+    }
+
+    public async Task ClearTdxCurrentKlineViewsAsync(CancellationToken ct = default)
+    {
+        await _context.TdxCurrentKlineViews.ExecuteDeleteAsync(ct);
     }
 
     #endregion

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ChanlunResponse, KlineBar, UdfHistory } from '../types/chanlun';
+import type { ChanlunResponse, KlineResolution } from '../types/chanlun';
 
 const DEFAULT_BASE_URL = 'http://localhost:5000';
 
@@ -20,28 +20,21 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-export async function calculateChanlun(symbol: string, bars: KlineBar[]): Promise<ChanlunResponse> {
-  const resp = await api.post<ChanlunResponse>('/api/calculation/tvchanlun', {
-    symbol,
-    bars,
-  });
-  return resp.data;
-}
 
-export async function pushKlines(symbol: string, bars: KlineBar[]): Promise<{ symbol: string; count: number; message: string }> {
-  const resp = await api.post('/api/tradingview/push', { symbol, bars });
-  return resp.data;
-}
-
-export async function getUdfHistory(
+export async function getChanlunKlines(
   symbol: string,
-  resolution: string = 'D',
-  from: number,
-  to: number
-): Promise<UdfHistory> {
-  const resp = await api.get<UdfHistory>('/api/tradingview/history', {
+  resolution: KlineResolution,
+  from: string,
+  to: string
+): Promise<ChanlunResponse> {
+  const resp = await api.get<ChanlunResponse>('/api/tradingview/chanlunklines', {
     params: { symbol, resolution, from, to },
   });
+  return resp.data;
+}
+
+export async function getTdxChanlunKlines(): Promise<ChanlunResponse> {
+  const resp = await api.get<ChanlunResponse>('/api/tradingview/tdxchanlunklines');
   return resp.data;
 }
 

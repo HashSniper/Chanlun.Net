@@ -12,17 +12,36 @@ namespace Chanlun.API.Adapter;
 
 public static class ChanCalculator
 {
-    public static void Calculate(int nCount, decimal[] pHigh, decimal[] pLow, decimal[] pkey)
+    public static ChanCalculateResult Calculate(decimal[] pkey)
     {
         decimal key = pkey[0];
         var result = ChanCalculateResultCache.Get(key);
 
-        ChanKLineCalculator.Calculate(nCount, pHigh, pLow, pkey, ref result);
+        ChanKLineCalculator.Calculate(ref result);
         BiCalculator.Calculate(ref result);
         SegCalculator.Calculate(ref result);
         PivotCalculator.Calculate(ref result);
 
         ChanCalculateResultCache.Add(key, result);
+        return result;
+    }
+}
+
+public static class ChanCalculateResultBuilder
+{
+    public static ChanCalculateResult Build(string symbol, List<KLineUnit> units)
+    {
+        var result = new ChanCalculateResult()
+        {
+            Symbol = symbol,
+            UnitList = units
+        };
+        ChanKLineCalculator.Calculate(ref result);
+        BiCalculator.Calculate(ref result);
+        SegCalculator.Calculate(ref result);
+        PivotCalculator.Calculate(ref result);
+
+        return result;
     }
 }
 
@@ -90,10 +109,9 @@ public static class BiCalculator
 
 public static class ChanKLineCalculator
 {
-    public static void Calculate(int nCount, decimal[] pHigh, decimal[] pLow, decimal[] pKey, ref ChanCalculateResult result)
+    public static void Calculate(ref ChanCalculateResult result)
     {
-        KLineDataPopulator.PopulateHighLowPrice(nCount, pHigh, pLow, pKey);
-
+        
         var unitList = result.UnitList;
         var lineList = new ChanKLineList();
 
@@ -416,11 +434,11 @@ public static class PivotCalculator
 
 public static class IndicatorCalculator
 {
-    public static decimal[] Calculate(int nCount, decimal[] pOpen, decimal[] pClose, decimal[] pKey)
+    public static decimal[] Calculate(decimal[] pKey)
     {
         var key = pKey[0];
         var calculateResult = ChanCalculateResultCache.Get(key);
-        var pOut = new decimal[nCount];
+        var pOut = new decimal[calculateResult.UnitList.Count];
         if (calculateResult == null)
         {
             return pOut;
@@ -431,8 +449,7 @@ public static class IndicatorCalculator
         {
             return pOut;
         }
-
-        KLineDataPopulator.PopulateOpenClosePrice(nCount, pOpen, pClose, pKey);
+        
         var units = calculateResult.UnitList;
 
         var bars = units.ConvertToBars();
@@ -601,6 +618,7 @@ public static class KLineDataPopulator
         }
         return hash & 0x00FFFFFF;
     }
+    
     /// <summary>
     /// 必须在第一步执行
     /// </summary>

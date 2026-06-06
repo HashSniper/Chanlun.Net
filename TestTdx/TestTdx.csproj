@@ -8,6 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Chanlun.Lib\Chanlun.Lib.csproj" />
       <ProjectReference Include="..\TdxQuantNet\TdxQuantNet.csproj" />
     </ItemGroup>
 

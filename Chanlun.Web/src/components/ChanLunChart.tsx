@@ -35,23 +35,12 @@ function msToSec(ms: number): number {
   return Math.floor(ms / 1000);
 }
 
-function parseTimeToSec(time: string | number): number {
-  if (typeof time === 'number') return Math.floor(time / 1000);
-  // yyyyMMdd format
-  if (/^\d{8}$/.test(time)) {
-    const y = parseInt(time.slice(0, 4), 10);
-    const m = parseInt(time.slice(4, 6), 10) - 1;
-    const d = parseInt(time.slice(6, 8), 10);
-    return Math.floor(new Date(y, m, d).getTime() / 1000);
-  }
-  // ISO string fallback
-  return Math.floor(new Date(time).getTime() / 1000);
-}
-
 function formatTime(sec: number): string {
   const d = new Date(sec * 1000);
   return d.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
 }
+
+
 
 export default function ChanLunChart({
   klines,
@@ -174,9 +163,8 @@ export default function ChanLunChart({
     // Render Bi
     if (showBi && chanlun.biList) {
       chanlun.biList.forEach((bi) => {
-        const color = bi.direction === 'up' ? '#ff6d00' : '#00c853';
         const series = chart.addSeries(LineSeries, {
-          color,
+          color: '#FFD700',
           lineWidth: 2,
           lastValueVisible: false,
           priceLineVisible: false,
@@ -193,9 +181,8 @@ export default function ChanLunChart({
     // Render Seg
     if (showSeg && chanlun.segList) {
       chanlun.segList.forEach((seg) => {
-        const color = seg.direction === 'up' ? '#d50000' : '#00bfa5';
         const series = chart.addSeries(LineSeries, {
-          color,
+          color: '#FF0000',
           lineWidth: 3,
           lastValueVisible: false,
           priceLineVisible: false,
@@ -210,18 +197,20 @@ export default function ChanLunChart({
     }
 
     // Render Pivots helper
-    const renderPivots = (pivotList: typeof chanlun.biPivotList, colorBase: string, alpha: number) => {
+    const renderPivots = (pivotList: typeof chanlun.biPivotList, colorBase: string, _alpha: number) => {
       if (!pivotList) return;
       pivotList.forEach((pivot) => {
-        const color = `${colorBase}${alpha})`;
-        const fill1 = `${colorBase}${Math.min(alpha * 1.2, 0.6)})`;
-        const fill2 = `${colorBase}0.05)`;
+        const startSec = msToSec(pivot.startTime);
+        const endSec = msToSec(pivot.endTime);
+        const borderColor = `${colorBase}0.9)`;
+        const fillColor = `${colorBase}0.12)`;
 
-        const series = chart.addSeries(BaselineSeries, {
+        // 填充区域（无边框线，只填充）
+        const fillSeries = chart.addSeries(BaselineSeries, {
           baseValue: { type: 'price', price: pivot.zd },
-          topLineColor: color,
-          topFillColor1: fill1,
-          topFillColor2: fill2,
+          topLineColor: 'transparent',
+          topFillColor1: fillColor,
+          topFillColor2: fillColor,
           bottomLineColor: 'transparent',
           bottomFillColor1: 'transparent',
           bottomFillColor2: 'transparent',
@@ -230,16 +219,44 @@ export default function ChanLunChart({
           priceLineVisible: false,
           crosshairMarkerVisible: false,
         });
-        series.setData([
-          { time: msToSec(pivot.startTime) as Time, value: pivot.zg },
-          { time: msToSec(pivot.endTime) as Time, value: pivot.zg },
+        fillSeries.setData([
+          { time: startSec as Time, value: pivot.zg },
+          { time: endSec as Time, value: pivot.zg },
         ]);
-        seriesRefs.current.push(series);
+        seriesRefs.current.push(fillSeries);
+
+        // 上边框
+        const topSeries = chart.addSeries(LineSeries, {
+          color: borderColor,
+          lineWidth: 1,
+          lastValueVisible: false,
+          priceLineVisible: false,
+          crosshairMarkerVisible: false,
+        });
+        topSeries.setData([
+          { time: startSec as Time, value: pivot.zg },
+          { time: endSec as Time, value: pivot.zg },
+        ]);
+        seriesRefs.current.push(topSeries);
+
+        // 下边框
+        const bottomSeries = chart.addSeries(LineSeries, {
+          color: borderColor,
+          lineWidth: 1,
+          lastValueVisible: false,
+          priceLineVisible: false,
+          crosshairMarkerVisible: false,
+        });
+        bottomSeries.setData([
+          { time: startSec as Time, value: pivot.zd },
+          { time: endSec as Time, value: pivot.zd },
+        ]);
+        seriesRefs.current.push(bottomSeries);
       });
     };
 
-    if (showBiPivot) renderPivots(chanlun.biPivotList, 'rgba(41, 98, 255, ', 0.35);
-    if (showSegPivot) renderPivots(chanlun.segPivotList, 'rgba(255, 171, 0, ', 0.35);
+    if (showBiPivot) renderPivots(chanlun.biPivotList, 'rgba(255, 215, 0, ', 0.55);
+    if (showSegPivot) renderPivots(chanlun.segPivotList, 'rgba(255, 0, 0, ', 0.55);
 
     // Render merged K-lines
     if (showMergedKLine && chanlun.mergedKLines) {

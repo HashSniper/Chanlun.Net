@@ -16,37 +16,46 @@ public interface IStockRepository
 
     #endregion
 
-    #region Kline 泛型接口（按周期分表）
+    #region Kline 查询接口
 
     /// <summary>
     /// 查询指定时间范围的K线（泛型，T 为具体周期实体）
     /// </summary>
-    Task<IEnumerable<T>> GetKlinesAsync<T>(string symbol, DateTime fromTime, DateTime toTime, CancellationToken ct = default) where T : class;
-
-    /// <summary>
-    /// 查询单根K线
-    /// </summary>
-    Task<T?> GetKlineAsync<T>(string symbol, DateTime tradeTime, CancellationToken ct = default) where T : class;
-
-    /// <summary>
-    /// 新增单根K线
-    /// </summary>
-    Task AddKlineAsync<T>(T kline, CancellationToken ct = default) where T : class;
-
+    Task<IEnumerable<T>> GetKlinesAsync<T>(string symbol, KlineResolution resolution,DateTime fromTime, DateTime toTime, CancellationToken ct = default) where T : KlineBase;
+    
     /// <summary>
     /// 批量新增K线
     /// </summary>
-    Task AddKlinesAsync<T>(IEnumerable<T> klines, CancellationToken ct = default) where T : class;
+    Task AddKlinesAsync<T>(IEnumerable<T> klines, CancellationToken ct = default) where T : KlineBase;
 
     /// <summary>
     /// 删除指定时间范围的K线
     /// </summary>
-    Task DeleteKlinesAsync<T>(string symbol, DateTime fromTime, DateTime toTime, CancellationToken ct = default) where T : class;
+    Task DeleteKlinesAsync<T>(string symbol, DateTime fromTime, DateTime toTime, CancellationToken ct = default) where T : KlineBase;
 
     /// <summary>
     /// 保存变更
     /// </summary>
     Task<int> SaveChangesAsync(CancellationToken ct = default);
+
+    #endregion
+
+    #region TdxCurrentKlineView
+
+    /// <summary>
+    /// 查询通达信当前K线视图（不带条件，仅取第一条）
+    /// </summary>
+    Task<TdxCurrentKlineView?> GetTdxCurrentKlineViewAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// 新增通达信当前K线视图，保存后返回生成的 Id
+    /// </summary>
+    Task<long> AddTdxCurrentKlineViewAsync(TdxCurrentKlineView record, CancellationToken ct = default);
+
+    /// <summary>
+    /// 清空通达信当前K线视图
+    /// </summary>
+    Task ClearTdxCurrentKlineViewsAsync(CancellationToken ct = default);
 
     #endregion
 }

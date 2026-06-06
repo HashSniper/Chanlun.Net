@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import ChanLunChart from './components/ChanLunChart';
 import ControlPanel, { type Resolution } from './components/ControlPanel';
-import { calculateChanlun, setBaseUrl, getBaseUrl } from './api/chanlunApi';
+import { getChanlunKlines, getTdxChanlunKlines, setBaseUrl, getBaseUrl } from './api/chanlunApi';
 import type { ChanlunResponse, KlineBar } from './types/chanlun';
 
 function App() {
@@ -10,14 +10,14 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [apiUrl, setApiUrl] = useState(getBaseUrl());
   const [error, setError] = useState<string>('');
-  const [resolution, setResolution] = useState<Resolution>('D');
+  const [resolution, setResolution] = useState<Resolution>('Day');
 
   // Display options
   const [showBi, setShowBi] = useState(true);
   const [showSeg, setShowSeg] = useState(true);
   const [showBiPivot, setShowBiPivot] = useState(true);
   const [showSegPivot, setShowSegPivot] = useState(true);
-  const [showMergedKLine, setShowMergedKLine] = useState(false);
+  const [showMergedKLine, setShowMergedKLine] = useState(true);
 
   const handleApiUrlChange = useCallback((url: string) => {
     setApiUrl(url);
@@ -25,30 +25,43 @@ function App() {
   }, []);
 
   const resolutionLabel: Record<Resolution, string> = {
-    '1': '1分钟', '5': '5分钟', '15': '15分钟', '30': '30分钟',
-    '60': '1小时', '240': '4小时', 'D': '日线', 'W': '周线', 'M': '月线',
+    'Minute1': '1分钟', 'Minute5': '5分钟', 'Minute15': '15分钟', 'Minute30': '30分钟',
+    'Minute60': '1小时', 'Day': '日线', 'Week': '周线', 'Month': '月线',
   };
 
-  const handleCalculate = useCallback(async (symbol: string, bars: KlineBar[], _resolution: Resolution) => {
+  const handleCalculate = useCallback(async (symbol: string, _resolution: Resolution, fromDate: string, toDate: string) => {
     setLoading(true);
     setError('');
     try {
-      const data = await calculateChanlun(symbol, bars);
-      setKlines(bars);
+      const data = await getChanlunKlines(symbol, _resolution, fromDate, toDate);
+      setKlines(data.bars);
       setChanlun(data);
     } catch (err: any) {
-      setError(err?.response?.data?.error || err.message || '计算失败');
+      setError(err?.response?.data?.error || err.message || '请求失败');
       setChanlun(null);
+      setKlines([]);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const handleClear = useCallback(() => {
-    setKlines([]);
-    setChanlun(null);
+  const handleTdxCalculate = useCallback(async () => {
+    setLoading(true);
     setError('');
+    try {
+      const data = await getTdxChanlunKlines();
+      setKlines(data.bars);
+      setChanlun(data);
+    } catch (err: any) {
+      setError(err?.response?.data?.error || err.message || '通达信数据请求失败');
+      setChanlun(null);
+      setKlines([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100vw', height: '100vh', background: '#131722', color: '#d1d4dc' }}>
@@ -62,7 +75,7 @@ function App() {
         )}
         {chanlun && !error && (
           <span style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '4px', background: 'rgba(46, 204, 113, 0.15)', color: '#2ecc71' }}>
-            ✅ [{resolutionLabel[resolution]}] 笔:{chanlun.biList?.length || 0} 线段:{chanlun.segList?.length || 0} 笔中枢:{chanlun.biPivotList?.length || 0} 线段中枢:{chanlun.segPivotList?.length || 0}
+            ✅ [{resolutionLabel[resolution]}] K线:{chanlun.barCount} 笔:{chanlun.biList?.length || 0} 线段:{chanlun.segList?.length || 0} 笔中枢:{chanlun.biPivotList?.length || 0} 线段中枢:{chanlun.segPivotList?.length || 0}
           </span>
         )}
       </div>
@@ -71,7 +84,7 @@ function App() {
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         <ControlPanel
           onCalculate={handleCalculate}
-          onClear={handleClear}
+          onTdxCalculate={handleTdxCalculate}
           loading={loading}
           apiUrl={apiUrl}
           onApiUrlChange={handleApiUrlChange}

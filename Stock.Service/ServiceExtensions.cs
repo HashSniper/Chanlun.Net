@@ -7,7 +7,10 @@ public static class ServiceExtensions
 {
     public static IServiceCollection AddMyService(this IServiceCollection services)
     {
-        services.AddTransient<ISetStockDataService, SetStockDataService>();
+        services.AddTransient<ISetKlineService, SetKlineService>();
+        services.AddTransient<IGetKLineService, GetKLineService>();
+        services.AddTransient<IGetTdxCurrentKlineViewService, GetTdxCurrentKlineViewService>();
+        services.AddTransient<ISaveTdxCurrentKlineViewService, SaveTdxCurrentKlineViewService>();
         return services;
     }
 }

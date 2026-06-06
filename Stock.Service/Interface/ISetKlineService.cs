@@ -2,7 +2,7 @@
 
 namespace Stock.Service.Interface;
 
-public interface ISetStockDataService
+public interface ISetKlineService
 {
     Task SaveKlinesAsync<T>(IEnumerable<T> klines, CancellationToken ct = default) where T : KlineBase;
 }
