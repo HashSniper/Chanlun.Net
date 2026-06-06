@@ -19,11 +19,6 @@ export default function ControlPanel({ onCalculate, onTdxCalculate, loading, api
   const oneYearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
   const [startDate, setStartDate] = useState(oneYearAgo.toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState(now.toISOString().split('T')[0]);
-  const [showBi, setShowBi] = useState(true);
-  const [showSeg, setShowSeg] = useState(true);
-  const [showBiPivot, setShowBiPivot] = useState(true);
-  const [showSegPivot, setShowSegPivot] = useState(true);
-  const [showMergedKLine, setShowMergedKLine] = useState(true);
 
   const resolutionMap: Record<Resolution, string> = {
     'Minute1': '1分钟',
@@ -125,31 +120,7 @@ export default function ControlPanel({ onCalculate, onTdxCalculate, loading, api
         </div>
       </div>
 
-      <div style={{ borderTop: '1px solid #2a2e39', paddingTop: '12px' }}>
-        <h3 style={{ fontSize: '13px', marginBottom: '10px', color: '#fff', fontWeight: 600 }}>⚙️ 显示选项</h3>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', marginBottom: '6px', cursor: 'pointer' }}>
-          <input type="checkbox" checked={showBi} onChange={(e) => setShowBi(e.target.checked)} />
-          显示笔
-        </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', marginBottom: '6px', cursor: 'pointer' }}>
-          <input type="checkbox" checked={showSeg} onChange={(e) => setShowSeg(e.target.checked)} />
-          显示线段
-        </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', marginBottom: '6px', cursor: 'pointer' }}>
-          <input type="checkbox" checked={showBiPivot} onChange={(e) => setShowBiPivot(e.target.checked)} />
-          显示笔中枢
-        </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', marginBottom: '6px', cursor: 'pointer' }}>
-          <input type="checkbox" checked={showSegPivot} onChange={(e) => setShowSegPivot(e.target.checked)} />
-          显示线段中枢
-        </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', cursor: 'pointer' }}>
-          <input type="checkbox" checked={showMergedKLine} onChange={(e) => setShowMergedKLine(e.target.checked)} />
-          显示合并K线
-        </label>
-      </div>
-
-      <div style={{ borderTop: '1px solid #2a2e39', paddingTop: '12px' }}>
+<div style={{ borderTop: '1px solid #2a2e39', paddingTop: '12px' }}>
         <h3 style={{ fontSize: '13px', marginBottom: '8px', color: '#fff', fontWeight: 600 }}>📐 图例</h3>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px', fontSize: '11px', color: '#868993' }}>
           <div style={{ width: '16px', height: '3px', borderRadius: '2px', background: '#FFD700' }}></div>

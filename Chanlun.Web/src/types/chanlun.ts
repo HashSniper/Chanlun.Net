@@ -5,6 +5,7 @@ export interface KlineBar {
   low: number;
   close: number;
   volume: number;
+  calIndicator?: number;
 }
 
 export interface BiItem {

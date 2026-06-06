@@ -86,7 +86,9 @@ public class TdxCalculationController : ControllerBase
     public IActionResult SetIndicator([FromBody] CalcRequest request)
     {
         KLineDataPopulator.PopulateOpenClosePrice(request.NCount, request.A, request.B, request.C);
-        var result = IndicatorCalculator.Calculate(request.C);
+        var key = request.C[0];
+        var calculateResult = ChanCalculateResultCache.Get(key);
+        var result = IndicatorCalculator.Calculate(ref calculateResult);
         return Ok(new CalcResponse { Result = result });
     }
 

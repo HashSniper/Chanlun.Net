@@ -8,6 +8,7 @@ public class TvKlineBar
     public decimal Low { get; set; }
     public decimal Close { get; set; }
     public decimal Volume { get; set; }
+    public decimal CalIndicator { get; set; }
 }
 
 public class TvChanlunRequest

@@ -4,10 +4,13 @@ import {
   CandlestickSeries,
   LineSeries,
   BaselineSeries,
+  HistogramSeries,
+  createSeriesMarkers,
   type IChartApi,
   type ISeriesApi,
   type CandlestickData,
   type Time,
+  type SeriesMarker,
 } from 'lightweight-charts';
 import type { ChanlunResponse, KlineBar } from '../types/chanlun';
 
@@ -40,7 +43,13 @@ function formatTime(sec: number): string {
   return d.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
 }
 
-
+function setPaneHeights(chart: IChartApi, containerHeight: number) {
+  const panes = chart.panes();
+  if (panes.length >= 2) {
+    panes[0].setHeight(Math.floor(containerHeight * 0.7));
+    panes[1].setHeight(Math.floor(containerHeight * 0.3));
+  }
+}
 
 export default function ChanLunChart({
   klines,
@@ -54,6 +63,7 @@ export default function ChanLunChart({
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRefs = useRef<ISeriesApi<any>[]>([]);
+  const markerPluginsRef = useRef<{ detach: () => void }[]>([]);
   const candleSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
 
@@ -76,9 +86,17 @@ export default function ChanLunChart({
     });
     chartRef.current = chart;
 
+    // 添加指标 pane（下半部分）
+    chart.addPane();
+    if (containerRef.current) {
+      setPaneHeights(chart, containerRef.current.clientHeight);
+    }
+
     const resizeObserver = new ResizeObserver(() => {
       if (containerRef.current) {
-        chart.applyOptions({ width: containerRef.current.clientWidth, height: containerRef.current.clientHeight });
+        const h = containerRef.current.clientHeight;
+        chart.applyOptions({ width: containerRef.current.clientWidth, height: h });
+        setPaneHeights(chart, h);
       }
     });
     resizeObserver.observe(containerRef.current);
@@ -94,6 +112,10 @@ export default function ChanLunChart({
 
   // Clear overlays
   const clearOverlays = () => {
+    markerPluginsRef.current.forEach((p) => {
+      try { p.detach(); } catch {}
+    });
+    markerPluginsRef.current = [];
     seriesRefs.current.forEach((s) => {
       try { chartRef.current?.removeSeries(s); } catch {}
     });
@@ -107,8 +129,8 @@ export default function ChanLunChart({
 
     clearOverlays();
 
-    // Render K-lines
-     const candleData: CandlestickData<Time>[] = klines
+    // Render K-lines (pane 0)
+    const candleData: CandlestickData<Time>[] = klines
       .map((b) => {
         const t = typeof b.time === 'number' ? Math.floor(b.time / 1000) : msToSec(new Date(b.time).getTime());
         return {
@@ -127,10 +149,47 @@ export default function ChanLunChart({
       borderVisible: false,
       wickUpColor: '#26a69a',
       wickDownColor: '#ef5350',
-    });
+    }, 0);
     candleSeries.setData(candleData);
     seriesRefs.current.push(candleSeries);
     candleSeriesRef.current = candleSeries;
+
+    // Render CalIndicator histogram (pane 1)
+    const indicatorData = klines
+      .map((b) => {
+        const t = typeof b.time === 'number' ? Math.floor(b.time / 1000) : msToSec(new Date(b.time).getTime());
+        return {
+          time: t as Time,
+          value: b.calIndicator ?? 0,
+          color: (b.calIndicator ?? 0) > 0 ? '#26a69a' : '#ef5350',
+        };
+      })
+      .filter((d) => d.value !== 0)
+      .sort((a, b) => (a.time as number) - (b.time as number));
+
+    if (indicatorData.length > 0) {
+      const histSeries = chart.addSeries(HistogramSeries, {
+        color: '#26a69a',
+        base: 0,
+        priceFormat: { type: 'price', precision: 2, minMove: 0.01 },
+        lastValueVisible: false,
+        priceLineVisible: false,
+      }, 1);
+      histSeries.setData(indicatorData);
+      seriesRefs.current.push(histSeries);
+
+      // 直接在柱子上标注数值（不画连线）
+      const markers: SeriesMarker<Time>[] = indicatorData.map((d) => ({
+        time: d.time,
+        position: d.value > 0 ? 'aboveBar' : 'belowBar',
+        shape: 'square',
+        color: d.color ?? '#26a69a',
+        text: String(Math.round(d.value * 100) / 100),
+        size: 1,
+      }));
+      const plugin = createSeriesMarkers(histSeries, markers);
+      markerPluginsRef.current.push(plugin);
+    }
 
     // 监听十字光标移动，显示K线详细信息
     chart.subscribeCrosshairMove((param) => {
@@ -160,7 +219,7 @@ export default function ChanLunChart({
 
     if (!chanlun) return;
 
-    // Render Bi
+    // Render Bi (pane 0)
     if (showBi && chanlun.biList) {
       chanlun.biList.forEach((bi) => {
         const series = chart.addSeries(LineSeries, {
@@ -169,7 +228,7 @@ export default function ChanLunChart({
           lastValueVisible: false,
           priceLineVisible: false,
           crosshairMarkerVisible: false,
-        });
+        }, 0);
         series.setData([
           { time: msToSec(bi.startTime) as Time, value: bi.startPrice },
           { time: msToSec(bi.endTime) as Time, value: bi.endPrice },
@@ -178,7 +237,7 @@ export default function ChanLunChart({
       });
     }
 
-    // Render Seg
+    // Render Seg (pane 0)
     if (showSeg && chanlun.segList) {
       chanlun.segList.forEach((seg) => {
         const series = chart.addSeries(LineSeries, {
@@ -187,7 +246,7 @@ export default function ChanLunChart({
           lastValueVisible: false,
           priceLineVisible: false,
           crosshairMarkerVisible: false,
-        });
+        }, 0);
         series.setData([
           { time: msToSec(seg.startTime) as Time, value: seg.startPrice },
           { time: msToSec(seg.endTime) as Time, value: seg.endPrice },
@@ -196,7 +255,7 @@ export default function ChanLunChart({
       });
     }
 
-    // Render Pivots helper
+    // Render Pivots helper (pane 0)
     const renderPivots = (pivotList: typeof chanlun.biPivotList, colorBase: string, _alpha: number) => {
       if (!pivotList) return;
       pivotList.forEach((pivot) => {
@@ -218,7 +277,7 @@ export default function ChanLunChart({
           lastValueVisible: false,
           priceLineVisible: false,
           crosshairMarkerVisible: false,
-        });
+        }, 0);
         fillSeries.setData([
           { time: startSec as Time, value: pivot.zg },
           { time: endSec as Time, value: pivot.zg },
@@ -232,7 +291,7 @@ export default function ChanLunChart({
           lastValueVisible: false,
           priceLineVisible: false,
           crosshairMarkerVisible: false,
-        });
+        }, 0);
         topSeries.setData([
           { time: startSec as Time, value: pivot.zg },
           { time: endSec as Time, value: pivot.zg },
@@ -246,7 +305,7 @@ export default function ChanLunChart({
           lastValueVisible: false,
           priceLineVisible: false,
           crosshairMarkerVisible: false,
-        });
+        }, 0);
         bottomSeries.setData([
           { time: startSec as Time, value: pivot.zd },
           { time: endSec as Time, value: pivot.zd },
@@ -258,7 +317,7 @@ export default function ChanLunChart({
     if (showBiPivot) renderPivots(chanlun.biPivotList, 'rgba(255, 215, 0, ', 0.55);
     if (showSegPivot) renderPivots(chanlun.segPivotList, 'rgba(255, 0, 0, ', 0.55);
 
-    // Render merged K-lines
+    // Render merged K-lines (pane 0)
     if (showMergedKLine && chanlun.mergedKLines) {
       chanlun.mergedKLines.forEach((kl) => {
         const startSec = msToSec(kl.startTime);
@@ -285,7 +344,7 @@ export default function ChanLunChart({
           lastValueVisible: false,
           priceLineVisible: false,
           crosshairMarkerVisible: false,
-        });
+        }, 0);
         series.setData([
           { time: startSec as Time, value: kl.high },
           { time: endSec as Time, value: kl.high },

@@ -40,7 +40,7 @@ public static class ChanCalculateResultBuilder
         BiCalculator.Calculate(ref result);
         SegCalculator.Calculate(ref result);
         PivotCalculator.Calculate(ref result);
-
+        IndicatorCalculator.Calculate(ref result);
         return result;
     }
 }
@@ -434,15 +434,13 @@ public static class PivotCalculator
 
 public static class IndicatorCalculator
 {
-    public static decimal[] Calculate(decimal[] pKey)
+    public static decimal[] Calculate(ref ChanCalculateResult calculateResult)
     {
-        var key = pKey[0];
-        var calculateResult = ChanCalculateResultCache.Get(key);
-        var pOut = new decimal[calculateResult.UnitList.Count];
         if (calculateResult == null)
         {
-            return pOut;
+            return [];
         }
+        var pOut = new decimal[calculateResult.UnitList.Count];
 
         var kLines = calculateResult.LineList;
         if (kLines.IsNullOrEmpty())
@@ -472,8 +470,8 @@ public static class IndicatorCalculator
         {
             var energy = CalculateBiMetric1(bi);
             pOut[bi.EndChanKLine.PeakUnit.Idx] = energy;
+            units[bi.EndChanKLine.PeakUnit.Idx].CalIndicator = energy;
         }
-
 
         return pOut;
     }

@@ -29,7 +29,8 @@ public static class ChanlunResultAdapter
                 High = u.High,
                 Low = u.Low,
                 Close = u.Close,
-                Volume = u.Volume
+                Volume = u.Volume,
+                CalIndicator = u.CalIndicator,
             }).ToList();
         }
 

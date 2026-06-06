@@ -19,6 +19,8 @@ namespace Chanlun.Lib.KLine
 
         public BollingerBandsResult Boll { get; set; }
 
+        public decimal CalIndicator { get; set; }
+
         public override string ToString() => $"Unit|{Idx}|{Time}";
     }
     
