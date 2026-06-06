@@ -11,12 +11,13 @@ namespace Chanlun.API.Adapter;
 /// </summary>
 public static class ChanlunResultAdapter
 {
-    public static TvChanlunResponse ConvertToTvResponse(int barCount, ChanCalculateResult result)
+    public static TvChanlunResponse ConvertToTvResponse(int barCount, ChanCalculateResult result, string resolution)
     {
         var response = new TvChanlunResponse
         {
             BarCount = barCount,
-            Symbol = result.Symbol ?? string.Empty
+            Symbol = result.Symbol ?? string.Empty,
+            Resolution = resolution ?? string.Empty,
         };
 
         // K线数据

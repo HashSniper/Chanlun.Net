@@ -36,7 +36,8 @@ public class TradingViewController : ControllerBase
         });
 
         var chanResult = ChanCalculateResultBuilder.Build(symbol, kLines.ToKLineUnits());
-        var response = ChanlunResultAdapter.ConvertToTvResponse(chanResult.UnitList?.Count ?? 0, chanResult);
+        var response =
+            ChanlunResultAdapter.ConvertToTvResponse(chanResult.UnitList?.Count ?? 0, chanResult, resolution);
         return Ok(response);
     }
     
@@ -58,7 +59,8 @@ public class TradingViewController : ControllerBase
         });
     
         var chanResult = ChanCalculateResultBuilder.Build(currentStock.Symbol, kLines.ToKLineUnits());
-        var response = ChanlunResultAdapter.ConvertToTvResponse(chanResult.UnitList?.Count ?? 0, chanResult);
+        var response = ChanlunResultAdapter.ConvertToTvResponse(chanResult.UnitList?.Count ?? 0, chanResult,
+            currentStock.Resolution.ToString());
         return Ok(response);
     }
 }

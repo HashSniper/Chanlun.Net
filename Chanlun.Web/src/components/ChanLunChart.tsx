@@ -11,6 +11,7 @@ import {
   type CandlestickData,
   type Time,
   type SeriesMarker,
+  type ISeriesPrimitive,
 } from 'lightweight-charts';
 import type { ChanlunResponse, KlineBar } from '../types/chanlun';
 
@@ -48,6 +49,51 @@ function setPaneHeights(chart: IChartApi, containerHeight: number) {
   if (panes.length >= 2) {
     panes[0].setHeight(Math.floor(containerHeight * 0.7));
     panes[1].setHeight(Math.floor(containerHeight * 0.3));
+  }
+}
+
+/**
+ * 在 pane 0 底部绘制分割线 —— 精确对齐上下 pane 分界
+ * 使用 lightweight-charts 原生 primitive API，不会受 CSS 布局偏差影响
+ */
+class PaneSeparator implements ISeriesPrimitive<Time> {
+  paneViews() {
+    return [
+      {
+        zOrder: () => 'top' as const,
+        renderer: () => ({
+          draw: (
+            target: {
+              useBitmapCoordinateSpace: (cb: (scope: {
+                context: CanvasRenderingContext2D;
+                bitmapSize: { width: number; height: number };
+              }) => void) => void;
+            },
+          ) => {
+            target.useBitmapCoordinateSpace(({ context, bitmapSize }) => {
+              const y = bitmapSize.height - 1; // pane 0 最底部 1px
+              const w = bitmapSize.width;
+              context.save();
+              const gradient = context.createLinearGradient(0, 0, w, 0);
+              gradient.addColorStop(0, 'rgba(90, 94, 105, 0)');
+              gradient.addColorStop(0.1, 'rgba(90, 94, 105, 1)');
+              gradient.addColorStop(0.5, 'rgba(138, 142, 153, 1)');
+              gradient.addColorStop(0.9, 'rgba(90, 94, 105, 1)');
+              gradient.addColorStop(1, 'rgba(90, 94, 105, 0)');
+              context.strokeStyle = gradient;
+              context.lineWidth = 1;
+              context.shadowColor = 'rgba(138, 142, 153, 0.35)';
+              context.shadowBlur = 6;
+              context.beginPath();
+              context.moveTo(0, y);
+              context.lineTo(w, y);
+              context.stroke();
+              context.restore();
+            });
+          },
+        }),
+      },
+    ];
   }
 }
 
@@ -153,6 +199,9 @@ export default function ChanLunChart({
     candleSeries.setData(candleData);
     seriesRefs.current.push(candleSeries);
     candleSeriesRef.current = candleSeries;
+
+    // 绘制 pane 0 底部精确分割线
+    candleSeries.attachPrimitive(new PaneSeparator());
 
     // Render CalIndicator histogram (pane 1)
     const indicatorData = klines
@@ -400,6 +449,23 @@ export default function ChanLunChart({
             </div>
           </>
         )}
+      </div>
+
+      {/* 下窗口标题：指标计算结果 */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '71%',
+          left: 12,
+          zIndex: 5,
+          pointerEvents: 'none',
+          fontSize: 11,
+          color: '#868993',
+          fontWeight: 500,
+          letterSpacing: '0.5px',
+        }}
+      >
+        指标计算结果
       </div>
 
       <div

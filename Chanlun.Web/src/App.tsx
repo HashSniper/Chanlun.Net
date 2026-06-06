@@ -75,7 +75,7 @@ function App() {
         )}
         {chanlun && !error && (
           <span style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '4px', background: 'rgba(46, 204, 113, 0.15)', color: '#2ecc71' }}>
-            ✅ [{resolutionLabel[resolution]}] K线:{chanlun.barCount} 笔:{chanlun.biList?.length || 0} 线段:{chanlun.segList?.length || 0} 笔中枢:{chanlun.biPivotList?.length || 0} 线段中枢:{chanlun.segPivotList?.length || 0}
+            ✅ {chanlun.symbol} [{resolutionLabel[chanlun.resolution as Resolution] ?? chanlun.resolution}] K线:{chanlun.barCount} 笔:{chanlun.biList?.length || 0} 线段:{chanlun.segList?.length || 0} 笔中枢:{chanlun.biPivotList?.length || 0} 线段中枢:{chanlun.segPivotList?.length || 0}
           </span>
         )}
       </div>

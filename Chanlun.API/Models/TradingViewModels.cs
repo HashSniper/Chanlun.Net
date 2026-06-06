@@ -60,6 +60,9 @@ public class TvChanlunResponse
 {
     public string Symbol { get; set; } = string.Empty;
     public int BarCount { get; set; }
+
+    public string Resolution { get; set; }
+
     public List<TvKlineBar> Bars { get; set; } = [];
     public List<TvBiItem> BiList { get; set; } = [];
     public List<TvSegItem> SegList { get; set; } = [];

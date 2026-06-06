@@ -46,6 +46,7 @@ export interface MergedKLine {
 export interface ChanlunResponse {
   symbol: string;
   barCount: number;
+  resolution: string;
   bars: KlineBar[];
   biList: BiItem[];
   segList: SegItem[];
