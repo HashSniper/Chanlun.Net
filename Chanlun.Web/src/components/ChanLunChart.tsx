@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import {
   createChart,
   CandlestickSeries,
@@ -25,6 +25,26 @@ interface TooltipData {
   changePct: number;
 }
 
+interface PatternModalData {
+  time: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+  patterns: string[];
+  patternDirection: string;
+  patternSignal: string;
+  x: number;
+  y: number;
+  // 量能关系指标
+  volumeRatio5?: number;
+  volumeChangePct?: number;
+  obv?: number;
+  volumeSignal?: string;
+  volumeBullish?: boolean | null;
+}
+
 interface Props {
   klines: KlineBar[];
   chanlun: ChanlunResponse | null;
@@ -44,6 +64,14 @@ function formatTime(sec: number): string {
   return d.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
 }
 
+function formatDateTime(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleString('zh-CN', {
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+  });
+}
+
 function setPaneHeights(chart: IChartApi, containerHeight: number) {
   const panes = chart.panes();
   if (panes.length >= 2) {
@@ -52,26 +80,15 @@ function setPaneHeights(chart: IChartApi, containerHeight: number) {
   }
 }
 
-/**
- * 在 pane 0 底部绘制分割线 —— 精确对齐上下 pane 分界
- * 使用 lightweight-charts 原生 primitive API，不会受 CSS 布局偏差影响
- */
 class PaneSeparator implements ISeriesPrimitive<Time> {
   paneViews() {
     return [
       {
         zOrder: () => 'top' as const,
         renderer: () => ({
-          draw: (
-            target: {
-              useBitmapCoordinateSpace: (cb: (scope: {
-                context: CanvasRenderingContext2D;
-                bitmapSize: { width: number; height: number };
-              }) => void) => void;
-            },
-          ) => {
-            target.useBitmapCoordinateSpace(({ context, bitmapSize }) => {
-              const y = bitmapSize.height - 1; // pane 0 最底部 1px
+          draw: (target: any) => {
+            target.useBitmapCoordinateSpace(({ context, bitmapSize }: any) => {
+              const y = bitmapSize.height - 1;
               const w = bitmapSize.width;
               context.save();
               const gradient = context.createLinearGradient(0, 0, w, 0);
@@ -97,6 +114,36 @@ class PaneSeparator implements ISeriesPrimitive<Time> {
   }
 }
 
+/** 在 pane 1 顶部绘制"指标计算结果"标题，天然位于分界线下方 */
+class PaneTitlePrimitive implements ISeriesPrimitive<Time> {
+  private _title: string;
+
+  constructor(title: string) {
+    this._title = title;
+  }
+
+  paneViews() {
+    return [
+      {
+        zOrder: () => 'top' as const,
+        renderer: () => ({
+          draw: (target: any) => {
+            target.useBitmapCoordinateSpace(({ context }: any) => {
+              context.save();
+              context.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+              context.fillStyle = '#868993';
+              context.textAlign = 'left';
+              context.textBaseline = 'top';
+              context.fillText(this._title, 4, 4);
+              context.restore();
+            });
+          },
+        }),
+      },
+    ];
+  }
+}
+
 export default function ChanLunChart({
   klines,
   chanlun,
@@ -112,6 +159,7 @@ export default function ChanLunChart({
   const markerPluginsRef = useRef<{ detach: () => void }[]>([]);
   const candleSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
+  const [modal, setModal] = useState<PatternModalData | null>(null);
 
   // Init chart
   useEffect(() => {
@@ -132,7 +180,6 @@ export default function ChanLunChart({
     });
     chartRef.current = chart;
 
-    // 添加指标 pane（下半部分）
     chart.addPane();
     if (containerRef.current) {
       setPaneHeights(chart, containerRef.current.clientHeight);
@@ -149,15 +196,13 @@ export default function ChanLunChart({
 
     return () => {
       resizeObserver.disconnect();
-      chart.unsubscribeCrosshairMove(() => {});
       chart.remove();
       chartRef.current = null;
       candleSeriesRef.current = null;
     };
   }, []);
 
-  // Clear overlays
-  const clearOverlays = () => {
+  const clearOverlays = useCallback(() => {
     markerPluginsRef.current.forEach((p) => {
       try { p.detach(); } catch {}
     });
@@ -166,7 +211,7 @@ export default function ChanLunChart({
       try { chartRef.current?.removeSeries(s); } catch {}
     });
     seriesRefs.current = [];
-  };
+  }, []);
 
   // Render data
   useEffect(() => {
@@ -175,7 +220,6 @@ export default function ChanLunChart({
 
     clearOverlays();
 
-    // Render K-lines (pane 0)
     const candleData: CandlestickData<Time>[] = klines
       .map((b) => {
         const t = typeof b.time === 'number' ? Math.floor(b.time / 1000) : msToSec(new Date(b.time).getTime());
@@ -190,17 +234,16 @@ export default function ChanLunChart({
       .sort((a, b) => (a.time as number) - (b.time as number));
 
     const candleSeries = chart.addSeries(CandlestickSeries, {
-      upColor: '#26a69a',
-      downColor: '#ef5350',
+      upColor: '#ef5350',
+      downColor: '#26a69a',
       borderVisible: false,
-      wickUpColor: '#26a69a',
-      wickDownColor: '#ef5350',
+      wickUpColor: '#ef5350',
+      wickDownColor: '#26a69a',
     }, 0);
     candleSeries.setData(candleData);
     seriesRefs.current.push(candleSeries);
     candleSeriesRef.current = candleSeries;
 
-    // 绘制 pane 0 底部精确分割线
     candleSeries.attachPrimitive(new PaneSeparator());
 
     // Render CalIndicator histogram (pane 1)
@@ -227,7 +270,9 @@ export default function ChanLunChart({
       histSeries.setData(indicatorData);
       seriesRefs.current.push(histSeries);
 
-      // 直接在柱子上标注数值（不画连线）
+      // 标题绘制在 pane 1 顶部，天然位于分界线下方
+      histSeries.attachPrimitive(new PaneTitlePrimitive('指标计算结果'));
+
       const markers: SeriesMarker<Time>[] = indicatorData.map((d) => ({
         time: d.time,
         position: d.value > 0 ? 'aboveBar' : 'belowBar',
@@ -240,8 +285,8 @@ export default function ChanLunChart({
       markerPluginsRef.current.push(plugin);
     }
 
-    // 监听十字光标移动，显示K线详细信息
-    chart.subscribeCrosshairMove((param) => {
+    // 十字光标 tooltip
+    const crosshairHandler = (param: any) => {
       if (!param.time || !param.seriesData) {
         setTooltip(null);
         return;
@@ -262,13 +307,47 @@ export default function ChanLunChart({
         change,
         changePct,
       });
-    });
+    };
+    chart.subscribeCrosshairMove(crosshairHandler);
+
+    // 点击K线弹窗
+    const clickHandler = (param: any) => {
+      if (!param.time) return;
+      const clickSec = param.time as number;
+      // 找到对应的K线数据（允许前后1秒误差）
+      const matched = klines.find((k) => {
+        const kSec = typeof k.time === 'number' ? Math.floor(k.time / 1000) : msToSec(new Date(k.time).getTime());
+        return Math.abs(kSec - clickSec) <= 1;
+      });
+      if (!matched) return;
+
+      const point = param.point ?? { x: 0, y: 0 };
+      setModal({
+        time: formatDateTime(matched.time),
+        open: matched.open,
+        high: matched.high,
+        low: matched.low,
+        close: matched.close,
+        volume: matched.volume,
+        patterns: matched.patterns ?? [],
+        patternDirection: matched.patternDirection ?? '',
+        patternSignal: matched.patternSignal ?? '',
+        x: point.x,
+        y: point.y,
+        // 量能关系指标
+        volumeRatio5: matched.volumeRatio5,
+        volumeChangePct: matched.volumeChangePct,
+        obv: matched.obv,
+        volumeSignal: matched.volumeSignal,
+        volumeBullish: matched.volumeBullish,
+      });
+    };
+    chart.subscribeClick(clickHandler);
 
     chart.timeScale().fitContent();
 
     if (!chanlun) return;
 
-    // Render Bi (pane 0)
     if (showBi && chanlun.biList) {
       chanlun.biList.forEach((bi) => {
         const series = chart.addSeries(LineSeries, {
@@ -286,7 +365,6 @@ export default function ChanLunChart({
       });
     }
 
-    // Render Seg (pane 0)
     if (showSeg && chanlun.segList) {
       chanlun.segList.forEach((seg) => {
         const series = chart.addSeries(LineSeries, {
@@ -304,8 +382,7 @@ export default function ChanLunChart({
       });
     }
 
-    // Render Pivots helper (pane 0)
-    const renderPivots = (pivotList: typeof chanlun.biPivotList, colorBase: string, _alpha: number) => {
+    const renderPivots = (pivotList: typeof chanlun.biPivotList, colorBase: string) => {
       if (!pivotList) return;
       pivotList.forEach((pivot) => {
         const startSec = msToSec(pivot.startTime);
@@ -313,7 +390,6 @@ export default function ChanLunChart({
         const borderColor = `${colorBase}0.9)`;
         const fillColor = `${colorBase}0.12)`;
 
-        // 填充区域（无边框线，只填充）
         const fillSeries = chart.addSeries(BaselineSeries, {
           baseValue: { type: 'price', price: pivot.zd },
           topLineColor: 'transparent',
@@ -333,7 +409,6 @@ export default function ChanLunChart({
         ]);
         seriesRefs.current.push(fillSeries);
 
-        // 上边框
         const topSeries = chart.addSeries(LineSeries, {
           color: borderColor,
           lineWidth: 1,
@@ -347,7 +422,6 @@ export default function ChanLunChart({
         ]);
         seriesRefs.current.push(topSeries);
 
-        // 下边框
         const bottomSeries = chart.addSeries(LineSeries, {
           color: borderColor,
           lineWidth: 1,
@@ -363,15 +437,13 @@ export default function ChanLunChart({
       });
     };
 
-    if (showBiPivot) renderPivots(chanlun.biPivotList, 'rgba(255, 215, 0, ', 0.55);
-    if (showSegPivot) renderPivots(chanlun.segPivotList, 'rgba(255, 0, 0, ', 0.55);
+    if (showBiPivot) renderPivots(chanlun.biPivotList, 'rgba(255, 215, 0, ');
+    if (showSegPivot) renderPivots(chanlun.segPivotList, 'rgba(255, 0, 0, ');
 
-    // Render merged K-lines (pane 0)
     if (showMergedKLine && chanlun.mergedKLines) {
       chanlun.mergedKLines.forEach((kl) => {
         const startSec = msToSec(kl.startTime);
         const endSec = msToSec(kl.endTime);
-        // 跳过时间相同的单根K线合并（无法绘制区域）
         if (startSec === endSec) return;
 
         const color =
@@ -403,7 +475,12 @@ export default function ChanLunChart({
     }
 
     chart.timeScale().fitContent();
-  }, [klines, chanlun, showBi, showSeg, showBiPivot, showSegPivot, showMergedKLine]);
+
+    return () => {
+      chart.unsubscribeCrosshairMove(crosshairHandler);
+      chart.unsubscribeClick(clickHandler);
+    };
+  }, [klines, chanlun, showBi, showSeg, showBiPivot, showSegPivot, showMergedKLine, clearOverlays]);
 
   const isUp = tooltip ? tooltip.close >= tooltip.open : false;
 
@@ -451,22 +528,209 @@ export default function ChanLunChart({
         )}
       </div>
 
-      {/* 下窗口标题：指标计算结果 */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '71%',
-          left: 12,
-          zIndex: 5,
-          pointerEvents: 'none',
-          fontSize: 11,
-          color: '#868993',
-          fontWeight: 500,
-          letterSpacing: '0.5px',
-        }}
-      >
-        指标计算结果
-      </div>
+      {/* 蜡烛图形态弹窗 —— 跟随点击位置 */}
+      {modal && (
+        <>
+          {/* 透明遮罩：点击空白处关闭 */}
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 99,
+            }}
+            onClick={() => setModal(null)}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              left: Math.max(8, Math.min(modal.x - 160, (containerRef.current?.clientWidth ?? 400) - 328)),
+              top: modal.y > 280 ? modal.y - 260 : modal.y + 24,
+              zIndex: 100,
+              background: '#1e222d',
+              border: '1px solid #2a2e39',
+              borderRadius: 8,
+              padding: '16px 20px',
+              minWidth: 280,
+              maxWidth: 360,
+              boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+              pointerEvents: 'auto',
+            }}
+          >
+            {/* 标题栏 */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h3 style={{ margin: 0, fontSize: 15, color: '#fff', fontWeight: 600 }}>📊 K线详情</h3>
+              <button
+                onClick={() => setModal(null)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#868993',
+                  fontSize: 20,
+                  cursor: 'pointer',
+                  lineHeight: 1,
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            {/* K线基础信息 */}
+            <div style={{ fontSize: 12, color: '#868993', marginBottom: 12 }}>{modal.time}</div>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr 1fr 1fr',
+              gap: 8,
+              marginBottom: 16,
+              padding: '10px 12px',
+              background: '#131722',
+              borderRadius: 6,
+            }}>
+              <div>
+                <div style={{ fontSize: 10, color: '#868993' }}>开盘</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#d1d4dc' }}>{modal.open.toFixed(2)}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, color: '#868993' }}>最高</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#26a69a' }}>{modal.high.toFixed(2)}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, color: '#868993' }}>最低</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#ef5350' }}>{modal.low.toFixed(2)}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, color: '#868993' }}>收盘</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: modal.close >= modal.open ? '#26a69a' : '#ef5350' }}>
+                  {modal.close.toFixed(2)}
+                </div>
+              </div>
+            </div>
+
+            {/* 蜡烛图形态 */}
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontSize: 11, color: '#868993', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                蜡烛图形态
+              </div>
+              {modal.patterns.length > 0 ? (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {modal.patterns.map((name, idx) => (
+                    <span
+                      key={idx}
+                      style={{
+                        fontSize: 12,
+                        padding: '3px 10px',
+                        borderRadius: 12,
+                        background: modal.patternDirection === 'Bullish' ? 'rgba(38, 166, 154, 0.2)' :
+                                    modal.patternDirection === 'Bearish' ? 'rgba(239, 83, 80, 0.2)' :
+                                    'rgba(150, 150, 150, 0.15)',
+                        color: modal.patternDirection === 'Bullish' ? '#26a69a' :
+                               modal.patternDirection === 'Bearish' ? '#ef5350' :
+                               '#d1d4dc',
+                        border: `1px solid ${modal.patternDirection === 'Bullish' ? 'rgba(38, 166, 154, 0.4)' :
+                                              modal.patternDirection === 'Bearish' ? 'rgba(239, 83, 80, 0.4)' :
+                                              'rgba(150, 150, 150, 0.3)'}`,
+                      }}
+                    >
+                      {name}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ fontSize: 12, color: '#5a5e69' }}>无特殊形态</div>
+              )}
+            </div>
+
+            {/* 信号判断 */}
+            {modal.patternSignal && (
+              <div style={{
+                padding: '10px 12px',
+                borderRadius: 6,
+                background: modal.patternDirection === 'Bullish' ? 'rgba(38, 166, 154, 0.1)' :
+                            modal.patternDirection === 'Bearish' ? 'rgba(239, 83, 80, 0.1)' :
+                            'rgba(150, 150, 150, 0.08)',
+                borderLeft: `3px solid ${modal.patternDirection === 'Bullish' ? '#26a69a' :
+                                          modal.patternDirection === 'Bearish' ? '#ef5350' :
+                                          '#868993'}`,
+              }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: modal.patternDirection === 'Bullish' ? '#26a69a' :
+                                                                       modal.patternDirection === 'Bearish' ? '#ef5350' :
+                                                                       '#d1d4dc' }}>
+                  {modal.patternSignal}
+                </div>
+              </div>
+            )}
+
+            {/* 量能关系指标 */}
+            <div style={{ marginTop: 12 }}>
+              <div style={{ fontSize: 11, color: '#868993', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                量能分析
+              </div>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr 1fr',
+                gap: 8,
+                marginBottom: 10,
+                padding: '8px 10px',
+                background: '#131722',
+                borderRadius: 6,
+              }}>
+                <div>
+                  <div style={{ fontSize: 10, color: '#868993' }}>5日量比</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#d1d4dc' }}>
+                    {modal.volumeRatio5 != null ? modal.volumeRatio5.toFixed(2) : '-'}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, color: '#868993' }}>量增减(%)</div>
+                  <div style={{
+                    fontSize: 12, fontWeight: 600,
+                    color: (modal.volumeChangePct ?? 0) >= 0 ? '#26a69a' : '#ef5350'
+                  }}>
+                    {modal.volumeChangePct != null
+                      ? `${modal.volumeChangePct >= 0 ? '+' : ''}${modal.volumeChangePct.toFixed(2)}%`
+                      : '-'}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, color: '#868993' }}>OBV</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#d1d4dc' }}>
+                    {modal.obv != null ? Math.round(modal.obv).toLocaleString() : '-'}
+                  </div>
+                </div>
+              </div>
+
+              {modal.volumeSignal && (
+                <div style={{
+                  padding: '10px 12px',
+                  borderRadius: 6,
+                  background: modal.volumeBullish === true ? 'rgba(38, 166, 154, 0.1)' :
+                              modal.volumeBullish === false ? 'rgba(239, 83, 80, 0.1)' :
+                              'rgba(150, 150, 150, 0.08)',
+                  borderLeft: `3px solid ${modal.volumeBullish === true ? '#26a69a' :
+                                            modal.volumeBullish === false ? '#ef5350' :
+                                            '#868993'}`,
+                }}>
+                  <div style={{
+                    fontSize: 12, fontWeight: 600,
+                    color: modal.volumeBullish === true ? '#26a69a' :
+                           modal.volumeBullish === false ? '#ef5350' :
+                           '#d1d4dc'
+                  }}>
+                    {modal.volumeBullish === true && '【看涨】 '}
+                    {modal.volumeBullish === false && '【看跌】 '}
+                    {modal.volumeBullish === null && '【观望】 '}
+                    {modal.volumeSignal}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* 下窗口标题：由 PaneTitlePrimitive 在 pane 1 内部绘制，天然跟随分界线 */}
 
       <div
         ref={containerRef}

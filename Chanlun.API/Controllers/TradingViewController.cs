@@ -10,10 +10,10 @@ namespace Chanlun.API.Controllers;
 [Route("api/[controller]")]
 public class TradingViewController : ControllerBase
 {
-    private readonly IGetKLineService _getKLineService;
+    private readonly IKLineIndicatorService _getKLineService;
     private readonly IGetTdxCurrentKlineViewService _recordService;
 
-    public TradingViewController(IGetKLineService getKLineService, IGetTdxCurrentKlineViewService recordService)
+    public TradingViewController(IKLineIndicatorService getKLineService, IGetTdxCurrentKlineViewService recordService)
     {
         _getKLineService = getKLineService;
         _recordService = recordService;
@@ -27,7 +27,7 @@ public class TradingViewController : ControllerBase
         [FromQuery] DateTime to)
     {
         var resolutionEnum = Enum.Parse<KlineResolution>(resolution);
-        var kLines = await _getKLineService.GetKlinesAsync(new GetKLineQuery()
+        var kLines = await _getKLineService.GetKlinesWithIndicatorsAsync(new GetKLineQuery()
         {
             Symbol = symbol,
             Resolution = resolutionEnum,
@@ -35,9 +35,9 @@ public class TradingViewController : ControllerBase
             ToTime = to
         });
 
-        var chanResult = ChanCalculateResultBuilder.Build(symbol, kLines.ToKLineUnits());
+        var chanResult = ChanCalculateResultBuilder.Build(symbol, kLines.Items.Select(p => p.Kline).ToKLineUnits());
         var response =
-            ChanlunResultAdapter.ConvertToTvResponse(chanResult.UnitList?.Count ?? 0, chanResult, resolution);
+            ChanlunResultAdapter.ConvertToTvResponse(kLines, chanResult);
         return Ok(response);
     }
     
@@ -50,7 +50,7 @@ public class TradingViewController : ControllerBase
             return NotFound();
         }
 
-        var kLines = await _getKLineService.GetKlinesAsync(new GetKLineQuery()
+        var kLines = await _getKLineService.GetKlinesWithIndicatorsAsync(new GetKLineQuery()
         {
             Symbol = currentStock.Symbol,
             Resolution = currentStock.Resolution,
@@ -58,9 +58,8 @@ public class TradingViewController : ControllerBase
             ToTime = currentStock.EndTime
         });
     
-        var chanResult = ChanCalculateResultBuilder.Build(currentStock.Symbol, kLines.ToKLineUnits());
-        var response = ChanlunResultAdapter.ConvertToTvResponse(chanResult.UnitList?.Count ?? 0, chanResult,
-            currentStock.Resolution.ToString());
+        var chanResult = ChanCalculateResultBuilder.Build(currentStock.Symbol, kLines.Items.Select(p => p.Kline).ToKLineUnits());
+        var response = ChanlunResultAdapter.ConvertToTvResponse(kLines, chanResult);
         return Ok(response);
     }
 }

@@ -8,7 +8,45 @@ public class TvKlineBar
     public decimal Low { get; set; }
     public decimal Close { get; set; }
     public decimal Volume { get; set; }
+    
     public decimal CalIndicator { get; set; }
+    // MA 移动平均线
+    public decimal? MA5 { get; set; }
+    public decimal? MA10 { get; set; }
+    public decimal? MA20 { get; set; }
+    public decimal? MA60 { get; set; }
+
+    // MACD
+    public decimal? MacdDif { get; set; }
+    public decimal? MacdDea { get; set; }
+    public decimal? MacdHistogram { get; set; }
+
+    // KDJ
+    public decimal? KdjK { get; set; }
+    public decimal? KdjD { get; set; }
+    public decimal? KdjJ { get; set; }
+
+    // RSI
+    public decimal? Rsi6 { get; set; }
+    public decimal? Rsi12 { get; set; }
+    public decimal? Rsi24 { get; set; }
+
+    // BOLL 布林带
+    public decimal? BollUpper { get; set; }
+    public decimal? BollMiddle { get; set; }
+    public decimal? BollLower { get; set; }
+
+    // 日本蜡烛图形态
+    public List<string> Patterns { get; set; } = [];
+    public string PatternDirection { get; set; } = string.Empty;
+    public string PatternSignal { get; set; } = string.Empty;
+
+    // 量能关系指标
+    public decimal? VolumeRatio5 { get; set; }
+    public decimal? VolumeChangePct { get; set; }
+    public decimal? Obv { get; set; }
+    public string VolumeSignal { get; set; } = string.Empty;
+    public bool? VolumeBullish { get; set; }
 }
 
 public class TvChanlunRequest

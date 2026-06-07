@@ -6,6 +6,17 @@ export interface KlineBar {
   close: number;
   volume: number;
   calIndicator?: number;
+  // 日本蜡烛图形态
+  patterns?: string[];
+  patternDirection?: string;
+  patternSignal?: string;
+
+  // 量能关系指标
+  volumeRatio5?: number;
+  volumeChangePct?: number;
+  obv?: number;
+  volumeSignal?: string;
+  volumeBullish?: boolean | null;
 }
 
 export interface BiItem {

@@ -3,6 +3,7 @@ using Chanlun.Lib;
 using Chanlun.Lib.ChanCommon;
 using Chanlun.Lib.Extensions;
 using Chanlun.Lib.KLine;
+using Stock.Service.Interface;
 
 namespace Chanlun.API.Adapter;
 
@@ -11,28 +12,60 @@ namespace Chanlun.API.Adapter;
 /// </summary>
 public static class ChanlunResultAdapter
 {
-    public static TvChanlunResponse ConvertToTvResponse(int barCount, ChanCalculateResult result, string resolution)
+    public static TvChanlunResponse ConvertToTvResponse(KLineIndicatorResult indicatorResult, ChanCalculateResult result)
     {
         var response = new TvChanlunResponse
         {
-            BarCount = barCount,
+            BarCount = result.UnitList.Count,
             Symbol = result.Symbol ?? string.Empty,
-            Resolution = resolution ?? string.Empty,
+            Resolution = indicatorResult.Resolution.ToString(),
         };
 
         // K线数据
         if (result.UnitList?.Count > 0)
         {
-            response.Bars = result.UnitList.Select(u => new TvKlineBar
+            response.Bars = new List<TvKlineBar>(result.UnitList.Count);
+            for (int i = 0; i < result.UnitList.Count; i++)
             {
-                Time = u.Time,
-                Open = u.Open,
-                High = u.High,
-                Low = u.Low,
-                Close = u.Close,
-                Volume = u.Volume,
-                CalIndicator = u.CalIndicator,
-            }).ToList();
+                var u = result.UnitList[i];
+                var item = indicatorResult.Items[i];
+                response.Bars.Add(new TvKlineBar()
+                {
+                    Time = u.Time,
+                    Open = u.Open,
+                    High = u.High,
+                    Low = u.Low,
+                    Close = u.Close,
+                    Volume = u.Volume,
+                    CalIndicator = u.CalIndicator,
+                    MA5 = item.Ma.MA5,
+                    MA10 = item.Ma.MA10,
+                    MA20 = item.Ma.MA20,
+                    MA60 = item.Ma.MA60,
+                    MacdDif = item.Macd.Dif,
+                    MacdDea = item.Macd.Dea,
+                    MacdHistogram = item.Macd.Histogram,
+                    KdjK = item.Kdj.K,
+                    KdjD = item.Kdj.D,
+                    KdjJ = item.Kdj.J,
+                    Rsi6 = item.Rsi.Rsi6,
+                    Rsi12 = item.Rsi.Rsi12,
+                    Rsi24 = item.Rsi.Rsi24,
+                    BollUpper = item.Boll.Upper,
+                    BollMiddle = item.Boll.Middle,
+                    BollLower = item.Boll.Lower,
+                    Patterns = item.Candlestick.PatternDetails.Select(p => p.Name).ToList(),
+                    PatternDirection = item.Candlestick.PatternDirection.ToString(),
+                    PatternSignal = item.Candlestick.PatternSignal,
+
+                    // 量能关系指标
+                    VolumeRatio5 = item.Volume.VolumeRatio5,
+                    VolumeChangePct = item.Volume.VolumeChangePct,
+                    Obv = item.Volume.Obv,
+                    VolumeSignal = item.Volume.VolumeSignal,
+                    VolumeBullish = item.Volume.VolumeBullish,
+                });
+            }
         }
 
         // 笔
