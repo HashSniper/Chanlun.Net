@@ -117,6 +117,12 @@ public class StockRepository : IStockRepository
         await _context.Set<T>().AddRangeAsync(klines, ct);
     }
 
+    public Task UpdateKlinesAsync<T>(IEnumerable<T> klines, CancellationToken ct = default) where T : KlineBase
+    {
+        _context.Set<T>().UpdateRange(klines);
+        return Task.CompletedTask;
+    }
+
     public async Task DeleteKlinesAsync<T>(string symbol, DateTime fromTime, DateTime toTime, CancellationToken ct = default)
         where T : KlineBase
     {

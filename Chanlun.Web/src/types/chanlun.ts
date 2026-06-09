@@ -17,6 +17,18 @@ export interface KlineBar {
   obv?: number;
   volumeSignal?: string;
   volumeBullish?: boolean | null;
+
+  // 海龟交易法则指标
+  turtleHigh20?: number;
+  turtleHigh50?: number;
+  turtleLow20?: number;
+  turtleLow50?: number;
+  turtleBreakoutHigh20?: boolean;
+  turtleBreakoutHigh50?: boolean;
+  turtleBreakdownLow20?: boolean;
+  turtleBreakdownLow50?: boolean;
+  turtleSignal?: string;
+  turtleBullish?: boolean | null;
 }
 
 export interface BiItem {
@@ -58,6 +70,8 @@ export interface ChanlunResponse {
   symbol: string;
   barCount: number;
   resolution: string;
+  fromTime: string;
+  toTime: string;
   bars: KlineBar[];
   biList: BiItem[];
   segList: SegItem[];

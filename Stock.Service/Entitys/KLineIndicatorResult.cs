@@ -32,6 +32,9 @@ public class KLineIndicatorItem
 
     /// <summary>量能分析指标值</summary>
     public VolumeAnalysisValue Volume { get; set; } = new();
+
+    /// <summary>海龟交易法则指标值</summary>
+    public TurtleTradingValue TurtleTrading { get; set; } = new();
 }
 
 /// <summary>

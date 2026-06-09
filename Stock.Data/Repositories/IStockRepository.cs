@@ -29,6 +29,11 @@ public interface IStockRepository
     Task AddKlinesAsync<T>(IEnumerable<T> klines, CancellationToken ct = default) where T : KlineBase;
 
     /// <summary>
+    /// 批量更新K线
+    /// </summary>
+    Task UpdateKlinesAsync<T>(IEnumerable<T> klines, CancellationToken ct = default) where T : KlineBase;
+
+    /// <summary>
     /// 删除指定时间范围的K线
     /// </summary>
     Task DeleteKlinesAsync<T>(string symbol, DateTime fromTime, DateTime toTime, CancellationToken ct = default) where T : KlineBase;

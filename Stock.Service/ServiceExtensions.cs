@@ -21,6 +21,10 @@ public static class ServiceExtensions
         services.AddTransient<IIndicatorProcessor, BollIndicatorProcessor>();
         services.AddTransient<IIndicatorProcessor, CandlestickPatternIndicatorProcessor>();
         services.AddTransient<IIndicatorProcessor, VolumeAnalysisIndicatorProcessor>();
+        services.AddTransient<IIndicatorProcessor, TurtleTradingIndicatorProcessor>();
+
+        // 交易服务
+        services.AddTransient<ITradeService, TradeService>();
 
         return services;
     }

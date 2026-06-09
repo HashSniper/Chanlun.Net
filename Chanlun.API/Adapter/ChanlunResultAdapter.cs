@@ -19,6 +19,8 @@ public static class ChanlunResultAdapter
             BarCount = result.UnitList.Count,
             Symbol = result.Symbol ?? string.Empty,
             Resolution = indicatorResult.Resolution.ToString(),
+            FromTime = indicatorResult.FromTime,
+            ToTime = indicatorResult.ToTime,
         };
 
         // K线数据
@@ -64,6 +66,18 @@ public static class ChanlunResultAdapter
                     Obv = item.Volume.Obv,
                     VolumeSignal = item.Volume.VolumeSignal,
                     VolumeBullish = item.Volume.VolumeBullish,
+
+                    // 海龟交易法则指标
+                    TurtleHigh20 = item.TurtleTrading.High20,
+                    TurtleHigh50 = item.TurtleTrading.High50,
+                    TurtleLow20 = item.TurtleTrading.Low20,
+                    TurtleLow50 = item.TurtleTrading.Low50,
+                    TurtleBreakoutHigh20 = item.TurtleTrading.BreakoutHigh20,
+                    TurtleBreakoutHigh50 = item.TurtleTrading.BreakoutHigh50,
+                    TurtleBreakdownLow20 = item.TurtleTrading.BreakdownLow20,
+                    TurtleBreakdownLow50 = item.TurtleTrading.BreakdownLow50,
+                    TurtleSignal = item.TurtleTrading.Signal,
+                    TurtleBullish = item.TurtleTrading.IsBullish,
                 });
             }
         }

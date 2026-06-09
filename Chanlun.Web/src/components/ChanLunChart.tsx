@@ -23,6 +23,8 @@ interface TooltipData {
   close: number;
   change: number;
   changePct: number;
+  x: number;
+  y: number;
 }
 
 interface PatternModalData {
@@ -43,6 +45,18 @@ interface PatternModalData {
   obv?: number;
   volumeSignal?: string;
   volumeBullish?: boolean | null;
+
+  // 海龟交易法则指标
+  turtleHigh20?: number;
+  turtleHigh50?: number;
+  turtleLow20?: number;
+  turtleLow50?: number;
+  turtleBreakoutHigh20?: boolean;
+  turtleBreakoutHigh50?: boolean;
+  turtleBreakdownLow20?: boolean;
+  turtleBreakdownLow50?: boolean;
+  turtleSignal?: string;
+  turtleBullish?: boolean | null;
 }
 
 interface Props {
@@ -253,7 +267,7 @@ export default function ChanLunChart({
         return {
           time: t as Time,
           value: b.calIndicator ?? 0,
-          color: (b.calIndicator ?? 0) > 0 ? '#26a69a' : '#ef5350',
+          color: (b.calIndicator ?? 0) > 0 ? '#ef5350' : '#26a69a',
         };
       })
       .filter((d) => d.value !== 0)
@@ -298,6 +312,7 @@ export default function ChanLunChart({
       }
       const change = data.close - data.open;
       const changePct = data.open !== 0 ? (change / data.open) * 100 : 0;
+      const point = param.point ?? { x: 0, y: 0 };
       setTooltip({
         time: formatTime(param.time as number),
         open: data.open,
@@ -306,6 +321,8 @@ export default function ChanLunChart({
         close: data.close,
         change,
         changePct,
+        x: point.x,
+        y: point.y,
       });
     };
     chart.subscribeCrosshairMove(crosshairHandler);
@@ -340,6 +357,17 @@ export default function ChanLunChart({
         obv: matched.obv,
         volumeSignal: matched.volumeSignal,
         volumeBullish: matched.volumeBullish,
+        // 海龟交易法则指标
+        turtleHigh20: matched.turtleHigh20,
+        turtleHigh50: matched.turtleHigh50,
+        turtleLow20: matched.turtleLow20,
+        turtleLow50: matched.turtleLow50,
+        turtleBreakoutHigh20: matched.turtleBreakoutHigh20,
+        turtleBreakoutHigh50: matched.turtleBreakoutHigh50,
+        turtleBreakdownLow20: matched.turtleBreakdownLow20,
+        turtleBreakdownLow50: matched.turtleBreakdownLow50,
+        turtleSignal: matched.turtleSignal,
+        turtleBullish: matched.turtleBullish,
       });
     };
     chart.subscribeClick(clickHandler);
@@ -486,12 +514,16 @@ export default function ChanLunChart({
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-      {/* K线信息浮层 */}
+      {/* K线信息浮层 —— 跟随鼠标 */}
       <div
         style={{
           position: 'absolute',
-          top: 10,
-          right: 10,
+          left: tooltip
+            ? Math.max(8, Math.min(tooltip.x + 16, (containerRef.current?.clientWidth ?? 400) - 196))
+            : 0,
+          top: tooltip
+            ? Math.max(8, tooltip.y - 8)
+            : 0,
           zIndex: 10,
           background: 'rgba(19, 23, 34, 0.92)',
           border: '1px solid #2a2e39',
@@ -516,11 +548,11 @@ export default function ChanLunChart({
               <span style={{ color: '#868993' }}>最低</span>
               <span style={{ textAlign: 'right', fontFamily: 'Consolas, monospace', color: '#ef5350' }}>{tooltip.low.toFixed(2)}</span>
               <span style={{ color: '#868993' }}>收盘</span>
-              <span style={{ textAlign: 'right', fontFamily: 'Consolas, monospace', fontWeight: 600, color: isUp ? '#26a69a' : '#ef5350' }}>
+              <span style={{ textAlign: 'right', fontFamily: 'Consolas, monospace', fontWeight: 600, color: isUp ? '#ef5350' : '#26a69a' }}>
                 {tooltip.close.toFixed(2)}
               </span>
               <span style={{ color: '#868993' }}>涨跌</span>
-              <span style={{ textAlign: 'right', fontFamily: 'Consolas, monospace', color: tooltip.change >= 0 ? '#26a69a' : '#ef5350' }}>
+              <span style={{ textAlign: 'right', fontFamily: 'Consolas, monospace', color: tooltip.change >= 0 ? '#ef5350' : '#26a69a' }}>
                 {tooltip.change >= 0 ? '+' : ''}{tooltip.change.toFixed(2)} ({tooltip.changePct >= 0 ? '+' : ''}{tooltip.changePct.toFixed(2)}%)
               </span>
             </div>
@@ -602,7 +634,7 @@ export default function ChanLunChart({
               </div>
               <div>
                 <div style={{ fontSize: 10, color: '#868993' }}>收盘</div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: modal.close >= modal.open ? '#26a69a' : '#ef5350' }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: modal.close >= modal.open ? '#ef5350' : '#26a69a' }}>
                   {modal.close.toFixed(2)}
                 </div>
               </div>
@@ -622,14 +654,14 @@ export default function ChanLunChart({
                         fontSize: 12,
                         padding: '3px 10px',
                         borderRadius: 12,
-                        background: modal.patternDirection === 'Bullish' ? 'rgba(38, 166, 154, 0.2)' :
-                                    modal.patternDirection === 'Bearish' ? 'rgba(239, 83, 80, 0.2)' :
+                        background: modal.patternDirection === 'Bullish' ? 'rgba(239, 83, 80, 0.2)' :
+                                    modal.patternDirection === 'Bearish' ? 'rgba(38, 166, 154, 0.2)' :
                                     'rgba(150, 150, 150, 0.15)',
-                        color: modal.patternDirection === 'Bullish' ? '#26a69a' :
-                               modal.patternDirection === 'Bearish' ? '#ef5350' :
+                        color: modal.patternDirection === 'Bullish' ? '#ef5350' :
+                               modal.patternDirection === 'Bearish' ? '#26a69a' :
                                '#d1d4dc',
-                        border: `1px solid ${modal.patternDirection === 'Bullish' ? 'rgba(38, 166, 154, 0.4)' :
-                                              modal.patternDirection === 'Bearish' ? 'rgba(239, 83, 80, 0.4)' :
+                        border: `1px solid ${modal.patternDirection === 'Bullish' ? 'rgba(239, 83, 80, 0.4)' :
+                                              modal.patternDirection === 'Bearish' ? 'rgba(38, 166, 154, 0.4)' :
                                               'rgba(150, 150, 150, 0.3)'}`,
                       }}
                     >
@@ -647,15 +679,15 @@ export default function ChanLunChart({
               <div style={{
                 padding: '10px 12px',
                 borderRadius: 6,
-                background: modal.patternDirection === 'Bullish' ? 'rgba(38, 166, 154, 0.1)' :
-                            modal.patternDirection === 'Bearish' ? 'rgba(239, 83, 80, 0.1)' :
+                background: modal.patternDirection === 'Bullish' ? 'rgba(239, 83, 80, 0.1)' :
+                            modal.patternDirection === 'Bearish' ? 'rgba(38, 166, 154, 0.1)' :
                             'rgba(150, 150, 150, 0.08)',
-                borderLeft: `3px solid ${modal.patternDirection === 'Bullish' ? '#26a69a' :
-                                          modal.patternDirection === 'Bearish' ? '#ef5350' :
+                borderLeft: `3px solid ${modal.patternDirection === 'Bullish' ? '#ef5350' :
+                                          modal.patternDirection === 'Bearish' ? '#26a69a' :
                                           '#868993'}`,
               }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: modal.patternDirection === 'Bullish' ? '#26a69a' :
-                                                                       modal.patternDirection === 'Bearish' ? '#ef5350' :
+                <div style={{ fontSize: 12, fontWeight: 600, color: modal.patternDirection === 'Bullish' ? '#ef5350' :
+                                                                       modal.patternDirection === 'Bearish' ? '#26a69a' :
                                                                        '#d1d4dc' }}>
                   {modal.patternSignal}
                 </div>
@@ -686,7 +718,7 @@ export default function ChanLunChart({
                   <div style={{ fontSize: 10, color: '#868993' }}>量增减(%)</div>
                   <div style={{
                     fontSize: 12, fontWeight: 600,
-                    color: (modal.volumeChangePct ?? 0) >= 0 ? '#26a69a' : '#ef5350'
+                    color: (modal.volumeChangePct ?? 0) >= 0 ? '#ef5350' : '#26a69a'
                   }}>
                     {modal.volumeChangePct != null
                       ? `${modal.volumeChangePct >= 0 ? '+' : ''}${modal.volumeChangePct.toFixed(2)}%`
@@ -705,23 +737,122 @@ export default function ChanLunChart({
                 <div style={{
                   padding: '10px 12px',
                   borderRadius: 6,
-                  background: modal.volumeBullish === true ? 'rgba(38, 166, 154, 0.1)' :
-                              modal.volumeBullish === false ? 'rgba(239, 83, 80, 0.1)' :
+                  background: modal.volumeBullish === true ? 'rgba(239, 83, 80, 0.1)' :
+                              modal.volumeBullish === false ? 'rgba(38, 166, 154, 0.1)' :
                               'rgba(150, 150, 150, 0.08)',
-                  borderLeft: `3px solid ${modal.volumeBullish === true ? '#26a69a' :
-                                            modal.volumeBullish === false ? '#ef5350' :
+                  borderLeft: `3px solid ${modal.volumeBullish === true ? '#ef5350' :
+                                            modal.volumeBullish === false ? '#26a69a' :
                                             '#868993'}`,
                 }}>
                   <div style={{
                     fontSize: 12, fontWeight: 600,
-                    color: modal.volumeBullish === true ? '#26a69a' :
-                           modal.volumeBullish === false ? '#ef5350' :
+                    color: modal.volumeBullish === true ? '#ef5350' :
+                           modal.volumeBullish === false ? '#26a69a' :
                            '#d1d4dc'
                   }}>
                     {modal.volumeBullish === true && '【看涨】 '}
                     {modal.volumeBullish === false && '【看跌】 '}
                     {modal.volumeBullish === null && '【观望】 '}
                     {modal.volumeSignal}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 海龟交易法则指标 */}
+            <div style={{ marginTop: 12 }}>
+              <div style={{ fontSize: 11, color: '#868993', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                海龟交易法则
+              </div>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr 1fr 1fr',
+                gap: 8,
+                marginBottom: 10,
+                padding: '8px 10px',
+                background: '#131722',
+                borderRadius: 6,
+              }}>
+                <div>
+                  <div style={{ fontSize: 10, color: '#868993' }}>20日最高</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#d1d4dc' }}>
+                    {modal.turtleHigh20 != null ? modal.turtleHigh20.toFixed(2) : '-'}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, color: '#868993' }}>20日最低</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#d1d4dc' }}>
+                    {modal.turtleLow20 != null ? modal.turtleLow20.toFixed(2) : '-'}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, color: '#868993' }}>50日最高</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#d1d4dc' }}>
+                    {modal.turtleHigh50 != null ? modal.turtleHigh50.toFixed(2) : '-'}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, color: '#868993' }}>50日最低</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#d1d4dc' }}>
+                    {modal.turtleLow50 != null ? modal.turtleLow50.toFixed(2) : '-'}
+                  </div>
+                </div>
+              </div>
+
+              {/* 突破/跌破标识 */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr 1fr 1fr',
+                gap: 8,
+                marginBottom: 10,
+              }}>
+                <div style={{ textAlign: 'center', padding: '4px 0', borderRadius: 4, background: modal.turtleBreakoutHigh20 ? 'rgba(239,83,80,0.15)' : 'transparent' }}>
+                  <div style={{ fontSize: 10, color: '#868993' }}>突破20日高</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: modal.turtleBreakoutHigh20 ? '#ef5350' : '#5a5e69' }}>
+                    {modal.turtleBreakoutHigh20 ? '✓ 突破' : '—'}
+                  </div>
+                </div>
+                <div style={{ textAlign: 'center', padding: '4px 0', borderRadius: 4, background: modal.turtleBreakoutHigh50 ? 'rgba(239,83,80,0.15)' : 'transparent' }}>
+                  <div style={{ fontSize: 10, color: '#868993' }}>突破50日高</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: modal.turtleBreakoutHigh50 ? '#ef5350' : '#5a5e69' }}>
+                    {modal.turtleBreakoutHigh50 ? '✓ 突破' : '—'}
+                  </div>
+                </div>
+                <div style={{ textAlign: 'center', padding: '4px 0', borderRadius: 4, background: modal.turtleBreakdownLow20 ? 'rgba(38,166,154,0.15)' : 'transparent' }}>
+                  <div style={{ fontSize: 10, color: '#868993' }}>跌破20日低</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: modal.turtleBreakdownLow20 ? '#26a69a' : '#5a5e69' }}>
+                    {modal.turtleBreakdownLow20 ? '✓ 跌破' : '—'}
+                  </div>
+                </div>
+                <div style={{ textAlign: 'center', padding: '4px 0', borderRadius: 4, background: modal.turtleBreakdownLow50 ? 'rgba(38,166,154,0.15)' : 'transparent' }}>
+                  <div style={{ fontSize: 10, color: '#868993' }}>跌破50日低</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: modal.turtleBreakdownLow50 ? '#26a69a' : '#5a5e69' }}>
+                    {modal.turtleBreakdownLow50 ? '✓ 跌破' : '—'}
+                  </div>
+                </div>
+              </div>
+
+              {modal.turtleSignal && (
+                <div style={{
+                  padding: '10px 12px',
+                  borderRadius: 6,
+                  background: modal.turtleBullish === true ? 'rgba(239, 83, 80, 0.1)' :
+                              modal.turtleBullish === false ? 'rgba(38, 166, 154, 0.1)' :
+                              'rgba(150, 150, 150, 0.08)',
+                  borderLeft: `3px solid ${modal.turtleBullish === true ? '#ef5350' :
+                                            modal.turtleBullish === false ? '#26a69a' :
+                                            '#868993'}`,
+                }}>
+                  <div style={{
+                    fontSize: 12, fontWeight: 600,
+                    color: modal.turtleBullish === true ? '#ef5350' :
+                           modal.turtleBullish === false ? '#26a69a' :
+                           '#d1d4dc'
+                  }}>
+                    {modal.turtleBullish === true && '【看涨】 '}
+                    {modal.turtleBullish === false && '【看跌】 '}
+                    {modal.turtleBullish === null && '【观望】 '}
+                    {modal.turtleSignal}
                   </div>
                 </div>
               )}

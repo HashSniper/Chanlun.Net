@@ -16,7 +16,12 @@ if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ASPNETCORE_PORT")))
 builder.Services.AddDb(builder.Configuration.GetConnectionString("DefaultConnection"));
 builder.Services.AddMyService();//注册服务层
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    });
 
 // 添加 CORS，允许TradingView跨域调用
 builder.Services.AddCors(options =>

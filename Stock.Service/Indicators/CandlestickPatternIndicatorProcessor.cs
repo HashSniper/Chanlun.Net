@@ -14,6 +14,8 @@ public class CandlestickPatternIndicatorProcessor : IIndicatorProcessor
     {
         for (int i = 0; i < klines.Count; i++)
         {
+            ct.ThrowIfCancellationRequested();
+
             var patterns = Recognize(klines, i);
             items[i].Candlestick.Patterns = patterns;
             items[i].Candlestick.PatternDetails = patterns.ToDetails();
@@ -220,22 +222,35 @@ public class CandlestickPatternIndicatorProcessor : IIndicatorProcessor
                curr.Close > prev.Open && curr.Open < prev.Close;
     }
 
-    /// <summary>十字孕线：孕线中第二根是十字星</summary>
+    /// <summary>十字孕线：孕线中第二根是十字星，第一根大实体，第二根doji完全在第一根实体内</summary>
     private bool IsHaramiCross(KlineBase prev, KlineBase curr)
     {
         if (!IsDoji(curr)) return false;
-        return (IsBullishHarami(prev, curr) || IsBearishHarami(prev, curr));
+        // Doji 既不严格阳线也不严格阴线，不能复用 IsBullishHarami/IsBearishHarami
+        // 独立检验：doji 的开收盘价是否落在 prev 实体内
+        var prevHigh = Math.Max(prev.Open, prev.Close);
+        var prevLow = Math.Min(prev.Open, prev.Close);
+        var prevBody = prevHigh - prevLow;
+        if (prevBody == 0) return false;
+        // doji 的实体非常小，检查其价格中心是否被 prev 包住即可
+        var dojiMid = (curr.Open + curr.Close) / 2;
+        return dojiMid >= prevLow && dojiMid <= prevHigh;
     }
 
     #endregion
 
     #region 三根K线形态
 
-    /// <summary>早晨之星：下跌趋势，第一根大阴线，第二根小实体，第三根阳线收盘深入第一根实体</summary>
-    private bool IsMorningStar(KlineBase first, KlineBase second, KlineBase third)
+    /// <summary>
+    /// 早晨之星：下跌趋势中，第一根大阴线，第二根小实体，第三根阳线收盘深入第一根实体
+    /// before: 形态之前一根K线，用于确认下跌趋势上下文
+    /// </summary>
+    private bool IsMorningStar(KlineBase first, KlineBase second, KlineBase third, KlineBase? before)
     {
         if (!IsBearish(first.Open, first.Close)) return false;
         if (!IsBullish(third.Open, third.Close)) return false;
+        // 若形态前有K线，确认其处于下跌趋势中
+        if (before != null && before.Close <= first.Close) return false;
         var firstBody = Body(first.Open, first.Close);
         var secondBody = Body(second.Open, second.Close);
         var thirdBody = Body(third.Open, third.Close);
@@ -244,11 +259,16 @@ public class CandlestickPatternIndicatorProcessor : IIndicatorProcessor
         return third.Close > (first.Open + first.Close) / 2;
     }
 
-    /// <summary>黄昏之星：上涨趋势，第一根大阳线，第二根小实体，第三根阴线收盘深入第一根实体</summary>
-    private bool IsEveningStar(KlineBase first, KlineBase second, KlineBase third)
+    /// <summary>
+    /// 黄昏之星：上涨趋势中，第一根大阳线，第二根小实体，第三根阴线收盘深入第一根实体
+    /// before: 形态之前一根K线，用于确认上涨趋势上下文
+    /// </summary>
+    private bool IsEveningStar(KlineBase first, KlineBase second, KlineBase third, KlineBase? before)
     {
         if (!IsBullish(first.Open, first.Close)) return false;
         if (!IsBearish(third.Open, third.Close)) return false;
+        // 若形态前有K线，确认其处于上涨趋势中
+        if (before != null && before.Close >= first.Close) return false;
         var firstBody = Body(first.Open, first.Close);
         var secondBody = Body(second.Open, second.Close);
         var thirdBody = Body(third.Open, third.Close);
@@ -257,26 +277,36 @@ public class CandlestickPatternIndicatorProcessor : IIndicatorProcessor
         return third.Close < (first.Open + first.Close) / 2;
     }
 
-    /// <summary>白三兵：连续三根阳线，收盘价越来越高，开盘价在前一根实体内</summary>
-    private bool IsThreeWhiteSoldiers(KlineBase first, KlineBase second, KlineBase third)
+    /// <summary>
+    /// 白三兵：下跌或盘整后，连续三根阳线，收盘价越来越高，开盘价在前一根实体内
+    /// before: 形态之前一根K线，用于确认非上涨趋势持续
+    /// </summary>
+    private bool IsThreeWhiteSoldiers(KlineBase first, KlineBase second, KlineBase third, KlineBase? before)
     {
         if (!IsBullish(first.Open, first.Close)) return false;
         if (!IsBullish(second.Open, second.Close)) return false;
         if (!IsBullish(third.Open, third.Close)) return false;
         if (second.Close <= first.Close) return false;
         if (third.Close <= second.Close) return false;
+        // 白三兵应为反转或启动信号，而非上涨趋势中的延续；检查前方不在明显的上升趋势中
+        if (before != null && before.Close < before.Open && first.Close > before.Close) return false;
         return second.Open > first.Open && second.Open < first.Close &&
                third.Open > second.Open && third.Open < second.Close;
     }
 
-    /// <summary>三只乌鸦：连续三根阴线，收盘价越来越低，开盘价在前一根实体内</summary>
-    private bool IsThreeBlackCrows(KlineBase first, KlineBase second, KlineBase third)
+    /// <summary>
+    /// 三只乌鸦：上涨或盘整后，连续三根阴线，收盘价越来越低，开盘价在前一根实体内
+    /// before: 形态之前一根K线，用于确认非下跌趋势持续
+    /// </summary>
+    private bool IsThreeBlackCrows(KlineBase first, KlineBase second, KlineBase third, KlineBase? before)
     {
         if (!IsBearish(first.Open, first.Close)) return false;
         if (!IsBearish(second.Open, second.Close)) return false;
         if (!IsBearish(third.Open, third.Close)) return false;
         if (second.Close >= first.Close) return false;
         if (third.Close >= second.Close) return false;
+        // 三只乌鸦应为反转或启动信号，而非下跌趋势中的延续；检查前方不在明显的下跌趋势中
+        if (before != null && before.Close > before.Open && first.Close < before.Close) return false;
         return second.Open < first.Open && second.Open > first.Close &&
                third.Open < second.Open && third.Open > second.Close;
     }
@@ -292,6 +322,7 @@ public class CandlestickPatternIndicatorProcessor : IIndicatorProcessor
         var curr = klines[index];
         KlineBase? prev = index > 0 ? klines[index - 1] : null;
         KlineBase? prevPrev = index > 1 ? klines[index - 2] : null;
+        KlineBase? before = index > 2 ? klines[index - 3] : null; // 3-bar 形态前的趋势上下文
 
         // 单根K线形态
         if (IsDoji(curr)) pattern |= CandlestickPattern.Doji;
@@ -317,13 +348,13 @@ public class CandlestickPatternIndicatorProcessor : IIndicatorProcessor
             if (IsHaramiCross(prev, curr)) pattern |= CandlestickPattern.HaramiCross;
         }
 
-        // 三根K线形态
+        // 三根K线形态（需 prev 和 prevPrev 都存在）
         if (prev != null && prevPrev != null)
         {
-            if (IsMorningStar(prevPrev, prev, curr)) pattern |= CandlestickPattern.MorningStar;
-            if (IsEveningStar(prevPrev, prev, curr)) pattern |= CandlestickPattern.EveningStar;
-            if (IsThreeWhiteSoldiers(prevPrev, prev, curr)) pattern |= CandlestickPattern.ThreeWhiteSoldiers;
-            if (IsThreeBlackCrows(prevPrev, prev, curr)) pattern |= CandlestickPattern.ThreeBlackCrows;
+            if (IsMorningStar(prevPrev, prev, curr, before)) pattern |= CandlestickPattern.MorningStar;
+            if (IsEveningStar(prevPrev, prev, curr, before)) pattern |= CandlestickPattern.EveningStar;
+            if (IsThreeWhiteSoldiers(prevPrev, prev, curr, before)) pattern |= CandlestickPattern.ThreeWhiteSoldiers;
+            if (IsThreeBlackCrows(prevPrev, prev, curr, before)) pattern |= CandlestickPattern.ThreeBlackCrows;
         }
 
         return pattern;

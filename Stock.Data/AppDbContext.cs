@@ -12,6 +12,11 @@ public class AppDbContext : DbContext
     public DbSet<StockInfo> StockInfos { get; set; }
     public DbSet<TdxCurrentKlineView> TdxCurrentKlineViews { get; set; }
 
+    // 账户与交易相关
+    public DbSet<TradingAccount> TradingAccounts { get; set; }
+    public DbSet<StockPosition> StockPositions { get; set; }
+    public DbSet<StockTradeRecord> StockTradeRecords { get; set; }
+
     // 分周期K线表（TPC：每个具体类独立一张完整表）
     public DbSet<Kline1m> Kline1m { get; set; }
     public DbSet<Kline5m> Kline5m { get; set; }
@@ -48,6 +53,68 @@ public class AppDbContext : DbContext
             entity.Property(e => e.StartTime).HasPrecision(0);
             entity.Property(e => e.EndTime).HasPrecision(0);
             entity.Property(e => e.CreatedAt).HasPrecision(0);
+        });
+
+        // 交易账户
+        modelBuilder.Entity<TradingAccount>(entity =>
+        {
+            entity.ToTable("TradingAccount");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.TotalBalance).HasPrecision(18, 4);
+            entity.Property(e => e.AvailableBalance).HasPrecision(18, 4);
+            entity.Property(e => e.FrozenBalance).HasPrecision(18, 4);
+            entity.Property(e => e.MarketValue).HasPrecision(18, 4);
+            entity.Property(e => e.TotalProfitLoss).HasPrecision(18, 4);
+            entity.Property(e => e.UpdatedAt).HasPrecision(0);
+            entity.Property(e => e.CreatedAt).HasPrecision(0);
+        });
+
+        // 股票持仓
+        modelBuilder.Entity<StockPosition>(entity =>
+        {
+            entity.ToTable("StockPosition");
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.AccountId, e.Symbol }).IsUnique();
+            entity.Property(e => e.Symbol).HasMaxLength(20).IsRequired();
+            entity.Property(e => e.Quantity).HasPrecision(18, 4);
+            entity.Property(e => e.AvailableQuantity).HasPrecision(18, 4);
+            entity.Property(e => e.AverageCost).HasPrecision(18, 4);
+            entity.Property(e => e.TotalCost).HasPrecision(18, 4);
+            entity.Property(e => e.ProfitLoss).HasPrecision(18, 4);
+            entity.Property(e => e.ProfitLossRate).HasPrecision(18, 6);
+            entity.Property(e => e.UpdatedAt).HasPrecision(0);
+            entity.Property(e => e.CreatedAt).HasPrecision(0);
+
+            entity.HasOne(e => e.Account)
+                  .WithMany(a => a.Positions)
+                  .HasForeignKey(e => e.AccountId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // 股票交易记录
+        modelBuilder.Entity<StockTradeRecord>(entity =>
+        {
+            entity.ToTable("StockTradeRecord");
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.AccountId, e.TradeTime });
+            entity.HasIndex(e => new { e.Symbol, e.TradeTime });
+            entity.Property(e => e.Symbol).HasMaxLength(20).IsRequired();
+            entity.Property(e => e.Direction).HasConversion<string>().HasMaxLength(10);
+            entity.Property(e => e.Price).HasPrecision(18, 4);
+            entity.Property(e => e.Quantity).HasPrecision(18, 4);
+            entity.Property(e => e.Amount).HasPrecision(18, 4);
+            entity.Property(e => e.Fee).HasPrecision(18, 4);
+            entity.Property(e => e.Tax).HasPrecision(18, 4);
+            entity.Property(e => e.TotalAmount).HasPrecision(18, 4);
+            entity.Property(e => e.TradeTime).HasPrecision(0);
+            entity.Property(e => e.Remark).HasMaxLength(500);
+            entity.Property(e => e.CreatedAt).HasPrecision(0);
+
+            entity.HasOne(e => e.Account)
+                  .WithMany(a => a.TradeRecords)
+                  .HasForeignKey(e => e.AccountId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
 
         // K线基类使用 TPC（Table-per-Concrete-Type）策略

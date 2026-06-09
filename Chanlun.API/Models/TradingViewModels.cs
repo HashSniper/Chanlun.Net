@@ -47,6 +47,18 @@ public class TvKlineBar
     public decimal? Obv { get; set; }
     public string VolumeSignal { get; set; } = string.Empty;
     public bool? VolumeBullish { get; set; }
+
+    // 海龟交易法则指标
+    public decimal? TurtleHigh20 { get; set; }
+    public decimal? TurtleHigh50 { get; set; }
+    public decimal? TurtleLow20 { get; set; }
+    public decimal? TurtleLow50 { get; set; }
+    public bool TurtleBreakoutHigh20 { get; set; }
+    public bool TurtleBreakoutHigh50 { get; set; }
+    public bool TurtleBreakdownLow20 { get; set; }
+    public bool TurtleBreakdownLow50 { get; set; }
+    public string TurtleSignal { get; set; } = string.Empty;
+    public bool? TurtleBullish { get; set; }
 }
 
 public class TvChanlunRequest
@@ -98,8 +110,9 @@ public class TvChanlunResponse
 {
     public string Symbol { get; set; } = string.Empty;
     public int BarCount { get; set; }
-
-    public string Resolution { get; set; }
+    public string Resolution { get; set; } = string.Empty;
+    public DateTime FromTime { get; set; }
+    public DateTime ToTime { get; set; }
 
     public List<TvKlineBar> Bars { get; set; } = [];
     public List<TvBiItem> BiList { get; set; } = [];

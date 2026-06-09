@@ -1,10 +1,13 @@
 import { useState, useCallback } from 'react';
 import ChanLunChart from './components/ChanLunChart';
 import ControlPanel, { type Resolution } from './components/ControlPanel';
+import TradeReportPage from './pages/TradeReportPage';
+
 import { getChanlunKlines, getTdxChanlunKlines, setBaseUrl, getBaseUrl } from './api/chanlunApi';
 import type { ChanlunResponse, KlineBar } from './types/chanlun';
 
 function App() {
+  const [currentView, setCurrentView] = useState<'chart' | 'tradeReport'>('chart');
   const [klines, setKlines] = useState<KlineBar[]>([]);
   const [chanlun, setChanlun] = useState<ChanlunResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -68,12 +71,36 @@ function App() {
       {/* Header */}
       <div style={{ background: '#1e222d', padding: '10px 20px', borderBottom: '1px solid #2a2e39', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
         <h1 style={{ fontSize: '16px', color: '#fff', marginRight: 'auto' }}>📈 ChanLun 缠论图表</h1>
+        <div style={{ display: 'flex', gap: 4 }}>
+          <button
+            onClick={() => setCurrentView('chart')}
+            style={{
+              padding: '5px 12px', fontSize: 12, borderRadius: 4, border: 'none',
+              cursor: 'pointer',
+              background: currentView === 'chart' ? '#2962FF' : '#2a2e39',
+              color: currentView === 'chart' ? '#fff' : '#868993',
+            }}
+          >
+            📊 图表
+          </button>
+          <button
+            onClick={() => setCurrentView('tradeReport')}
+            style={{
+              padding: '5px 12px', fontSize: 12, borderRadius: 4, border: 'none',
+              cursor: 'pointer',
+              background: currentView === 'tradeReport' ? '#2962FF' : '#2a2e39',
+              color: currentView === 'tradeReport' ? '#fff' : '#868993',
+            }}
+          >
+            📜 交易报表
+          </button>
+        </div>
         {error && (
           <span style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '4px', background: 'rgba(231, 76, 60, 0.15)', color: '#e74c3c' }}>
             ❌ {error}
           </span>
         )}
-        {chanlun && !error && (
+        {currentView === 'chart' && chanlun && !error && (
           <span style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '4px', background: 'rgba(46, 204, 113, 0.15)', color: '#2ecc71' }}>
             ✅ {chanlun.symbol} [{resolutionLabel[chanlun.resolution as Resolution] ?? chanlun.resolution}] K线:{chanlun.barCount} 笔:{chanlun.biList?.length || 0} 线段:{chanlun.segList?.length || 0} 笔中枢:{chanlun.biPivotList?.length || 0} 线段中枢:{chanlun.segPivotList?.length || 0}
           </span>
@@ -82,6 +109,10 @@ function App() {
 
       {/* Main */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        {currentView === 'tradeReport' ? (
+          <TradeReportPage />
+        ) : (
+        <>
         <ControlPanel
           onCalculate={handleCalculate}
           onTdxCalculate={handleTdxCalculate}
@@ -90,8 +121,12 @@ function App() {
           onApiUrlChange={handleApiUrlChange}
           resolution={resolution}
           onResolutionChange={setResolution}
+          currentSymbol={chanlun?.symbol}
+          currentResolution={chanlun?.resolution as Resolution | undefined}
+          currentFromTime={chanlun?.fromTime}
+          currentToTime={chanlun?.toTime}
         />
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {/* Toolbar */}
           <div style={{ padding: '8px 16px', borderBottom: '1px solid #2a2e39', display: 'flex', gap: '12px', alignItems: 'center' }}>
             <span style={{ fontSize: '12px', color: '#868993' }}>图层控制:</span>
@@ -128,6 +163,8 @@ function App() {
             />
           </div>
         </div>
+        </>
+        )}
       </div>
     </div>
   );
