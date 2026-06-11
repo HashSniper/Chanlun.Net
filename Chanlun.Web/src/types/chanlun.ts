@@ -29,6 +29,19 @@ export interface KlineBar {
   turtleBreakdownLow50?: boolean;
   turtleSignal?: string;
   turtleBullish?: boolean | null;
+
+  // KDJ 指标基础值
+  kdjK?: number;
+  kdjD?: number;
+  kdjJ?: number;
+
+  // KDJ 指标信号
+  kdjSignal?: string;
+  kdjBullish?: boolean | null;
+  kdjGoldenCross?: boolean;
+  kdjDeathCross?: boolean;
+  kdjBottomDivergence?: boolean;
+  kdjTopDivergence?: boolean;
 }
 
 export interface BiItem {

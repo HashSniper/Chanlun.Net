@@ -25,6 +25,12 @@ public class TvKlineBar
     public decimal? KdjK { get; set; }
     public decimal? KdjD { get; set; }
     public decimal? KdjJ { get; set; }
+    public string KdjSignal { get; set; } = string.Empty;
+    public bool? KdjBullish { get; set; }
+    public bool KdjGoldenCross { get; set; }
+    public bool KdjDeathCross { get; set; }
+    public bool KdjBottomDivergence { get; set; }
+    public bool KdjTopDivergence { get; set; }
 
     // RSI
     public decimal? Rsi6 { get; set; }

@@ -57,6 +57,19 @@ interface PatternModalData {
   turtleBreakdownLow50?: boolean;
   turtleSignal?: string;
   turtleBullish?: boolean | null;
+
+  // KDJ 指标基础值
+  kdjK?: number;
+  kdjD?: number;
+  kdjJ?: number;
+
+  // KDJ 指标信号
+  kdjSignal?: string;
+  kdjBullish?: boolean | null;
+  kdjGoldenCross?: boolean;
+  kdjDeathCross?: boolean;
+  kdjBottomDivergence?: boolean;
+  kdjTopDivergence?: boolean;
 }
 
 interface Props {
@@ -339,6 +352,9 @@ export default function ChanLunChart({
       if (!matched) return;
 
       const point = param.point ?? { x: 0, y: 0 };
+      const rect = containerRef.current?.getBoundingClientRect();
+      const viewportX = rect ? rect.left + point.x : point.x;
+      const viewportY = rect ? rect.top + point.y : point.y;
       setModal({
         time: formatDateTime(matched.time),
         open: matched.open,
@@ -349,8 +365,8 @@ export default function ChanLunChart({
         patterns: matched.patterns ?? [],
         patternDirection: matched.patternDirection ?? '',
         patternSignal: matched.patternSignal ?? '',
-        x: point.x,
-        y: point.y,
+        x: viewportX,
+        y: viewportY,
         // 量能关系指标
         volumeRatio5: matched.volumeRatio5,
         volumeChangePct: matched.volumeChangePct,
@@ -368,6 +384,17 @@ export default function ChanLunChart({
         turtleBreakdownLow50: matched.turtleBreakdownLow50,
         turtleSignal: matched.turtleSignal,
         turtleBullish: matched.turtleBullish,
+        // KDJ 指标基础值
+        kdjK: matched.kdjK,
+        kdjD: matched.kdjD,
+        kdjJ: matched.kdjJ,
+        // KDJ 指标信号
+        kdjSignal: matched.kdjSignal,
+        kdjBullish: matched.kdjBullish,
+        kdjGoldenCross: matched.kdjGoldenCross,
+        kdjDeathCross: matched.kdjDeathCross,
+        kdjBottomDivergence: matched.kdjBottomDivergence,
+        kdjTopDivergence: matched.kdjTopDivergence,
       });
     };
     chart.subscribeClick(clickHandler);
@@ -577,16 +604,17 @@ export default function ChanLunChart({
           />
           <div
             style={{
-              position: 'absolute',
-              left: Math.max(8, Math.min(modal.x - 160, (containerRef.current?.clientWidth ?? 400) - 328)),
-              top: modal.y > 280 ? modal.y - 260 : modal.y + 24,
+              position: 'fixed',
+              left: Math.max(8, Math.min(modal.x - 200, window.innerWidth - 408)),
+              top: Math.max(40, modal.y - 20),
+              bottom: 8,
               zIndex: 100,
               background: '#1e222d',
               border: '1px solid #2a2e39',
               borderRadius: 8,
               padding: '16px 20px',
-              minWidth: 280,
-              maxWidth: 360,
+              width: 400,
+              overflowY: 'auto',
               boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
               pointerEvents: 'auto',
             }}
@@ -853,6 +881,97 @@ export default function ChanLunChart({
                     {modal.turtleBullish === false && '【看跌】 '}
                     {modal.turtleBullish === null && '【观望】 '}
                     {modal.turtleSignal}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* KDJ 指标信号 */}
+            <div style={{ marginTop: 12 }}>
+              <div style={{ fontSize: 11, color: '#868993', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                KDJ 随机指标
+              </div>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr 1fr',
+                gap: 8,
+                marginBottom: 10,
+                padding: '8px 10px',
+                background: '#131722',
+                borderRadius: 6,
+              }}>
+                <div>
+                  <div style={{ fontSize: 10, color: '#868993' }}>K 值</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#d1d4dc' }}>
+                    {modal.kdjK != null ? modal.kdjK.toFixed(2) : '-'}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, color: '#868993' }}>D 值</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#d1d4dc' }}>
+                    {modal.kdjD != null ? modal.kdjD.toFixed(2) : '-'}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, color: '#868993' }}>J 值</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: (modal.kdjJ ?? 0) > 100 ? '#ef5350' : (modal.kdjJ ?? 0) < 0 ? '#26a69a' : '#d1d4dc' }}>
+                    {modal.kdjJ != null ? modal.kdjJ.toFixed(2) : '-'}
+                  </div>
+                </div>
+              </div>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr 1fr 1fr',
+                gap: 8,
+                marginBottom: 10,
+              }}>
+                <div style={{ textAlign: 'center', padding: '4px 0', borderRadius: 4, background: modal.kdjGoldenCross ? 'rgba(239,83,80,0.15)' : 'transparent' }}>
+                  <div style={{ fontSize: 10, color: '#868993' }}>金叉</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: modal.kdjGoldenCross ? '#ef5350' : '#5a5e69' }}>
+                    {modal.kdjGoldenCross ? '✓ 金叉' : '—'}
+                  </div>
+                </div>
+                <div style={{ textAlign: 'center', padding: '4px 0', borderRadius: 4, background: modal.kdjDeathCross ? 'rgba(38,166,154,0.15)' : 'transparent' }}>
+                  <div style={{ fontSize: 10, color: '#868993' }}>死叉</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: modal.kdjDeathCross ? '#26a69a' : '#5a5e69' }}>
+                    {modal.kdjDeathCross ? '✓ 死叉' : '—'}
+                  </div>
+                </div>
+                <div style={{ textAlign: 'center', padding: '4px 0', borderRadius: 4, background: modal.kdjBottomDivergence ? 'rgba(239,83,80,0.15)' : 'transparent' }}>
+                  <div style={{ fontSize: 10, color: '#868993' }}>底背离</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: modal.kdjBottomDivergence ? '#ef5350' : '#5a5e69' }}>
+                    {modal.kdjBottomDivergence ? '✓ 背离' : '—'}
+                  </div>
+                </div>
+                <div style={{ textAlign: 'center', padding: '4px 0', borderRadius: 4, background: modal.kdjTopDivergence ? 'rgba(38,166,154,0.15)' : 'transparent' }}>
+                  <div style={{ fontSize: 10, color: '#868993' }}>顶背离</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: modal.kdjTopDivergence ? '#26a69a' : '#5a5e69' }}>
+                    {modal.kdjTopDivergence ? '✓ 背离' : '—'}
+                  </div>
+                </div>
+              </div>
+
+              {modal.kdjSignal && (
+                <div style={{
+                  padding: '10px 12px',
+                  borderRadius: 6,
+                  background: modal.kdjBullish === true ? 'rgba(239, 83, 80, 0.1)' :
+                              modal.kdjBullish === false ? 'rgba(38, 166, 154, 0.1)' :
+                              'rgba(150, 150, 150, 0.08)',
+                  borderLeft: `3px solid ${modal.kdjBullish === true ? '#ef5350' :
+                                            modal.kdjBullish === false ? '#26a69a' :
+                                            '#868993'}`,
+                }}>
+                  <div style={{
+                    fontSize: 12, fontWeight: 600,
+                    color: modal.kdjBullish === true ? '#ef5350' :
+                           modal.kdjBullish === false ? '#26a69a' :
+                           '#d1d4dc'
+                  }}>
+                    {modal.kdjBullish === true && '【看涨】 '}
+                    {modal.kdjBullish === false && '【看跌】 '}
+                    {modal.kdjBullish === null && '【观望】 '}
+                    {modal.kdjSignal}
                   </div>
                 </div>
               )}
