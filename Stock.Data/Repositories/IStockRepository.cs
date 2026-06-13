@@ -1,4 +1,5 @@
 using Stock.Data.Entities;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Stock.Data.Repositories;
 
@@ -24,9 +25,19 @@ public interface IStockRepository
     Task<IEnumerable<T>> GetKlinesAsync<T>(string symbol, KlineResolution resolution,DateTime fromTime, DateTime toTime, CancellationToken ct = default) where T : KlineBase;
     
     /// <summary>
-    /// 批量新增K线
+    /// 批量新增K线（内部大数据量自动走 SqlBulkCopy）
     /// </summary>
     Task AddKlinesAsync<T>(IEnumerable<T> klines, CancellationToken ct = default) where T : KlineBase;
+
+    /// <summary>
+    /// 批量 Upsert K线（先 SqlBulkCopy 到临时表，再 MERGE 到目标表）
+    /// </summary>
+    Task BulkUpsertKlinesAsync<T>(IEnumerable<T> klines, CancellationToken ct = default) where T : KlineBase;
+
+    /// <summary>
+    /// 开启数据库事务
+    /// </summary>
+    Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken ct = default);
 
     /// <summary>
     /// 批量更新K线

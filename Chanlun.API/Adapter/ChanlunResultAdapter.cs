@@ -39,7 +39,7 @@ public static class ChanlunResultAdapter
                     Low = u.Low,
                     Close = u.Close,
                     Volume = u.Volume,
-                    CalIndicator = u.CalIndicator,
+                    CalIndicator = u.UnitIndicator.CalIndicator,
                     MA5 = item.Ma.MA5,
                     MA10 = item.Ma.MA10,
                     MA20 = item.Ma.MA20,

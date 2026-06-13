@@ -5,13 +5,24 @@ Baostock 历史行情数据同步工具
     python main.py --stock sh.600000 --freq 5m --start 2024-01-01 --end 2024-06-01
     python main.py --stock sh.600000 sh.600519 sz.000001 --freq 5m 30m 1d
     python main.py --all --freq 1d
+    python main.py --all-a-shares --freq 1d
+    python main.py --sync-stock-info
 """
 
 import argparse
 from datetime import datetime
 
 from config import DEFAULT_STOCKS, FREQUENCY_MAP
-from sync_service import sync_all
+from sync_service import sync_all, sync_all_a_shares, sync_all_stock_info
+from baostock_client import symbol_to_bs_code
+
+
+def normalize_stock_code(code: str) -> str:
+    """统一股票代码为 Baostock 格式 sh.xxxxxx / sz.xxxxxx"""
+    code = code.strip()
+    if "." in code:
+        return code
+    return symbol_to_bs_code(code)
 
 
 def main():
@@ -19,7 +30,7 @@ def main():
     parser.add_argument(
         "--stock",
         nargs="+",
-        help="Baostock 股票代码，如 sh.600000 sz.000001",
+        help="Baostock 股票代码，如 sh.600000 sz.000001 或 600000 000001",
     )
     parser.add_argument(
         "--freq",
@@ -43,13 +54,48 @@ def main():
         action="store_true",
         help="同步默认股票列表",
     )
+    parser.add_argument(
+        "--all-a-shares",
+        action="store_true",
+        help="根据 StockInfo 表同步全部 A 股股票和 ETF 的 K 线（从 2020-01-01 到现在）",
+    )
+    parser.add_argument(
+        "--sync-stock-info",
+        action="store_true",
+        help="仅同步全部 A 股股票和 ETF 的 StockInfo 基本信息",
+    )
 
     args = parser.parse_args()
+
+    if args.sync_stock_info:
+        print("=" * 50)
+        print("Mode   : sync all stock info only")
+        print("=" * 50)
+        sync_all_stock_info()
+        print("Done.")
+        return
+
+    if args.all_a_shares:
+        start = datetime.strptime(args.start, "%Y-%m-%d") if args.start else None
+        end = datetime.strptime(args.end, "%Y-%m-%d") if args.end else None
+
+        print("=" * 50)
+        print("Mode   : all A-share stocks & ETFs")
+        print(f"Freqs  : {args.freq}")
+        print(f"Start  : {start}")
+        print(f"End    : {end}")
+        print("=" * 50)
+
+        sync_all_a_shares(args.freq, start, end)
+        print("Done.")
+        return
 
     stocks = args.stock or (DEFAULT_STOCKS if args.all else [])
     if not stocks:
         parser.print_help()
         return
+
+    stocks = [normalize_stock_code(s) for s in stocks]
 
     start = datetime.strptime(args.start, "%Y-%m-%d") if args.start else None
     end = datetime.strptime(args.end, "%Y-%m-%d") if args.end else None

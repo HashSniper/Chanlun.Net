@@ -455,8 +455,8 @@ public static class IndicatorCalculator
         var bollList = bars.GetBollingerBands().ToList();
         foreach (var unit in units)
         {
-            unit.MACD = macds[unit.Idx];
-            unit.Boll = bollList[unit.Idx];
+            unit.UnitIndicator.MACD = macds[unit.Idx];
+            unit.UnitIndicator.Boll = bollList[unit.Idx];
         }
 
         var biList = calculateResult.BiList;
@@ -470,7 +470,7 @@ public static class IndicatorCalculator
         {
             var energy = CalculateBiMetric1(bi);
             pOut[bi.EndChanKLine.PeakUnit.Idx] = energy;
-            units[bi.EndChanKLine.PeakUnit.Idx].CalIndicator = energy;
+            units[bi.EndChanKLine.PeakUnit.Idx].UnitIndicator.CalIndicator = energy;
         }
 
         return pOut;
@@ -492,11 +492,11 @@ public static class IndicatorCalculator
         foreach (var k in units)
         {
             // 1. 获取 MACD 柱值（乘上乘数以匹配国内习惯）
-            double macdHist = (double)(k.MACD.Histogram ?? 0) * macdMultiplier;
+            double macdHist = (double)(k.UnitIndicator.MACD.Histogram ?? 0) * macdMultiplier;
 
             // 2. 计算布林带 %b
-            double upper = (double)(k.Boll.UpperBand ?? 0);
-            double lower = (double)(k.Boll.LowerBand ?? 0);
+            double upper = (double)(k.UnitIndicator.Boll.UpperBand ?? 0);
+            double lower = (double)(k.UnitIndicator.Boll.LowerBand ?? 0);
             double percentB;
 
             if (Math.Abs(upper - lower) < 1e-12)
@@ -547,8 +547,8 @@ public static class IndicatorCalculator
         }
 
         // 1. 计算 MACD 动能总量 (面积积分)
-        double macdArea = units.Where(p => bi.DIR.IsDown() ? p.MACD.Histogram < 0 : p.MACD.Histogram > 0)
-            .Sum(b => b.MACD.Histogram ?? 0);
+        double macdArea = units.Where(p => bi.DIR.IsDown() ? p.UnitIndicator.MACD.Histogram < 0 : p.UnitIndicator.MACD.Histogram > 0)
+            .Sum(b => b.UnitIndicator.MACD.Histogram ?? 0);
 
         // 2. 计算 BOLL 空间拓张率
         double bollExtension = 0;
@@ -557,22 +557,22 @@ public static class IndicatorCalculator
         {
             // 找到最高点所在的那根 K 线
             var maxBar = units.MaxBy(b => b.High);
-            double denominator = (maxBar.Boll.UpperBand ?? 0) - (maxBar.Boll.Sma ?? 0);
+            double denominator = (maxBar.UnitIndicator.Boll.UpperBand ?? 0) - (maxBar.UnitIndicator.Boll.Sma ?? 0);
 
             if (denominator > 0)
             {
-                bollExtension = ((double)maxBar.High - (maxBar.Boll.Sma ?? 0)) / denominator;
+                bollExtension = ((double)maxBar.High - (maxBar.UnitIndicator.Boll.Sma ?? 0)) / denominator;
             }
         }
         else // Down
         {
             // 找到最低点所在的那根 K 线
             var minBar = units.MinBy(b => b.Low);
-            double denominator = (minBar.Boll.Sma ?? 0) - (minBar.Boll.LowerBand ?? 0);
+            double denominator = (minBar.UnitIndicator.Boll.Sma ?? 0) - (minBar.UnitIndicator.Boll.LowerBand ?? 0);
 
             if (denominator > 0)
             {
-                bollExtension = ((minBar.Boll.Sma ?? 0) - (double)minBar.Low) / denominator;
+                bollExtension = ((minBar.UnitIndicator.Boll.Sma ?? 0) - (double)minBar.Low) / denominator;
             }
         }
 

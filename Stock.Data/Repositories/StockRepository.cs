@@ -1,5 +1,8 @@
-using Stock.Data.Entities;
+using System.Data;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+using Stock.Data.Entities;
 
 namespace Stock.Data.Repositories;
 
@@ -107,14 +110,245 @@ public class StockRepository : IStockRepository
     }
     
     
+    private (string tableName, string schema) ResolveKlineTableName<T>(IReadOnlyList<T> list) where T : KlineBase
+    {
+        var actualType = typeof(T);
+        var entityType = _context.Model.FindEntityType(actualType);
+        var tableName = entityType?.GetTableName();
+        var schema = entityType?.GetSchema();
+
+        if (string.IsNullOrEmpty(tableName) && list.Count > 0)
+        {
+            // TPC 基类（如 KlineBase）没有对应表，需从 Resolution 推断具体子类
+            actualType = list[0].Resolution switch
+            {
+                KlineResolution.Minute1 => typeof(Kline1m),
+                KlineResolution.Minute5 => typeof(Kline5m),
+                KlineResolution.Minute15 => typeof(Kline15m),
+                KlineResolution.Minute30 => typeof(Kline30m),
+                KlineResolution.Minute60 => typeof(Kline60m),
+                KlineResolution.Day => typeof(Kline1d),
+                KlineResolution.Week => typeof(Kline1w),
+                KlineResolution.Month => typeof(Kline1mo),
+                _ => actualType
+            };
+            entityType = _context.Model.FindEntityType(actualType);
+            tableName = entityType?.GetTableName();
+            schema = entityType?.GetSchema();
+        }
+
+        return (tableName ?? string.Empty, schema ?? string.Empty);
+    }
+
     public async Task AddKlinesAsync<T>(IEnumerable<T> klines, CancellationToken ct = default) where T : KlineBase
     {
+        var list = klines?.ToList();
+        if (list == null || list.Count == 0)
+            return;
+
         var now = DateTime.Now;
-        foreach (var kline in klines)
+        foreach (var kline in list)
         {
             kline.CreatedAt = now;
         }
-        await _context.Set<T>().AddRangeAsync(klines, ct);
+
+        // 小批量仍走 EF ChangeTracker，减少 SqlBulkCopy 的固定开销
+        if (list.Count <= 100)
+        {
+            await _context.Set<T>().AddRangeAsync(list, ct);
+            return;
+        }
+
+        var (tableName, schema) = ResolveKlineTableName(list);
+
+        if (string.IsNullOrEmpty(tableName))
+        {
+            await _context.Set<T>().AddRangeAsync(list, ct);
+            return;
+        }
+
+        var connection = _context.Database.GetDbConnection();
+        var wasOpen = connection.State == ConnectionState.Open;
+        if (!wasOpen)
+            await connection.OpenAsync(ct);
+
+        try
+        {
+            var destinationTableName = string.IsNullOrEmpty(schema)
+                ? $"[{tableName}]"
+                : $"[{schema}].[{tableName}]";
+
+            var sqlTransaction = _context.Database.CurrentTransaction?.GetDbTransaction() as SqlTransaction;
+
+            using var bulkCopy = new SqlBulkCopy((SqlConnection)connection, SqlBulkCopyOptions.Default, sqlTransaction);
+            bulkCopy.DestinationTableName = destinationTableName;
+            bulkCopy.BatchSize = 5000;
+            bulkCopy.BulkCopyTimeout = 300;
+
+            var dataTable = new DataTable();
+            dataTable.Columns.Add("Symbol", typeof(string));
+            dataTable.Columns.Add("TradeTime", typeof(DateTime));
+            dataTable.Columns.Add("Open", typeof(decimal));
+            dataTable.Columns.Add("High", typeof(decimal));
+            dataTable.Columns.Add("Low", typeof(decimal));
+            dataTable.Columns.Add("Close", typeof(decimal));
+            dataTable.Columns.Add("Volume", typeof(decimal));
+            dataTable.Columns.Add("Amount", typeof(decimal));
+            dataTable.Columns.Add("CreatedAt", typeof(DateTime));
+
+            foreach (var item in list)
+            {
+                dataTable.Rows.Add(
+                    item.Symbol,
+                    item.TradeTime,
+                    item.Open,
+                    item.High,
+                    item.Low,
+                    item.Close,
+                    item.Volume,
+                    item.Amount,
+                    item.CreatedAt);
+            }
+
+            await bulkCopy.WriteToServerAsync(dataTable, ct);
+        }
+        finally
+        {
+            if (!wasOpen && connection.State == ConnectionState.Open)
+                await connection.CloseAsync();
+        }
+    }
+
+    public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken ct = default)
+    {
+        return _context.Database.BeginTransactionAsync(ct);
+    }
+
+    public async Task BulkUpsertKlinesAsync<T>(IEnumerable<T> klines, CancellationToken ct = default) where T : KlineBase
+    {
+        var list = klines?.ToList();
+        if (list == null || list.Count == 0)
+            return;
+
+        var now = DateTime.Now;
+        foreach (var kline in list)
+        {
+            kline.CreatedAt = now;
+        }
+
+        var (tableName, schema) = ResolveKlineTableName(list);
+
+        if (string.IsNullOrEmpty(tableName))
+            throw new InvalidOperationException($"Unable to determine table name for entity {typeof(T).Name}");
+
+        var connection = _context.Database.GetDbConnection();
+        var wasOpen = connection.State == ConnectionState.Open;
+        if (!wasOpen)
+            await connection.OpenAsync(ct);
+
+        var sqlTransaction = _context.Database.CurrentTransaction?.GetDbTransaction() as SqlTransaction;
+        var ownsTransaction = false;
+
+        try
+        {
+            if (sqlTransaction == null)
+            {
+                sqlTransaction = ((SqlConnection)connection).BeginTransaction();
+                ownsTransaction = true;
+            }
+
+            var destinationTableName = string.IsNullOrEmpty(schema)
+                ? $"[{tableName}]"
+                : $"[{schema}].[{tableName}]";
+
+            using var command = new SqlCommand();
+            command.Connection = (SqlConnection)connection;
+            command.Transaction = sqlTransaction;
+
+            // 创建与目标表结构一致的临时表（不含自增 Id）
+            command.CommandText = $@"
+                SELECT TOP 0 Symbol, TradeTime, [Open], High, Low, [Close], Volume, Amount, CreatedAt
+                INTO #TempKlines
+                FROM {destinationTableName}";
+            await command.ExecuteNonQueryAsync(ct);
+
+            // BulkCopy 到临时表
+            using var bulkCopy = new SqlBulkCopy((SqlConnection)connection, SqlBulkCopyOptions.Default, sqlTransaction);
+            bulkCopy.DestinationTableName = "#TempKlines";
+            bulkCopy.BatchSize = 5000;
+            bulkCopy.BulkCopyTimeout = 300;
+
+            var dataTable = new DataTable();
+            dataTable.Columns.Add("Symbol", typeof(string));
+            dataTable.Columns.Add("TradeTime", typeof(DateTime));
+            dataTable.Columns.Add("Open", typeof(decimal));
+            dataTable.Columns.Add("High", typeof(decimal));
+            dataTable.Columns.Add("Low", typeof(decimal));
+            dataTable.Columns.Add("Close", typeof(decimal));
+            dataTable.Columns.Add("Volume", typeof(decimal));
+            dataTable.Columns.Add("Amount", typeof(decimal));
+            dataTable.Columns.Add("CreatedAt", typeof(DateTime));
+
+            foreach (var item in list)
+            {
+                dataTable.Rows.Add(
+                    item.Symbol,
+                    item.TradeTime,
+                    item.Open,
+                    item.High,
+                    item.Low,
+                    item.Close,
+                    item.Volume,
+                    item.Amount,
+                    item.CreatedAt);
+            }
+
+            await bulkCopy.WriteToServerAsync(dataTable, ct);
+
+            // 执行 MERGE
+            command.CommandText = $@"
+                MERGE INTO {destinationTableName} AS target
+                USING #TempKlines AS source
+                ON target.Symbol = source.Symbol AND target.TradeTime = source.TradeTime
+                WHEN MATCHED AND (
+                    target.[Open] <> source.[Open] OR
+                    target.High <> source.High OR
+                    target.Low <> source.Low OR
+                    target.[Close] <> source.[Close] OR
+                    target.Volume <> source.Volume OR
+                    target.Amount <> source.Amount
+                ) THEN
+                    UPDATE SET
+                        target.[Open] = source.[Open],
+                        target.High = source.High,
+                        target.Low = source.Low,
+                        target.[Close] = source.[Close],
+                        target.Volume = source.Volume,
+                        target.Amount = source.Amount
+                WHEN NOT MATCHED THEN
+                    INSERT (Symbol, TradeTime, [Open], High, Low, [Close], Volume, Amount, CreatedAt)
+                    VALUES (source.Symbol, source.TradeTime, source.[Open], source.High, source.Low, source.[Close], source.Volume, source.Amount, source.CreatedAt);";
+
+            await command.ExecuteNonQueryAsync(ct);
+
+            if (ownsTransaction)
+            {
+                sqlTransaction.Commit();
+            }
+        }
+        catch
+        {
+            if (ownsTransaction && sqlTransaction != null)
+            {
+                sqlTransaction.Rollback();
+            }
+            throw;
+        }
+        finally
+        {
+            if (!wasOpen && connection.State == ConnectionState.Open)
+                await connection.CloseAsync();
+        }
     }
 
     public Task UpdateKlinesAsync<T>(IEnumerable<T> klines, CancellationToken ct = default) where T : KlineBase

@@ -11,7 +11,7 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
     public AppDbContext CreateDbContext(string[] args)
     {
         var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-        optionsBuilder.UseSqlServer("Server=.\\SQLEXPRESS;Database=StockDb;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True");
+        optionsBuilder.UseSqlServer("Server=.\\SQLEXPRESS;Database=StockDb;User Id=sa;Password=dd461233;MultipleActiveResultSets=true;TrustServerCertificate=True");
         return new AppDbContext(optionsBuilder.Options);
     }
 }

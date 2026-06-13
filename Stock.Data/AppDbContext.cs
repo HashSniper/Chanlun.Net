@@ -36,11 +36,20 @@ public class AppDbContext : DbContext
         {
             entity.ToTable("StockInfo");
             entity.HasKey(e => e.Id);
-            entity.HasIndex(e => e.Symbol).IsUnique();
+            entity.HasAlternateKey(e => e.Symbol); // Symbol 作为备用键，供 Kline 外键引用
             entity.Property(e => e.Symbol).HasMaxLength(20).IsRequired();
             entity.Property(e => e.Name).HasMaxLength(100).IsRequired();
             entity.Property(e => e.Exchange).HasMaxLength(10).IsRequired();
             entity.Property(e => e.Type).HasMaxLength(20).IsRequired();
+            entity.Property(e => e.SettlementType)
+                .HasConversion<string>()
+                .HasMaxLength(10)
+                .IsRequired()
+                .HasDefaultValue(TradeSettlementType.T1);
+            entity.Property(e => e.SyncStatus)
+                .HasConversion<int>()
+                .IsRequired()
+                .HasDefaultValue(SyncStatus.NotSynced);
         });
 
         // 通达信当前K线视图
@@ -123,6 +132,13 @@ public class AppDbContext : DbContext
             entity.UseTpcMappingStrategy();
             entity.Property(e => e.TradeTime).HasPrecision(0);   // 精确到秒
             entity.Property(e => e.CreatedAt).HasPrecision(0);   // 精确到秒
+
+            // K线 Symbol 关联到 StockInfo.Symbol
+            entity.HasOne<StockInfo>()
+                .WithMany()
+                .HasForeignKey(e => e.Symbol)
+                .HasPrincipalKey(e => e.Symbol)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         // 分钟级K线：每张表独立自增 ID
