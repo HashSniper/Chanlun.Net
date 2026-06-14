@@ -1,7 +1,12 @@
 ﻿using Chanlun.API.Adapter;
-using Chanlun.Lib.Adapter;
+using Stock.Service.Adapter;
 using Chanlun.API.Models;
+using Chanlun.Lib.Bi;
+using Chanlun.Lib.KLine;
 using Chanlun.Lib.Memory;
+using Chanlun.Lib.SEG;
+using Chanlun.Lib.StockIndicators;
+using Chanlun.Lib.Zs;
 using Microsoft.AspNetCore.Mvc;
 using Stock.Data.Entities;
 using Stock.Service.Interface;

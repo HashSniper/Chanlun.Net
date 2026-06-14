@@ -1,5 +1,4 @@
 using Chanlun.API.Adapter;
-using Chanlun.Lib.Adapter;
 using Microsoft.AspNetCore.Mvc;
 using Stock.Data.Entities;
 using Stock.Service.Interface;
@@ -34,10 +33,9 @@ public class TradingViewController : ControllerBase
             FromTime = from,
             ToTime = to
         });
-
-        var chanResult = ChanCalculateResultBuilder.Build(symbol, kLines.Items.Select(p => p.Kline).ToKLineUnits());
+        
         var response =
-            ChanlunResultAdapter.ConvertToTvResponse(kLines, chanResult);
+            ChanlunResultAdapter.ConvertToTvResponse(kLines);
         return Ok(response);
     }
     
@@ -57,9 +55,8 @@ public class TradingViewController : ControllerBase
             FromTime = currentStock.StartTime,
             ToTime = currentStock.EndTime
         });
-    
-        var chanResult = ChanCalculateResultBuilder.Build(currentStock.Symbol, kLines.Items.Select(p => p.Kline).ToKLineUnits());
-        var response = ChanlunResultAdapter.ConvertToTvResponse(kLines, chanResult);
+        
+        var response = ChanlunResultAdapter.ConvertToTvResponse(kLines);
         return Ok(response);
     }
 }

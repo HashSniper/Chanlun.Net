@@ -1,3 +1,5 @@
+using Chanlun.Lib;
+using Skender.Stock.Indicators;
 using Stock.Data.Entities;
 using Stock.Service.Indicators;
 using Stock.Service.Interface;
@@ -16,7 +18,7 @@ public class KLineIndicatorItem
     public MaIndicatorValue Ma { get; set; } = new();
 
     /// <summary>MACD 指标值</summary>
-    public MacdIndicatorValue Macd { get; set; } = new();
+    public MacdResult Macd { get; set; } = null!;
 
     /// <summary>KDJ 随机指标值</summary>
     public KdjIndicatorValue Kdj { get; set; } = new();
@@ -25,7 +27,7 @@ public class KLineIndicatorItem
     public RsiIndicatorValue Rsi { get; set; } = new();
 
     /// <summary>BOLL 布林带指标值</summary>
-    public BollIndicatorValue Boll { get; set; } = new();
+    public BollingerBandsResult Boll { get; set; } = null!;
 
     /// <summary>蜡烛图形态指标值</summary>
     public CandlestickPatternValue Candlestick { get; set; } = new();
@@ -48,4 +50,6 @@ public class KLineIndicatorResult
     public DateTime ToTime { get; set; }
     public int Count { get; set; }
     public List<KLineIndicatorItem> Items { get; set; } = [];
+    
+    public ChanCalculateResult ChanCalculateResult { get; set; }
 }

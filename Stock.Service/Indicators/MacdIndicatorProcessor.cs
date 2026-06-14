@@ -22,9 +22,7 @@ public class MacdIndicatorProcessor : IIndicatorProcessor
 
         for (int i = 0; i < klines.Count; i++)
         {
-            items[i].Macd.Dif = IndicatorUtils.ToDecimal(macds[i].Macd);
-            items[i].Macd.Dea = IndicatorUtils.ToDecimal(macds[i].Signal);
-            items[i].Macd.Histogram = IndicatorUtils.ToDecimal(macds[i].Histogram);
+            items[i].Macd = macds[i];
         }
 
         return Task.CompletedTask;

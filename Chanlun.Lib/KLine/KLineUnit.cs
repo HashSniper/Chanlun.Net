@@ -22,11 +22,11 @@ namespace Chanlun.Lib.KLine
 
     public class KLineUnitIndicator
     {
-        public MacdResult MACD { get; set; }
+        public MacdResult? MACD { get; set; }
 
-        public BollingerBandsResult Boll { get; set; }
+        public BollingerBandsResult? Boll { get; set; }
 
-        public decimal CalIndicator { get; set; }
+        public decimal ChanEnergy { get; set; }
 
         public bool? IsBuy1 { get; set; }
         public bool? IsBuy2 { get; set; }

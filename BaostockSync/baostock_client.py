@@ -291,3 +291,19 @@ def is_a_share_or_etf(bs_code: str, bs_type: str) -> bool:
         return True
 
     return False
+
+
+def is_a_share_stock(bs_code: str, bs_type: str) -> bool:
+    """
+    判断是否属于 A 股股票（排除指数和 ETF）
+    """
+    if bs_type == "2":
+        return False
+
+    if is_etf(bs_code):
+        return False
+
+    if bs_type == "1":
+        return True
+
+    return False

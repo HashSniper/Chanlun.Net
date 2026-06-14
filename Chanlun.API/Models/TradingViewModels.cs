@@ -8,8 +8,15 @@ public class TvKlineBar
     public decimal Low { get; set; }
     public decimal Close { get; set; }
     public decimal Volume { get; set; }
-    
-    public decimal CalIndicator { get; set; }
+
+    // 缠论买卖点
+    public bool? IsBuy1 { get; set; }
+    public bool? IsBuy2 { get; set; }
+    public bool? IsBuy3 { get; set; }
+    public bool? IsSell1 { get; set; }
+    public bool? IsSell2 { get; set; }
+    public bool? IsSell3 { get; set; }
+
     // MA 移动平均线
     public decimal? MA5 { get; set; }
     public decimal? MA10 { get; set; }

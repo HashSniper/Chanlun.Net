@@ -11,6 +11,7 @@ from baostock_client import (
     bs_code_to_symbol,
     bs_type_to_type,
     is_a_share_or_etf,
+    is_a_share_stock,
     is_etf,
     is_t0_etf,
     parse_trade_time,
@@ -185,15 +186,15 @@ def sync_all(
 def _load_a_share_list(
     bs: BaostockClient,
 ) -> List[Dict[str, Any]]:
-    """一次性拉取全部 A 股股票和 ETF 的基本信息列表"""
+    """一次性拉取全部 A 股股票的基本信息列表（不含 ETF）"""
     print("[FETCH] loading all A-share stock list ...")
     basics = bs.query_all_stock_basics()
     items = [
         item
         for item in basics
-        if is_a_share_or_etf(item["code"], item.get("type", ""))
+        if is_a_share_stock(item["code"], item.get("type", ""))
     ]
-    print(f"[FETCH] found {len(items)} A-share stocks/ETFs")
+    print(f"[FETCH] found {len(items)} A-share stocks")
     return items
 
 
@@ -225,16 +226,22 @@ def sync_all_a_shares(
             print(f"  [{symbol}] claimed, start syncing klines ...")
 
             # 同步 K 线数据
+            all_success = True
             for freq in frequencies:
                 try:
                     sync_stock(db, bs, bs_code, freq, start_date, end_date)
                 except Exception as e:
+                    all_success = False
                     print(f"[ERROR] sync {bs_code} {freq} failed: {e}")
                     traceback.print_exc()
 
-            # K 线同步完成后置为 2
-            db.update_stock_info_sync_status(symbol, 2)
-            print(f"  [{symbol}] SyncStatus set to 2")
+            # 全部成功则置为 2，任一失败则置回 0 以便重试
+            if all_success:
+                db.update_stock_info_sync_status(symbol, 2)
+                print(f"  [{symbol}] all frequencies synced, SyncStatus set to 2")
+            else:
+                db.update_stock_info_sync_status(symbol, 0)
+                print(f"  [{symbol}] some frequencies failed, SyncStatus reset to 0")
 
 
 def sync_all_stock_info():

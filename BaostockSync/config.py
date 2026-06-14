@@ -2,7 +2,7 @@
 
 DB_CONFIG = {
     "driver": "ODBC Driver 17 for SQL Server",
-    "server": r".\SQLEXPRESS",
+    "server": ".",
     "database": "StockDb",
     "username": "sa",
     "password": "dd461233",

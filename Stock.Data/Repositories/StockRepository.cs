@@ -99,12 +99,6 @@ public class StockRepository : IStockRepository
             KlineResolution.Day => (await _context.Kline1d.AsNoTracking()
                 .Where(k => k.Symbol == symbol && k.TradeTime >= fromTime && k.TradeTime <= toTime)
                 .OrderBy(k => k.TradeTime).ToListAsync(ct)).Cast<T>().ToList(),
-            KlineResolution.Week => (await _context.Kline1w.AsNoTracking()
-                .Where(k => k.Symbol == symbol && k.TradeTime >= fromTime && k.TradeTime <= toTime)
-                .OrderBy(k => k.TradeTime).ToListAsync(ct)).Cast<T>().ToList(),
-            KlineResolution.Month => (await _context.Kline1mo.AsNoTracking()
-                .Where(k => k.Symbol == symbol && k.TradeTime >= fromTime && k.TradeTime <= toTime)
-                .OrderBy(k => k.TradeTime).ToListAsync(ct)).Cast<T>().ToList(),
             _ => throw new ArgumentException($"Unsupported resolution: {resolution}")
         };
     }
@@ -126,10 +120,8 @@ public class StockRepository : IStockRepository
                 KlineResolution.Minute5 => typeof(Kline5m),
                 KlineResolution.Minute15 => typeof(Kline15m),
                 KlineResolution.Minute30 => typeof(Kline30m),
-                KlineResolution.Minute60 => typeof(Kline60m),
+                KlineResolution.Minute60 => typeof(Kline1d),
                 KlineResolution.Day => typeof(Kline1d),
-                KlineResolution.Week => typeof(Kline1w),
-                KlineResolution.Month => typeof(Kline1mo),
                 _ => actualType
             };
             entityType = _context.Model.FindEntityType(actualType);

@@ -13,15 +13,12 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Chanlun.Lib\Chanlun.Lib.csproj" />
       <ProjectReference Include="..\Stock.Data\Stock.Data.csproj" />
     </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="Skender.Stock.Indicators" Version="2.7.1" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Indicators\IndicatorValues\" />
     </ItemGroup>
 
 </Project>

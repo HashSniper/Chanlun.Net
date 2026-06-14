@@ -4,7 +4,6 @@ import {
   CandlestickSeries,
   LineSeries,
   BaselineSeries,
-  HistogramSeries,
   createSeriesMarkers,
   type IChartApi,
   type ISeriesApi,
@@ -273,42 +272,24 @@ export default function ChanLunChart({
 
     candleSeries.attachPrimitive(new PaneSeparator());
 
-    // Render CalIndicator histogram (pane 1)
-    const indicatorData = klines
+    // 缠论买卖点标记
+    const tradingPointMarkers: SeriesMarker<Time>[] = klines
       .map((b) => {
         const t = typeof b.time === 'number' ? Math.floor(b.time / 1000) : msToSec(new Date(b.time).getTime());
-        return {
-          time: t as Time,
-          value: b.calIndicator ?? 0,
-          color: (b.calIndicator ?? 0) > 0 ? '#ef5350' : '#26a69a',
-        };
+        const markers: SeriesMarker<Time>[] = [];
+        if (b.isBuy1) markers.push({ time: t as Time, position: 'belowBar', shape: 'arrowUp', color: '#ff0000', text: 'B1', size: 2 });
+        if (b.isBuy2) markers.push({ time: t as Time, position: 'belowBar', shape: 'arrowUp', color: '#ff6600', text: 'B2', size: 2 });
+        if (b.isBuy3) markers.push({ time: t as Time, position: 'belowBar', shape: 'arrowUp', color: '#ff9900', text: 'B3', size: 2 });
+        if (b.isSell1) markers.push({ time: t as Time, position: 'aboveBar', shape: 'arrowDown', color: '#00ff00', text: 'S1', size: 2 });
+        if (b.isSell2) markers.push({ time: t as Time, position: 'aboveBar', shape: 'arrowDown', color: '#66ff00', text: 'S2', size: 2 });
+        if (b.isSell3) markers.push({ time: t as Time, position: 'aboveBar', shape: 'arrowDown', color: '#99ff00', text: 'S3', size: 2 });
+        return markers;
       })
-      .filter((d) => d.value !== 0)
+      .flat()
       .sort((a, b) => (a.time as number) - (b.time as number));
 
-    if (indicatorData.length > 0) {
-      const histSeries = chart.addSeries(HistogramSeries, {
-        color: '#26a69a',
-        base: 0,
-        priceFormat: { type: 'price', precision: 2, minMove: 0.01 },
-        lastValueVisible: false,
-        priceLineVisible: false,
-      }, 1);
-      histSeries.setData(indicatorData);
-      seriesRefs.current.push(histSeries);
-
-      // 标题绘制在 pane 1 顶部，天然位于分界线下方
-      histSeries.attachPrimitive(new PaneTitlePrimitive('指标计算结果'));
-
-      const markers: SeriesMarker<Time>[] = indicatorData.map((d) => ({
-        time: d.time,
-        position: d.value > 0 ? 'aboveBar' : 'belowBar',
-        shape: 'square',
-        color: d.color ?? '#26a69a',
-        text: String(Math.round(d.value * 100) / 100),
-        size: 1,
-      }));
-      const plugin = createSeriesMarkers(histSeries, markers);
+    if (tradingPointMarkers.length > 0) {
+      const plugin = createSeriesMarkers(candleSeries, tradingPointMarkers);
       markerPluginsRef.current.push(plugin);
     }
 
@@ -979,8 +960,6 @@ export default function ChanLunChart({
           </div>
         </>
       )}
-
-      {/* 下窗口标题：由 PaneTitlePrimitive 在 pane 1 内部绘制，天然跟随分界线 */}
 
       <div
         ref={containerRef}

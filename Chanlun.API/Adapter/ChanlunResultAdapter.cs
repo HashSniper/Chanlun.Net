@@ -12,24 +12,24 @@ namespace Chanlun.API.Adapter;
 /// </summary>
 public static class ChanlunResultAdapter
 {
-    public static TvChanlunResponse ConvertToTvResponse(KLineIndicatorResult indicatorResult, ChanCalculateResult result)
+    public static TvChanlunResponse ConvertToTvResponse(KLineIndicatorResult indicatorResult)
     {
         var response = new TvChanlunResponse
         {
-            BarCount = result.UnitList.Count,
-            Symbol = result.Symbol ?? string.Empty,
+            BarCount = indicatorResult.ChanCalculateResult.UnitList.Count,
+            Symbol = indicatorResult.ChanCalculateResult.Symbol ?? string.Empty,
             Resolution = indicatorResult.Resolution.ToString(),
             FromTime = indicatorResult.FromTime,
             ToTime = indicatorResult.ToTime,
         };
 
         // K线数据
-        if (result.UnitList?.Count > 0)
+        if (indicatorResult.ChanCalculateResult.UnitList?.Count > 0)
         {
-            response.Bars = new List<TvKlineBar>(result.UnitList.Count);
-            for (int i = 0; i < result.UnitList.Count; i++)
+            response.Bars = new List<TvKlineBar>(indicatorResult.ChanCalculateResult.UnitList.Count);
+            for (int i = 0; i < indicatorResult.ChanCalculateResult.UnitList.Count; i++)
             {
-                var u = result.UnitList[i];
+                var u = indicatorResult.ChanCalculateResult.UnitList[i];
                 var item = indicatorResult.Items[i];
                 response.Bars.Add(new TvKlineBar()
                 {
@@ -39,14 +39,19 @@ public static class ChanlunResultAdapter
                     Low = u.Low,
                     Close = u.Close,
                     Volume = u.Volume,
-                    CalIndicator = u.UnitIndicator.CalIndicator,
+                    IsBuy1 = u.UnitIndicator.IsBuy1,
+                    IsBuy2 = u.UnitIndicator.IsBuy2,
+                    IsBuy3 = u.UnitIndicator.IsBuy3,
+                    IsSell1 = u.UnitIndicator.IsSell1,
+                    IsSell2 = u.UnitIndicator.IsSell2,
+                    IsSell3 = u.UnitIndicator.IsSell3,
                     MA5 = item.Ma.MA5,
                     MA10 = item.Ma.MA10,
                     MA20 = item.Ma.MA20,
                     MA60 = item.Ma.MA60,
-                    MacdDif = item.Macd.Dif,
-                    MacdDea = item.Macd.Dea,
-                    MacdHistogram = item.Macd.Histogram,
+                    MacdDif = item.Macd?.Macd.HasValue == true ? (decimal?)item.Macd.Macd.Value : null,
+                    MacdDea = item.Macd?.Signal.HasValue == true ? (decimal?)item.Macd.Signal.Value : null,
+                    MacdHistogram = item.Macd?.Histogram.HasValue == true ? (decimal?)item.Macd.Histogram.Value : null,
                     KdjK = item.Kdj.K,
                     KdjD = item.Kdj.D,
                     KdjJ = item.Kdj.J,
@@ -59,9 +64,9 @@ public static class ChanlunResultAdapter
                     Rsi6 = item.Rsi.Rsi6,
                     Rsi12 = item.Rsi.Rsi12,
                     Rsi24 = item.Rsi.Rsi24,
-                    BollUpper = item.Boll.Upper,
-                    BollMiddle = item.Boll.Middle,
-                    BollLower = item.Boll.Lower,
+                    BollUpper = item.Boll?.UpperBand.HasValue == true ? (decimal?)item.Boll.UpperBand.Value : null,
+                    BollMiddle = item.Boll?.Sma.HasValue == true ? (decimal?)item.Boll.Sma.Value : null,
+                    BollLower = item.Boll?.LowerBand.HasValue == true ? (decimal?)item.Boll.LowerBand.Value : null,
                     Patterns = item.Candlestick.PatternDetails.Select(p => p.Name).ToList(),
                     PatternDirection = item.Candlestick.PatternDirection.ToString(),
                     PatternSignal = item.Candlestick.PatternSignal,
@@ -89,9 +94,9 @@ public static class ChanlunResultAdapter
         }
 
         // 笔
-        if (result.BiList.IsNotNullOrEmpty())
+        if (indicatorResult.ChanCalculateResult.BiList.IsNotNullOrEmpty())
         {
-            foreach (var bi in result.BiList)
+            foreach (var bi in indicatorResult.ChanCalculateResult.BiList)
             {
                 var startUnit = bi.StartChanKLine.PeakUnit;
                 var endUnit = bi.EndChanKLine.PeakUnit;
@@ -110,9 +115,9 @@ public static class ChanlunResultAdapter
         }
 
         // 线段
-        if (result.SegList.IsNotNullOrEmpty())
+        if (indicatorResult.ChanCalculateResult.SegList.IsNotNullOrEmpty())
         {
-            foreach (var seg in result.SegList)
+            foreach (var seg in indicatorResult.ChanCalculateResult.SegList)
             {
                 var startUnit = seg.StartBi.StartChanKLine.PeakUnit;
                 var endUnit = seg.EndBi.EndChanKLine.PeakUnit;
@@ -131,9 +136,9 @@ public static class ChanlunResultAdapter
         }
 
         // 笔中枢
-        if (result.BiPivotList.IsNotNullOrEmpty())
+        if (indicatorResult.ChanCalculateResult.BiPivotList.IsNotNullOrEmpty())
         {
-            foreach (var pivot in result.BiPivotList)
+            foreach (var pivot in indicatorResult.ChanCalculateResult.BiPivotList)
             {
                 var startUnit = pivot.Segments[0].StartChanKLine.PeakUnit;
                 var endUnit = pivot.Segments[^1].EndChanKLine.PeakUnit;
@@ -153,9 +158,9 @@ public static class ChanlunResultAdapter
         }
 
         // 线段中枢
-        if (result.SegPivotList.IsNotNullOrEmpty())
+        if (indicatorResult.ChanCalculateResult.SegPivotList.IsNotNullOrEmpty())
         {
-            foreach (var pivot in result.SegPivotList)
+            foreach (var pivot in indicatorResult.ChanCalculateResult.SegPivotList)
             {
                 var startUnit = pivot.Segments[0].StartBi.StartChanKLine.PeakUnit;
                 var endUnit = pivot.Segments[^1].EndBi.EndChanKLine.PeakUnit;
@@ -175,9 +180,9 @@ public static class ChanlunResultAdapter
         }
 
         // 合并K线
-        if (result.LineList.IsNotNullOrEmpty())
+        if (indicatorResult.ChanCalculateResult.LineList.IsNotNullOrEmpty())
         {
-            foreach (var kline in result.LineList)
+            foreach (var kline in indicatorResult.ChanCalculateResult.LineList)
             {
                 if (kline.CombinedUnits.Count == 0) continue;
 

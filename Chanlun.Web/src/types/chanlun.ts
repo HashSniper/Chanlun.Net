@@ -5,7 +5,12 @@ export interface KlineBar {
   low: number;
   close: number;
   volume: number;
-  calIndicator?: number;
+  isBuy1?: boolean;
+  isBuy2?: boolean;
+  isBuy3?: boolean;
+  isSell1?: boolean;
+  isSell2?: boolean;
+  isSell3?: boolean;
   // 日本蜡烛图形态
   patterns?: string[];
   patternDirection?: string;
@@ -93,7 +98,7 @@ export interface ChanlunResponse {
   mergedKLines: MergedKLine[];
 }
 
-export type KlineResolution = 'Minute1' | 'Minute5' | 'Minute15' | 'Minute30' | 'Minute60' | 'Day' | 'Week' | 'Month';
+export type KlineResolution = 'Minute1' | 'Minute5' | 'Minute15' | 'Minute30' | 'Minute60' | 'Day';
 
 export interface UdfHistory {
   s: 'ok' | 'error' | 'no_data';

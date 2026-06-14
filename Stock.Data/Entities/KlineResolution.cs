@@ -11,6 +11,4 @@ public enum KlineResolution
     Minute30 = 30,
     Minute60 = 60,
     Day = 100,
-    Week = 200,
-    Month = 300,
 }

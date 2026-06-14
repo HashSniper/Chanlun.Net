@@ -29,7 +29,7 @@ function App() {
 
   const resolutionLabel: Record<Resolution, string> = {
     'Minute1': '1分钟', 'Minute5': '5分钟', 'Minute15': '15分钟', 'Minute30': '30分钟',
-    'Minute60': '1小时', 'Day': '日线', 'Week': '周线', 'Month': '月线',
+    'Minute60': '1小时', 'Day': '日线',
   };
 
   const handleCalculate = useCallback(async (symbol: string, _resolution: Resolution, fromDate: string, toDate: string) => {

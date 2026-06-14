@@ -24,8 +24,6 @@ public class AppDbContext : DbContext
     public DbSet<Kline30m> Kline30m { get; set; }
     public DbSet<Kline60m> Kline60m { get; set; }
     public DbSet<Kline1d> Kline1d { get; set; }
-    public DbSet<Kline1w> Kline1w { get; set; }
-    public DbSet<Kline1mo> Kline1mo { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -130,6 +128,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<KlineBase>(entity =>
         {
             entity.UseTpcMappingStrategy();
+            entity.HasKey(e => e.Id).IsClustered(false);         // TPC 主键配置在基类，非聚集
             entity.Property(e => e.TradeTime).HasPrecision(0);   // 精确到秒
             entity.Property(e => e.CreatedAt).HasPrecision(0);   // 精确到秒
 
@@ -141,12 +140,12 @@ public class AppDbContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
-        // 分钟级K线：每张表独立自增 ID
+        // 分钟级K线：每张表独立自增 ID，(Symbol, TradeTime) 作为聚集索引以支持表分区
         modelBuilder.Entity<Kline1m>(entity =>
         {
             entity.ToTable("Kline_1m");
             entity.Property(e => e.Id).UseIdentityColumn();
-            entity.HasIndex(e => new { e.Symbol, e.TradeTime }).IsUnique().HasDatabaseName("IX_Kline1m_Symbol_Time");
+            entity.HasIndex(e => new { e.Symbol, e.TradeTime }).IsUnique().IsClustered().HasDatabaseName("IX_Kline1m_Symbol_Time");
             entity.Property(e => e.Symbol).HasMaxLength(20).IsRequired();
         });
 
@@ -154,7 +153,7 @@ public class AppDbContext : DbContext
         {
             entity.ToTable("Kline_5m");
             entity.Property(e => e.Id).UseIdentityColumn();
-            entity.HasIndex(e => new { e.Symbol, e.TradeTime }).IsUnique().HasDatabaseName("IX_Kline5m_Symbol_Time");
+            entity.HasIndex(e => new { e.Symbol, e.TradeTime }).IsUnique().IsClustered().HasDatabaseName("IX_Kline5m_Symbol_Time");
             entity.Property(e => e.Symbol).HasMaxLength(20).IsRequired();
         });
 
@@ -162,7 +161,7 @@ public class AppDbContext : DbContext
         {
             entity.ToTable("Kline_15m");
             entity.Property(e => e.Id).UseIdentityColumn();
-            entity.HasIndex(e => new { e.Symbol, e.TradeTime }).IsUnique().HasDatabaseName("IX_Kline15m_Symbol_Time");
+            entity.HasIndex(e => new { e.Symbol, e.TradeTime }).IsUnique().IsClustered().HasDatabaseName("IX_Kline15m_Symbol_Time");
             entity.Property(e => e.Symbol).HasMaxLength(20).IsRequired();
         });
 
@@ -170,7 +169,7 @@ public class AppDbContext : DbContext
         {
             entity.ToTable("Kline_30m");
             entity.Property(e => e.Id).UseIdentityColumn();
-            entity.HasIndex(e => new { e.Symbol, e.TradeTime }).IsUnique().HasDatabaseName("IX_Kline30m_Symbol_Time");
+            entity.HasIndex(e => new { e.Symbol, e.TradeTime }).IsUnique().IsClustered().HasDatabaseName("IX_Kline30m_Symbol_Time");
             entity.Property(e => e.Symbol).HasMaxLength(20).IsRequired();
         });
 
@@ -178,33 +177,18 @@ public class AppDbContext : DbContext
         {
             entity.ToTable("Kline_60m");
             entity.Property(e => e.Id).UseIdentityColumn();
-            entity.HasIndex(e => new { e.Symbol, e.TradeTime }).IsUnique().HasDatabaseName("IX_Kline60m_Symbol_Time");
+            entity.HasIndex(e => new { e.Symbol, e.TradeTime }).IsUnique().IsClustered().HasDatabaseName("IX_Kline60m_Symbol_Time");
             entity.Property(e => e.Symbol).HasMaxLength(20).IsRequired();
         });
 
-        // 日/周/月线：每张表独立自增 ID
+        // 日K线：每张表独立自增 ID，(Symbol, TradeTime) 作为聚集索引以支持表分区
         modelBuilder.Entity<Kline1d>(entity =>
         {
             entity.ToTable("Kline_1d");
             entity.Property(e => e.Id).UseIdentityColumn();
-            entity.HasIndex(e => new { e.Symbol, e.TradeTime }).IsUnique().HasDatabaseName("IX_Kline1d_Symbol_Time");
+            entity.HasIndex(e => new { e.Symbol, e.TradeTime }).IsUnique().IsClustered().HasDatabaseName("IX_Kline1d_Symbol_Time");
             entity.Property(e => e.Symbol).HasMaxLength(20).IsRequired();
         });
 
-        modelBuilder.Entity<Kline1w>(entity =>
-        {
-            entity.ToTable("Kline_1w");
-            entity.Property(e => e.Id).UseIdentityColumn();
-            entity.HasIndex(e => new { e.Symbol, e.TradeTime }).IsUnique().HasDatabaseName("IX_Kline1w_Symbol_Time");
-            entity.Property(e => e.Symbol).HasMaxLength(20).IsRequired();
-        });
-
-        modelBuilder.Entity<Kline1mo>(entity =>
-        {
-            entity.ToTable("Kline_1mo");
-            entity.Property(e => e.Id).UseIdentityColumn();
-            entity.HasIndex(e => new { e.Symbol, e.TradeTime }).IsUnique().HasDatabaseName("IX_Kline1mo_Symbol_Time");
-            entity.Property(e => e.Symbol).HasMaxLength(20).IsRequired();
-        });
     }
 }

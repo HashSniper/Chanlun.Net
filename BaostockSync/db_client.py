@@ -139,7 +139,7 @@ class DbClient:
             UPDATE TOP (1) StockInfo WITH (READPAST)
             SET SyncStatus = 1, UpdatedAt = ?
             OUTPUT inserted.Symbol
-            WHERE SyncStatus = 0
+            WHERE SyncStatus = 0 AND Type = 'stock'
         """
         cursor = self.conn.cursor()
         try:

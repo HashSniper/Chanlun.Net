@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import TradingPanel from './TradingPanel';
 
-export type Resolution = 'Minute1' | 'Minute5' | 'Minute15' | 'Minute30' | 'Minute60' | 'Day' | 'Week' | 'Month';
+export type Resolution = 'Minute1' | 'Minute5' | 'Minute15' | 'Minute30' | 'Minute60' | 'Day';
 
 interface Props {
   onCalculate: (symbol: string, resolution: Resolution, fromDate: string, toDate: string) => void;
@@ -58,8 +58,6 @@ export default function ControlPanel({ onCalculate, onTdxCalculate, loading, api
     'Minute30': '30分钟',
     'Minute60': '1小时',
     'Day': '日线',
-    'Week': '周线',
-    'Month': '月线',
   };
 
   const handleFetchAndCalculate = useCallback(async () => {

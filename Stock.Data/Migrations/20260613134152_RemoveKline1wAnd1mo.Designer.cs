@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Stock.Data;
 
@@ -11,9 +12,11 @@ using Stock.Data;
 namespace Stock.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260613134152_RemoveKline1wAnd1mo")]
+    partial class RemoveKline1wAnd1mo
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -62,8 +65,6 @@ namespace Stock.Data.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
-
-                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"), false);
 
                     b.HasIndex("Symbol");
 
@@ -334,8 +335,6 @@ namespace Stock.Data.Migrations
                         .IsUnique()
                         .HasDatabaseName("IX_Kline15m_Symbol_Time");
 
-                    SqlServerIndexBuilderExtensions.IsClustered(b.HasIndex("Symbol", "TradeTime"));
-
                     b.ToTable("Kline_15m", (string)null);
                 });
 
@@ -346,8 +345,6 @@ namespace Stock.Data.Migrations
                     b.HasIndex("Symbol", "TradeTime")
                         .IsUnique()
                         .HasDatabaseName("IX_Kline1d_Symbol_Time");
-
-                    SqlServerIndexBuilderExtensions.IsClustered(b.HasIndex("Symbol", "TradeTime"));
 
                     b.ToTable("Kline_1d", (string)null);
                 });
@@ -360,8 +357,6 @@ namespace Stock.Data.Migrations
                         .IsUnique()
                         .HasDatabaseName("IX_Kline1m_Symbol_Time");
 
-                    SqlServerIndexBuilderExtensions.IsClustered(b.HasIndex("Symbol", "TradeTime"));
-
                     b.ToTable("Kline_1m", (string)null);
                 });
 
@@ -372,8 +367,6 @@ namespace Stock.Data.Migrations
                     b.HasIndex("Symbol", "TradeTime")
                         .IsUnique()
                         .HasDatabaseName("IX_Kline30m_Symbol_Time");
-
-                    SqlServerIndexBuilderExtensions.IsClustered(b.HasIndex("Symbol", "TradeTime"));
 
                     b.ToTable("Kline_30m", (string)null);
                 });
@@ -386,8 +379,6 @@ namespace Stock.Data.Migrations
                         .IsUnique()
                         .HasDatabaseName("IX_Kline5m_Symbol_Time");
 
-                    SqlServerIndexBuilderExtensions.IsClustered(b.HasIndex("Symbol", "TradeTime"));
-
                     b.ToTable("Kline_5m", (string)null);
                 });
 
@@ -398,8 +389,6 @@ namespace Stock.Data.Migrations
                     b.HasIndex("Symbol", "TradeTime")
                         .IsUnique()
                         .HasDatabaseName("IX_Kline60m_Symbol_Time");
-
-                    SqlServerIndexBuilderExtensions.IsClustered(b.HasIndex("Symbol", "TradeTime"));
 
                     b.ToTable("Kline_60m", (string)null);
                 });

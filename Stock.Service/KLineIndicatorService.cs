@@ -1,3 +1,5 @@
+using Chanlun.Lib;
+using Stock.Service.Adapter;
 using Stock.Data.Entities;
 using Stock.Data.Repositories;
 using Stock.Service.Indicators;
@@ -48,13 +50,20 @@ public class KLineIndicatorService : IKLineIndicatorService
             return result;
         }
 
+
+
         // 2. 初始化结果壳（按索引与 klines 对齐）
         result.Items = klines.Select(k => new KLineIndicatorItem { Kline = k }).ToList();
 
         // 3. 逐个异步调用指标处理器计算并填充结果
         List<Task> tasks = _processors.Select(processor => processor.ProcessAsync(klines, result.Items, ct)).ToList();
+        
+        // 4. 计算缠论信息
         await Task.WhenAll(tasks);
 
+        result.ChanCalculateResult =
+            ChanCalculateResultBuilder.Build(query.Symbol, result.Items.ToKLineUnits());
+        
         return result;
     }
 }

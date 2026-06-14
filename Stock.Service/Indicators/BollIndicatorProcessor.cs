@@ -22,9 +22,7 @@ public class BollIndicatorProcessor : IIndicatorProcessor
 
         for (int i = 0; i < klines.Count; i++)
         {
-            items[i].Boll.Upper = IndicatorUtils.ToDecimal(bolls[i].UpperBand);
-            items[i].Boll.Middle = IndicatorUtils.ToDecimal(bolls[i].Sma);
-            items[i].Boll.Lower = IndicatorUtils.ToDecimal(bolls[i].LowerBand);
+            items[i].Boll = bolls[i];
         }
 
         return Task.CompletedTask;

@@ -1,7 +1,8 @@
 using Chanlun.Lib.KLine;
 using Stock.Data.Entities;
+using Stock.Service.Interface;
 
-namespace Chanlun.Lib.Adapter
+namespace Stock.Service.Adapter
 {
     /// <summary>
     /// KlineBase 与 KLineUnit 之间的双向映射器
@@ -34,8 +35,8 @@ namespace Chanlun.Lib.Adapter
                 return KlineResolution.Day;
 
             var diffs = units.Zip(units.Skip(1), (a, b) => b.Time - a.Time)
-                             .Select(d => d.TotalMinutes)
-                             .ToList();
+                .Select(d => d.TotalMinutes)
+                .ToList();
 
             // 取中位数，避免休市间隙等异常值干扰
             var medianDiff = diffs.OrderBy(d => d).ElementAt(diffs.Count / 2);
@@ -55,10 +56,8 @@ namespace Chanlun.Lib.Adapter
 
             if (medianDays < 2)
                 return KlineResolution.Day;
-            if (medianDays < 10)
-                return KlineResolution.Week;
 
-            return KlineResolution.Month;
+            return KlineResolution.Day;
         }
 
         /// <summary>
@@ -74,8 +73,6 @@ namespace Chanlun.Lib.Adapter
                 KlineResolution.Minute30 => new Kline30m(),
                 KlineResolution.Minute60 => new Kline60m(),
                 KlineResolution.Day => new Kline1d(),
-                KlineResolution.Week => new Kline1w(),
-                KlineResolution.Month => new Kline1mo(),
                 _ => new Kline1d()
             };
 
@@ -101,17 +98,22 @@ namespace Chanlun.Lib.Adapter
         /// <param name="kline">KlineBase 实体（任意具体周期子类）</param>
         /// <param name="idx">节点索引</param>
         /// <returns>KLineUnit</returns>
-        public static KLineUnit ToKLineUnit(this KlineBase kline, int idx)
+        public static KLineUnit ToKLineUnit(this KLineIndicatorItem kline, int idx)
         {
             return new KLineUnit(idx)
             {
-                Time = kline.TradeTime,
-                Open = kline.Open,
-                High = kline.High,
-                Low = kline.Low,
-                Close = kline.Close,
-                Volume = kline.Volume,
-                Amount = kline.Amount
+                Time = kline.Kline.TradeTime,
+                Open = kline.Kline.Open,
+                High = kline.Kline.High,
+                Low = kline.Kline.Low,
+                Close = kline.Kline.Close,
+                Volume = kline.Kline.Volume,
+                Amount = kline.Kline.Amount,
+                UnitIndicator = new KLineUnitIndicator()
+                {
+                    MACD = kline.Macd,
+                    Boll = kline.Boll,
+                }
             };
         }
 
@@ -120,9 +122,9 @@ namespace Chanlun.Lib.Adapter
         /// </summary>
         /// <param name="klines">KlineBase 列表</param>
         /// <returns>已排序并链接好的 KLineUnit 列表</returns>
-        public static List<KLineUnit> ToKLineUnits(this IEnumerable<KlineBase> klines)
+        public static List<KLineUnit> ToKLineUnits(this IEnumerable<KLineIndicatorItem> klines)
         {
-            var ordered = klines.OrderBy(k => k.TradeTime).ToList();
+            var ordered = klines.OrderBy(k => k.Kline.TradeTime).ToList();
             var result = new List<KLineUnit>(ordered.Count);
 
             for (int i = 0; i < ordered.Count; i++)
