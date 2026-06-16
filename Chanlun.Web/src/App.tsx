@@ -1,9 +1,11 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import type { HubConnection } from '@microsoft/signalr';
 import ChanLunChart from './components/ChanLunChart';
 import ControlPanel, { type Resolution } from './components/ControlPanel';
 import TradeReportPage from './pages/TradeReportPage';
 
 import { getChanlunKlines, getTdxChanlunKlines, setBaseUrl, getBaseUrl } from './api/chanlunApi';
+import { startSignalRConnection, onTdxDataUpdated, stopSignalRConnection } from './api/signalrService';
 import type { ChanlunResponse, KlineBar } from './types/chanlun';
 
 function App() {
@@ -14,6 +16,9 @@ function App() {
   const [apiUrl, setApiUrl] = useState(getBaseUrl());
   const [error, setError] = useState<string>('');
   const [resolution, setResolution] = useState<Resolution>('Day');
+  const [signalRStatus, setSignalRStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');
+  const signalRStartedRef = useRef(false);
+  const signalRConnRef = useRef<HubConnection | null>(null);
 
   // Display options
   const [showBi, setShowBi] = useState(true);
@@ -64,6 +69,42 @@ function App() {
     }
   }, []);
 
+  // 连接 SignalR，接收后端推送的通达信数据更新通知
+  useEffect(() => {
+    // 防止 StrictMode 下重复连接
+    if (signalRStartedRef.current) return;
+    signalRStartedRef.current = true;
+
+    let unsubscribe: (() => void) | null = null;
+
+    setSignalRStatus('connecting');
+    startSignalRConnection()
+      .then((conn) => {
+        signalRConnRef.current = conn;
+        setSignalRStatus('connected');
+        unsubscribe = onTdxDataUpdated(conn, () => {
+          handleTdxCalculate();
+        });
+      })
+      .catch((err) => {
+        signalRStartedRef.current = false;
+        setSignalRStatus('disconnected');
+        console.error('SignalR 连接失败:', err);
+      });
+
+    return () => {
+      unsubscribe?.();
+      const conn = signalRConnRef.current;
+      if (conn) {
+        stopSignalRConnection(conn).catch((err) => {
+          console.error('SignalR 停止失败:', err);
+        });
+        signalRConnRef.current = null;
+      }
+      signalRStartedRef.current = false;
+    };
+  }, [handleTdxCalculate]);
+
 
 
   return (
@@ -95,6 +136,13 @@ function App() {
             📜 交易报表
           </button>
         </div>
+        <span style={{
+          fontSize: '12px', padding: '4px 10px', borderRadius: '4px',
+          background: signalRStatus === 'connected' ? 'rgba(46, 204, 113, 0.15)' : signalRStatus === 'connecting' ? 'rgba(241, 196, 15, 0.15)' : 'rgba(231, 76, 60, 0.15)',
+          color: signalRStatus === 'connected' ? '#2ecc71' : signalRStatus === 'connecting' ? '#f1c40f' : '#e74c3c',
+        }}>
+          {signalRStatus === 'connected' ? '🟢 SignalR 已连接' : signalRStatus === 'connecting' ? '🟡 SignalR 连接中' : '🔴 SignalR 未连接'}
+        </span>
         {error && (
           <span style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '4px', background: 'rgba(231, 76, 60, 0.15)', color: '#e74c3c' }}>
             ❌ {error}

@@ -4,6 +4,7 @@ using Stock.Data;
 using Stock.Data.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Stock.Service;
+using Chanlun.API.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +23,9 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
+
+// 注册 SignalR，用于服务端向前端推送通达信数据更新通知
+builder.Services.AddSignalR();
 
 // 添加 CORS，允许TradingView跨域调用
 builder.Services.AddCors(options =>
@@ -61,6 +65,7 @@ app.UseDefaultFiles();
 app.UseStaticFiles();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<ChanlunHub>("/chanlunhub");
 
 app.MapGet("/info", () => Results.Content("""
 <!DOCTYPE html>

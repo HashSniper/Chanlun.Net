@@ -118,13 +118,17 @@ namespace Stock.Service.Adapter
         }
 
         /// <summary>
-        /// 将 KlineBase 列表映射为 KLineUnit 列表，按 TradeTime 排序并自动链接 Pre/Next
+        /// 将 KlineBase 列表映射为 KLineUnit 列表，按 TradeTime 排序、去重并自动链接 Pre/Next
         /// </summary>
         /// <param name="klines">KlineBase 列表</param>
-        /// <returns>已排序并链接好的 KLineUnit 列表</returns>
+        /// <returns>已排序、去重并链接好的 KLineUnit 列表</returns>
         public static List<KLineUnit> ToKLineUnits(this IEnumerable<KLineIndicatorItem> klines)
         {
-            var ordered = klines.OrderBy(k => k.Kline.TradeTime).ToList();
+            var ordered = klines
+                .GroupBy(k => k.Kline.TradeTime)
+                .Select(g => g.First())
+                .OrderBy(k => k.Kline.TradeTime)
+                .ToList();
             var result = new List<KLineUnit>(ordered.Count);
 
             for (int i = 0; i < ordered.Count; i++)

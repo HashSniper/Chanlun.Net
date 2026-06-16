@@ -120,7 +120,6 @@ public class StockRepository : IStockRepository
                 KlineResolution.Minute5 => typeof(Kline5m),
                 KlineResolution.Minute15 => typeof(Kline15m),
                 KlineResolution.Minute30 => typeof(Kline30m),
-                KlineResolution.Minute60 => typeof(Kline1d),
                 KlineResolution.Day => typeof(Kline1d),
                 _ => actualType
             };

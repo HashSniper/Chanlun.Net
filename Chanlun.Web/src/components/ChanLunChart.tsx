@@ -81,8 +81,11 @@ interface Props {
   showMergedKLine: boolean;
 }
 
-function msToSec(ms: number): number {
-  return Math.floor(ms / 1000);
+function toChartTime(time: string | number): number {
+  if (typeof time === 'number') {
+    return Math.floor(time / 1000);
+  }
+  return Math.floor(new Date(time).getTime() / 1000);
 }
 
 function formatTime(sec: number): string {
@@ -131,36 +134,6 @@ class PaneSeparator implements ISeriesPrimitive<Time> {
               context.moveTo(0, y);
               context.lineTo(w, y);
               context.stroke();
-              context.restore();
-            });
-          },
-        }),
-      },
-    ];
-  }
-}
-
-/** 在 pane 1 顶部绘制"指标计算结果"标题，天然位于分界线下方 */
-class PaneTitlePrimitive implements ISeriesPrimitive<Time> {
-  private _title: string;
-
-  constructor(title: string) {
-    this._title = title;
-  }
-
-  paneViews() {
-    return [
-      {
-        zOrder: () => 'top' as const,
-        renderer: () => ({
-          draw: (target: any) => {
-            target.useBitmapCoordinateSpace(({ context }: any) => {
-              context.save();
-              context.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-              context.fillStyle = '#868993';
-              context.textAlign = 'left';
-              context.textBaseline = 'top';
-              context.fillText(this._title, 4, 4);
               context.restore();
             });
           },
@@ -248,7 +221,7 @@ export default function ChanLunChart({
 
     const candleData: CandlestickData<Time>[] = klines
       .map((b) => {
-        const t = typeof b.time === 'number' ? Math.floor(b.time / 1000) : msToSec(new Date(b.time).getTime());
+        const t = toChartTime(b.time);
         return {
           time: t as Time,
           open: b.open,
@@ -275,7 +248,7 @@ export default function ChanLunChart({
     // 缠论买卖点标记
     const tradingPointMarkers: SeriesMarker<Time>[] = klines
       .map((b) => {
-        const t = typeof b.time === 'number' ? Math.floor(b.time / 1000) : msToSec(new Date(b.time).getTime());
+        const t = toChartTime(b.time);
         const markers: SeriesMarker<Time>[] = [];
         if (b.isBuy1) markers.push({ time: t as Time, position: 'belowBar', shape: 'arrowUp', color: '#ff0000', text: 'B1', size: 2 });
         if (b.isBuy2) markers.push({ time: t as Time, position: 'belowBar', shape: 'arrowUp', color: '#ff6600', text: 'B2', size: 2 });
@@ -327,7 +300,7 @@ export default function ChanLunChart({
       const clickSec = param.time as number;
       // 找到对应的K线数据（允许前后1秒误差）
       const matched = klines.find((k) => {
-        const kSec = typeof k.time === 'number' ? Math.floor(k.time / 1000) : msToSec(new Date(k.time).getTime());
+        const kSec = toChartTime(k.time);
         return Math.abs(kSec - clickSec) <= 1;
       });
       if (!matched) return;
@@ -394,8 +367,8 @@ export default function ChanLunChart({
           crosshairMarkerVisible: false,
         }, 0);
         series.setData([
-          { time: msToSec(bi.startTime) as Time, value: bi.startPrice },
-          { time: msToSec(bi.endTime) as Time, value: bi.endPrice },
+          { time: toChartTime(bi.startTime) as Time, value: bi.startPrice },
+          { time: toChartTime(bi.endTime) as Time, value: bi.endPrice },
         ]);
         seriesRefs.current.push(series);
       });
@@ -411,8 +384,8 @@ export default function ChanLunChart({
           crosshairMarkerVisible: false,
         }, 0);
         series.setData([
-          { time: msToSec(seg.startTime) as Time, value: seg.startPrice },
-          { time: msToSec(seg.endTime) as Time, value: seg.endPrice },
+          { time: toChartTime(seg.startTime) as Time, value: seg.startPrice },
+          { time: toChartTime(seg.endTime) as Time, value: seg.endPrice },
         ]);
         seriesRefs.current.push(series);
       });
@@ -421,8 +394,8 @@ export default function ChanLunChart({
     const renderPivots = (pivotList: typeof chanlun.biPivotList, colorBase: string) => {
       if (!pivotList) return;
       pivotList.forEach((pivot) => {
-        const startSec = msToSec(pivot.startTime);
-        const endSec = msToSec(pivot.endTime);
+        const startSec = toChartTime(pivot.startTime);
+        const endSec = toChartTime(pivot.endTime);
         const borderColor = `${colorBase}0.9)`;
         const fillColor = `${colorBase}0.12)`;
 
@@ -478,8 +451,8 @@ export default function ChanLunChart({
 
     if (showMergedKLine && chanlun.mergedKLines) {
       chanlun.mergedKLines.forEach((kl) => {
-        const startSec = msToSec(kl.startTime);
-        const endSec = msToSec(kl.endTime);
+        const startSec = toChartTime(kl.startTime);
+        const endSec = toChartTime(kl.endTime);
         if (startSec === endSec) return;
 
         const color =

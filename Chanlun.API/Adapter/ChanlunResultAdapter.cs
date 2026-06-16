@@ -105,9 +105,9 @@ public static class ChanlunResultAdapter
 
                 response.BiList.Add(new TvBiItem
                 {
-                    StartTime = new DateTimeOffset(startUnit.Time).ToUnixTimeMilliseconds(),
+                    StartTime = startUnit.Time,
                     StartPrice = startPrice,
-                    EndTime = new DateTimeOffset(endUnit.Time).ToUnixTimeMilliseconds(),
+                    EndTime = endUnit.Time,
                     EndPrice = endPrice,
                     Direction = bi.DIR.IsUp() ? "up" : "down"
                 });
@@ -126,9 +126,9 @@ public static class ChanlunResultAdapter
 
                 response.SegList.Add(new TvSegItem
                 {
-                    StartTime = new DateTimeOffset(startUnit.Time).ToUnixTimeMilliseconds(),
+                    StartTime = startUnit.Time,
                     StartPrice = startPrice,
-                    EndTime = new DateTimeOffset(endUnit.Time).ToUnixTimeMilliseconds(),
+                    EndTime = endUnit.Time,
                     EndPrice = endPrice,
                     Direction = seg.DIR.IsUp() ? "up" : "down"
                 });
@@ -145,8 +145,8 @@ public static class ChanlunResultAdapter
 
                 response.BiPivotList.Add(new TvPivotItem
                 {
-                    StartTime = new DateTimeOffset(startUnit.Time).ToUnixTimeMilliseconds(),
-                    EndTime = new DateTimeOffset(endUnit.Time).ToUnixTimeMilliseconds(),
+                    StartTime = startUnit.Time,
+                    EndTime = endUnit.Time,
                     ZG = pivot.ZG,
                     ZD = pivot.ZD,
                     GG = pivot.GG,
@@ -167,8 +167,8 @@ public static class ChanlunResultAdapter
 
                 response.SegPivotList.Add(new TvPivotItem
                 {
-                    StartTime = new DateTimeOffset(startUnit.Time).ToUnixTimeMilliseconds(),
-                    EndTime = new DateTimeOffset(endUnit.Time).ToUnixTimeMilliseconds(),
+                    StartTime = startUnit.Time,
+                    EndTime = endUnit.Time,
                     ZG = pivot.ZG,
                     ZD = pivot.ZD,
                     GG = pivot.GG,
@@ -191,8 +191,8 @@ public static class ChanlunResultAdapter
 
                 response.MergedKLines.Add(new TvMergedKLine
                 {
-                    StartTime = new DateTimeOffset(startUnit.Time).ToUnixTimeMilliseconds(),
-                    EndTime = new DateTimeOffset(endUnit.Time).ToUnixTimeMilliseconds(),
+                    StartTime = startUnit.Time,
+                    EndTime = endUnit.Time,
                     High = kline.High,
                     Low = kline.Low,
                     Direction = kline.DIR == ChanDir.UP ? "up" : kline.DIR == ChanDir.DOWN ? "down" : "combine"

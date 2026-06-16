@@ -8,10 +8,25 @@ using Chanlun.Lib.SEG;
 using Chanlun.Lib.StockIndicators;
 using Chanlun.Lib.Zs;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using Chanlun.API.Hubs;
 using Stock.Data.Entities;
 using Stock.Service.Interface;
 
 namespace Chanlun.API.Controllers;
+
+public class CalcRequest
+{
+    public int NCount { get; set; }
+    public decimal[] A { get; set; } = [];
+    public decimal[] B { get; set; } = [];
+    public decimal[] C { get; set; } = [];
+}
+
+public class CalcResponse
+{
+    public decimal[] Result { get; set; } = [];
+}
 
 [ApiController]
 [Route("api/calculation")]
@@ -19,11 +34,17 @@ public class TdxCalculationController : ControllerBase
 {
     private readonly ISetKlineService _setKlineService;
     private readonly ISaveTdxCurrentKlineViewService _recordService;
+    private readonly ILogger<TdxCalculationController> _logger;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly IHubContext<ChanlunHub> _hubContext;
 
-    public TdxCalculationController(ISetKlineService setKlineService, ISaveTdxCurrentKlineViewService recordService)
+    public TdxCalculationController(ISetKlineService setKlineService, ISaveTdxCurrentKlineViewService recordService, ILogger<TdxCalculationController> logger, IServiceScopeFactory serviceScopeFactory, IHubContext<ChanlunHub> hubContext)
     {
         _setKlineService = setKlineService;
         _recordService = recordService;
+        _logger = logger;
+        _serviceScopeFactory = serviceScopeFactory;
+        _hubContext = hubContext;
     }
 
     /// <summary>
@@ -55,7 +76,22 @@ public class TdxCalculationController : ControllerBase
         currentView.EndTime = calResult.UnitList[^1].Time;
         currentView.Resolution = KlineMapper.DetectResolution(calResult.UnitList);
 
-        await _recordService.SaveTdxCurrentKlineView(currentView);
+        // 使用 Task.Run 在线程池中异步保存数据，避免阻塞 API 响应
+        // 在后台任务内创建新的 DI Scope，避免请求结束后 DbContext 被释放
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await using var scope = _serviceScopeFactory.CreateAsyncScope();
+                var recordService = scope.ServiceProvider.GetRequiredService<ISaveTdxCurrentKlineViewService>();
+                await recordService.SaveTdxCurrentKlineView(currentView);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to save TdxCurrentKlineView");
+            }
+        });
+
         return Ok(new CalcResponse { Result = [] });
     }
 
@@ -65,7 +101,7 @@ public class TdxCalculationController : ControllerBase
     /// <param name="request"></param>
     /// <returns></returns>
     [HttpPost("setvolume")]
-    public async Task<IActionResult> SetVolume([FromBody] CalcRequest request)
+    public IActionResult SetVolume([FromBody] CalcRequest request)
     {
         KLineDataPopulator.PopulateVolume(request.NCount, request.A, request.B, request.C);
         var key = request.C[0];
@@ -75,9 +111,26 @@ public class TdxCalculationController : ControllerBase
 
         var kLineDatas = KlineMapper.Map(calculateResult.UnitList, calculateResult.Symbol);
 
-        // 使用 Task.Run 在线程池执行，避免同步上下文死锁
-        //Task.Run(async () => await _setStockDataService.SaveKlinesAsync(kLineDatas));
-        await _setKlineService.SaveKlinesAsync(kLineDatas);
+        // 使用 Task.Run 在线程池中异步保存数据，避免阻塞 API 响应
+        // 在后台任务内创建新的 DI Scope，避免请求结束后 DbContext 被释放
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await using var scope = _serviceScopeFactory.CreateAsyncScope();
+                var setKlineService = scope.ServiceProvider.GetRequiredService<ISetKlineService>();
+                await setKlineService.SaveKlinesAsync(kLineDatas);
+
+                // 保存完成后通知所有前端客户端刷新通达信当前窗口数据
+                _logger.LogInformation("Klines saved, sending TdxDataUpdated notification to all SignalR clients");
+                await _hubContext.Clients.All.SendAsync(ChanlunHub.TdxDataUpdatedMethod);
+                _logger.LogInformation("TdxDataUpdated notification sent");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to save klines");
+            }
+        });
 
         return Ok(new CalcResponse { Result = [] });
     }
@@ -230,18 +283,5 @@ public class TdxCalculationController : ControllerBase
         var result = PivotCalculator.GetBiPivotRange(request.NCount, request.A, request.B, request.C);
         return Ok(new CalcResponse { Result = result });
     }
-   
-}
 
-public class CalcRequest
-{
-    public int NCount { get; set; }
-    public decimal[] A { get; set; } = [];
-    public decimal[] B { get; set; } = [];
-    public decimal[] C { get; set; } = [];
-}
-
-public class CalcResponse
-{
-    public decimal[] Result { get; set; } = [];
 }

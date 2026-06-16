@@ -82,26 +82,26 @@ public class TvChanlunRequest
 
 public class TvBiItem
 {
-    public long StartTime { get; set; }
+    public DateTime StartTime { get; set; }
     public decimal StartPrice { get; set; }
-    public long EndTime { get; set; }
+    public DateTime EndTime { get; set; }
     public decimal EndPrice { get; set; }
     public string Direction { get; set; } = string.Empty;
 }
 
 public class TvSegItem
 {
-    public long StartTime { get; set; }
+    public DateTime StartTime { get; set; }
     public decimal StartPrice { get; set; }
-    public long EndTime { get; set; }
+    public DateTime EndTime { get; set; }
     public decimal EndPrice { get; set; }
     public string Direction { get; set; } = string.Empty;
 }
 
 public class TvPivotItem
 {
-    public long StartTime { get; set; }
-    public long EndTime { get; set; }
+    public DateTime StartTime { get; set; }
+    public DateTime EndTime { get; set; }
     public decimal ZG { get; set; }
     public decimal ZD { get; set; }
     public decimal GG { get; set; }
@@ -112,8 +112,8 @@ public class TvPivotItem
 
 public class TvMergedKLine
 {
-    public long StartTime { get; set; }
-    public long EndTime { get; set; }
+    public DateTime StartTime { get; set; }
+    public DateTime EndTime { get; set; }
     public decimal High { get; set; }
     public decimal Low { get; set; }
     public string Direction { get; set; } = string.Empty;

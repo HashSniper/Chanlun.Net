@@ -50,24 +50,24 @@ export interface KlineBar {
 }
 
 export interface BiItem {
-  startTime: number;
+  startTime: string;
   startPrice: number;
-  endTime: number;
+  endTime: string;
   endPrice: number;
   direction: 'up' | 'down';
 }
 
 export interface SegItem {
-  startTime: number;
+  startTime: string;
   startPrice: number;
-  endTime: number;
+  endTime: string;
   endPrice: number;
   direction: 'up' | 'down';
 }
 
 export interface PivotItem {
-  startTime: number;
-  endTime: number;
+  startTime: string;
+  endTime: string;
   zg: number;
   zd: number;
   gg: number;
@@ -77,8 +77,8 @@ export interface PivotItem {
 }
 
 export interface MergedKLine {
-  startTime: number;
-  endTime: number;
+  startTime: string;
+  endTime: string;
   high: number;
   low: number;
   direction: 'up' | 'down' | 'combine';
