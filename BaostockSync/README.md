@@ -39,7 +39,7 @@ python main.py --all
 python main.py --all-a-shares --freq 1d
 ```
 
-> 该命令读取 `StockInfo` 表中的股票列表进行 K 线同步，不含 ETF。请确保先运行 `--sync-stock-info` 初始化股票信息。
+> 该命令读取 `StockInfo` 表中的股票列表进行 K 线同步，含 ETF。请确保先运行 `--sync-stock-info` 初始化股票信息。
 > `SyncStatus` 状态：0=未同步，1=同步中，2=已同步。只处理状态为 0 的股票。
 
 ### 多窗口并行同步 K 线
@@ -61,7 +61,7 @@ sync_all_a_shares.bat
 python main.py --sync-stock-info
 ```
 
-> 该命令只更新 `StockInfo` 表中的 A 股股票信息（不含 ETF），不会同步 K 线数据。
+> 该命令更新 `StockInfo` 表中的 A 股股票和 ETF 信息，不会同步 K 线数据。
 
 ## 数据库连接
 

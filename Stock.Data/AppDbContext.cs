@@ -132,6 +132,14 @@ public class AppDbContext : DbContext
             entity.Property(e => e.TradeTime).HasPrecision(0);   // 精确到秒
             entity.Property(e => e.CreatedAt).HasPrecision(0);   // 精确到秒
 
+            // K线价格/量/额精度统一为 18,4
+            entity.Property(e => e.Open).HasPrecision(18, 4);
+            entity.Property(e => e.High).HasPrecision(18, 4);
+            entity.Property(e => e.Low).HasPrecision(18, 4);
+            entity.Property(e => e.Close).HasPrecision(18, 4);
+            entity.Property(e => e.Volume).HasPrecision(18, 4);
+            entity.Property(e => e.Amount).HasPrecision(18, 4);
+
             // K线 Symbol 关联到 StockInfo.Symbol
             entity.HasOne<StockInfo>()
                 .WithMany()

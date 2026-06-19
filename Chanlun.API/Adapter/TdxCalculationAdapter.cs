@@ -1,4 +1,6 @@
-﻿using Chanlun.Lib;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
+using Chanlun.Lib;
 using Chanlun.Lib.Bi;
 using Chanlun.Lib.ChanCommon;
 using Chanlun.Lib.Extensions;
@@ -23,6 +25,27 @@ public static class ChanCalculator
         SegCalculator.Calculate(ref result);
         PivotCalculator.Calculate(ref result);
         ChanCalculateResultCache.Add(key, result);
+
+#if DEBUG
+        try
+        {
+            var json = JsonSerializer.Serialize(result, new JsonSerializerOptions
+            {
+                ReferenceHandler = ReferenceHandler.IgnoreCycles,
+                WriteIndented = true
+            });
+
+            var logDir = Path.Combine(AppContext.BaseDirectory, "logs");
+            Directory.CreateDirectory(logDir);
+            var filePath = Path.Combine(logDir, $"chan_calculate_result_tdx.json");
+            File.WriteAllText(filePath, json);
+        }
+        catch
+        {
+            // 调试输出不影响主流程
+        }
+#endif
+
         return result;
     }
 }

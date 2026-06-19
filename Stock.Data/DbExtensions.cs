@@ -9,7 +9,7 @@ public static class DbExtensions
     public static IServiceCollection AddDb(this IServiceCollection services, string? connectionString)
     {
         services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlServer(connectionString, sqlOptions => sqlOptions.CommandTimeout(600)));
+            options.UseSqlServer(connectionString, sqlOptions => sqlOptions.CommandTimeout(3600)));
 
         // 注册 Repository
         services.AddScoped<IStockRepository, StockRepository>();

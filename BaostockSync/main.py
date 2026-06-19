@@ -57,12 +57,12 @@ def main():
     parser.add_argument(
         "--all-a-shares",
         action="store_true",
-        help="根据 StockInfo 表同步全部 A 股股票的 K 线（从 2020-01-01 到现在，不含 ETF）",
+        help="根据 StockInfo 表同步全部 A 股股票和 ETF 的 K 线（从 2020-01-01 到现在）",
     )
     parser.add_argument(
         "--sync-stock-info",
         action="store_true",
-        help="仅同步全部 A 股股票的 StockInfo 基本信息（不含 ETF）",
+        help="仅同步全部 A 股股票和 ETF 的 StockInfo 基本信息",
     )
 
     args = parser.parse_args()

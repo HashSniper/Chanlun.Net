@@ -13,7 +13,7 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
         var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
         optionsBuilder.UseSqlServer(
             "Server=.;Database=StockDb;User Id=sa;Password=dd461233;MultipleActiveResultSets=true;TrustServerCertificate=True",
-            sqlOptions => sqlOptions.CommandTimeout(600));
+            sqlOptions => sqlOptions.CommandTimeout(3600));
         return new AppDbContext(optionsBuilder.Options);
     }
 }

@@ -24,6 +24,8 @@ public class Seg(int idx, Bi.Bi startBi, Bi.Bi endBi, bool isSure = true)
     public Bi.Bi StartBi { get; private set; } = startBi;
     public Bi.Bi EndBi { get; private set; } = endBi;
 
+    public bool IsSure { get; private set; } = isSure;
+
     public EigenFx? EigenFx { get; set; }
 
     public void UpdateBiList(List<Bi.Bi> biLst, int idx1, int idx2)

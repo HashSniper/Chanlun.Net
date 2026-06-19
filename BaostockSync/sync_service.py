@@ -186,15 +186,15 @@ def sync_all(
 def _load_a_share_list(
     bs: BaostockClient,
 ) -> List[Dict[str, Any]]:
-    """一次性拉取全部 A 股股票的基本信息列表（不含 ETF）"""
-    print("[FETCH] loading all A-share stock list ...")
+    """一次性拉取全部 A 股股票和 ETF 的基本信息列表"""
+    print("[FETCH] loading all A-share stock & ETF list ...")
     basics = bs.query_all_stock_basics()
     items = [
         item
         for item in basics
-        if is_a_share_stock(item["code"], item.get("type", ""))
+        if is_a_share_or_etf(item["code"], item.get("type", ""))
     ]
-    print(f"[FETCH] found {len(items)} A-share stocks")
+    print(f"[FETCH] found {len(items)} A-share stocks & ETFs")
     return items
 
 
