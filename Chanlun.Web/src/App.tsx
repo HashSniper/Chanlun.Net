@@ -69,6 +69,11 @@ function App() {
     }
   }, []);
 
+  // 页面加载时自动同步通达信当前窗口数据
+  useEffect(() => {
+    handleTdxCalculate();
+  }, [handleTdxCalculate]);
+
   // 连接 SignalR，接收后端推送的通达信数据更新通知
   useEffect(() => {
     // 防止 StrictMode 下重复连接

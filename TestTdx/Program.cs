@@ -9,7 +9,7 @@ var td = Utils.ConvertToDateTime(1260605, 1500);
 try
 {
     using var tq = TdxQuantFactory.Create("tq.net.test1", @"C:\new_tdx64");
-    var res = tq.GetMarketData("688318.SH", 1);
+    var res = tq.GetMarketData("600584.SH", 1);
     Console.WriteLine(res);
 }
 catch (Exception ex)

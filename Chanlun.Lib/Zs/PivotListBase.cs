@@ -80,6 +80,19 @@ public abstract class PivotListBase<TPivot, TSegment> : List<TPivot>
         _currentPivot = newPivot;
         Add(_currentPivot);
 
+        // 中枢方向：与上一个中枢对比确定
+        // 缠论中，中枢方向不由进入段决定，而是由相邻中枢的位置关系决定
+        if (Count > 1)
+        {
+            var previous = this[^2];
+            _currentPivot.DIR = _currentPivot.ZG > previous.ZG ? ChanDir.UP : ChanDir.DOWN;
+        }
+        else
+        {
+            // 第一个中枢，使用进入段方向作为初始参考
+            _currentPivot.DIR = entry.DIR;
+        }
+
         // 改变指针位置，下一次搜索从 s3 后面开始
         _searchIndex += 4;
 
@@ -107,8 +120,10 @@ public abstract class PivotListBase<TPivot, TSegment> : List<TPivot>
         {
             // 在实际工程中，这里通常会生成一个新的高级别 Pivot 对象，
             // 并将 previous 和 current 标记为该高级别 Pivot 的子组件。
-            // 此处简化为直接将 current 级别提升。
-            current.Level = previous.Level + 1;
+            // 此处简化为将两个中枢同时升级
+            var newLevel = previous.Level + 1;
+            previous.Level = newLevel;
+            current.Level = newLevel;
         }
     }
 }

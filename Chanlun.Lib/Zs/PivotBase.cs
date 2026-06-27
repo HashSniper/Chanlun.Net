@@ -53,7 +53,6 @@ public abstract class PivotBase<TNode, TSegment>(int idx) : ChanNode<TNode>(idx)
         ZG = minHigh;
         GG = Math.Max(s1.High, Math.Max(s2.High, s3.High));
         DD = Math.Min(s1.Low, Math.Min(s2.Low, s3.Low));
-        DIR = entry.DIR;
 
         InSegment = entry;
         Segments.AddRange([s1, s2, s3]);
@@ -70,10 +69,11 @@ public abstract class PivotBase<TNode, TSegment>(int idx) : ChanNode<TNode>(idx)
         }
 
         // 只要与 [ZD, ZG] 还有重叠，就属于中枢震荡延伸
-        // 构成第三类买卖点，此时设置退出
+        // 构成第三类买卖点：当次级别走势离开中枢后，其后的次级别回抽不重新回到中枢
+        // 条件1: 当前段脱离中枢；条件2: 当前段虽重叠，但下一段不回抽确认离开
         if (!IsOverlap(s) || (s.Next != null && !IsOverlap(s.Next)))
         {
-            // 无法延伸，说明该线段脱离了中枢，确认为退出段
+            // 无法延伸，说明该线段脱离了中枢，确认为退出段（离开段）
             OutSegment = s;
             IsClosed = true;
             return false;
